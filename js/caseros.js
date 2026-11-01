@@ -6,8 +6,9 @@ async function cargarCaseros() {
   const d = await r.json();
   if (d.ok) {
     CASEROS = d.data;
-    document.getElementById('count-caseros').textContent = 
-      CASEROS.length ? `${CASEROS.length} vídeo${CASEROS.length!==1?'s':''}` : 'Sin vídeos aún';
+    const n = CASEROS.length, tv = document.body.classList.contains('modo-tv');
+    document.getElementById('count-caseros').textContent = !n ? 'Sin vídeos aún'
+      : tv ? `${n} vídeo${n!==1?'s':''}` : (n === 1 ? 'Ver el vídeo' : `Ver los ${n} vídeos`);
     renderCaseros();
     if (tieneInicio()) renderInicioExtras();
   }

@@ -169,35 +169,80 @@ body.tema-claro .continue-card .cc-kicker { color:var(--accent); }
 #cc-progress { height:2px !important; border-radius:0 !important; }
 .cc-play { width:44px; height:44px; background:var(--accent-soft); color:var(--accent); }
 
-/* Colecciones: dos celdas separadas por líneas, con el recuento grande */
-.home-sections { max-width:none; gap:0; margin-top:28px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.section-card { background:none !important; border:none; border-radius:0; padding:28px 4px 26px; gap:6px; display:grid; grid-template-columns:1fr auto; grid-template-areas:'txt count'; align-items:end; transform:none !important; }
-.section-card + .section-card { border-left:1px solid var(--line); padding-left:28px; }
-.section-card { grid-template-areas:'icon count' 'txt count'; row-gap:18px; }
-.section-card .card-icon {
-  grid-area:icon; display:flex; width:52px; height:52px; border-radius:0; font-size:26px;
-  background:none; border:1px solid currentColor; color:var(--col, var(--accent)); opacity:0.95;
+/* Colecciones en el modo TV: las celdas separadas por líneas de siempre (sin fotos ni flecha) */
+body.modo-tv .home-sections { max-width:none; gap:0; margin-top:28px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+body.modo-tv .section-card { background:none !important; border:none; border-radius:0; padding:28px 4px 26px; gap:6px; display:grid; grid-template-columns:1fr auto; grid-template-areas:'icon count' 'txt count'; row-gap:18px; align-items:end; transform:none !important; }
+body.modo-tv .section-card + .section-card { border-left:1px solid var(--line); padding-left:28px; }
+body.modo-tv .section-card .card-icon { grid-area:icon; display:flex; width:52px; height:52px; border-radius:0; font-size:26px; background:none; border:1px solid currentColor; color:var(--col, var(--accent)); opacity:0.95; }
+body.modo-tv .section-card .card-icon .ico { stroke-width:1.5; }
+body.modo-tv .section-card > div { grid-area:txt; }
+body.modo-tv .section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--col, var(--muted)); margin-bottom:8px; }
+body.modo-tv .card-title { font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.01em; }
+body.modo-tv .card-desc { font-size:14px; margin-top:8px; max-width:30ch; }
+body.modo-tv .card-pie { display:contents; }
+body.modo-tv .card-count { grid-area:count; font-family:var(--serif); font-size:17px; font-weight:400; color:var(--muted-2); text-align:right; white-space:nowrap; }
+body.modo-tv .card-mos, body.modo-tv .card-flecha { display:none; }
+
+/* ─── COLECCIONES: tarjetas con mosaico de fotos ───
+   Cada colección es una tarjeta con su color (terracota las actuaciones, verde salvia los
+   caseros), un mosaico de miniaturas de fondo (se rellena en inicio.js, renderMosaicos),
+   un degradado para que el texto se lea y una flecha. Al pulsar, la tarjeta se aprieta y la
+   flecha avanza; con ratón, las fotos se acercan al pasar por encima. */
+body:not(.modo-tv) .home-sections { max-width:none; gap:16px; margin-top:28px; }
+body:not(.modo-tv) .section-card {
+  --col:#D4652F;
+  position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;
+  min-height:260px; padding:22px; gap:0; text-align:left; color:#F4EFE6;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E);
+  border:1px solid color-mix(in srgb, var(--col) 55%, transparent); border-radius:0;
+  transition:transform 0.22s var(--ease-sala), border-color 0.22s; transform:none; -webkit-tap-highlight-color:transparent;
 }
-.section-card .card-icon .ico { stroke-width:1.5; }
-.section-card[onclick*="sevillanas"] { --col:#D4652F; }
-.section-card[onclick*="caseros"] { --col:#9DB5A4; }
-body.tema-claro .section-card[onclick*="sevillanas"] { --col:#B54818; }
-body.tema-claro .section-card[onclick*="caseros"] { --col:#46705C; }
-body.tema-claro .section-card .card-icon.sev, body.tema-claro .section-card .card-icon.cas { background:none; color:var(--col); }
-.section-card > div { grid-area:txt; }
-.section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--col, var(--muted)); margin-bottom:8px; }
-.card-title { font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.01em; }
-.section-card:hover .card-title { color:var(--col, var(--accent)); }
-.section-card:hover .card-icon { background:color-mix(in srgb, var(--col) 14%, transparent); }
-.card-desc { font-size:14px; margin-top:8px; max-width:30ch; }
-.card-count { grid-area:count; font-family:var(--serif); font-size:17px; font-weight:400; color:var(--muted-2); text-align:right; white-space:nowrap; }
-body:is(.rol-caseros, .rol-actuaciones) .card-desc { max-width:46ch; }
+body:not(.modo-tv) .section-card[onclick*="caseros"] { --col:#9DB5A4; }
+body:not(.modo-tv) .section-card::before {
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(to top, rgba(18,17,14,.98) 10%, rgba(18,17,14,.84) 58%, rgba(18,17,14,.62) 100%);
+}
+body:not(.modo-tv) .section-card:hover { background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E); transform:none; border-color:var(--col); }
+body:not(.modo-tv) .section-card:active { transform:scale(0.97); }
+body:not(.modo-tv) .section-card:focus-visible { outline:2px solid var(--col); outline-offset:3px; }
+/* Mosaico */
+.card-mos { position:absolute; inset:0; z-index:-2; display:grid; grid-template-columns:1.2fr 1fr 1fr; grid-template-rows:1fr 1fr; filter:saturate(.85); }
+.card-mos img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.6s var(--ease-sala); }
+.card-mos img:first-child { grid-row:1 / 3; }
+.card-mos.n1 { grid-template-columns:1fr; grid-template-rows:1fr; }
+.card-mos.n2 { grid-template-columns:1fr 1fr; grid-template-rows:1fr; }
+.card-mos.n2 img:first-child { grid-row:auto; }
+.card-mos.n3 { grid-template-rows:1fr 1fr; }
+/* Icono, texto y pie */
+body:not(.modo-tv) .section-card .card-icon {
+  position:absolute; top:18px; left:22px; display:flex; width:44px; height:44px; border-radius:0; font-size:22px;
+  background:rgba(18,17,14,.55); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  border:1px solid var(--col); color:var(--col);
+}
+body:not(.modo-tv) .section-card .card-icon .ico { stroke-width:1.5; }
+body:not(.modo-tv) .section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--col); margin-bottom:8px; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+body:not(.modo-tv) .card-title { font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.01em; color:#F4EFE6; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+body:not(.modo-tv) .card-desc { font-size:14px; margin-top:8px; max-width:34ch; color:#D3C9BB; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+body:not(.modo-tv) .card-pie { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; }
+body:not(.modo-tv) .card-count { font-family:var(--sans); font-size:15px; font-weight:600; color:#F4EFE6; text-align:left; }
+body:not(.modo-tv) .card-flecha { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:50%; background:var(--col); color:#12110E; font-size:20px; transition:transform 0.22s var(--ease-sala); }
+body:not(.modo-tv) .card-flecha .ico { stroke-width:2; }
+body:not(.modo-tv) .section-card:active .card-flecha { transform:translateX(5px); }
+@media (hover:hover) {
+  body:not(.modo-tv) .section-card:hover .card-mos img { transform:scale(1.06); }
+  body:not(.modo-tv) .section-card:hover .card-flecha { transform:translateX(5px); }
+}
+body:not(.modo-tv):is(.rol-caseros, .rol-actuaciones) .home-sections { grid-template-columns:1fr; }
+body:not(.modo-tv):is(.rol-caseros, .rol-actuaciones) .section-card { min-height:280px; }
 @media (max-width:760px) {
-  .home-sections, body.rol-caseros .home-sections, body.rol-actuaciones .home-sections { grid-template-columns:1fr; }
-  .section-card { padding:22px 0; column-gap:16px; }
-  .section-card + .section-card { border-left:none; border-top:1px solid var(--line); padding-left:0; }
-  .card-title { font-size:28px; }
-  .card-desc { font-size:13px; }
+  body:not(.modo-tv) .home-sections, body:not(.modo-tv).rol-caseros .home-sections, body:not(.modo-tv).rol-actuaciones .home-sections { grid-template-columns:1fr; }
+  body:not(.modo-tv) .section-card { min-height:240px; padding:20px; }
+  body:not(.modo-tv) .card-title { font-size:28px; }
+  body:not(.modo-tv) .card-desc { font-size:13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(.modo-tv) .section-card, .card-mos img, body:not(.modo-tv) .card-flecha { transition:none !important; }
+  body:not(.modo-tv) .section-card:active { transform:none; }
 }
 
 /* Recién archivado */
