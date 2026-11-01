@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `main`, apartado 0.3).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `main`, apartado 0.3; transiciones en `main`, apartado 0.4).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -402,6 +402,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Los 17 vídeos convertidos.
 - Fases 1 y 2 de la reestructuración y migración de datos (1 nov 2026).
 - Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026, con el inicio para todos los roles y la corrección de caché. Pendiente de que Carlos confirme el efecto de vuelta en su móvil, y la app y la tele (`?tv=1`) en producción.
+- Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
@@ -440,7 +441,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
   - Si Carlos pega alguna, recomiéndale cambiarla.
   - **No subas un `api.php` con `define('PASS_…', '…')`**: pisaría `claves.php`.
 - **Orden de despliegue** cuando cambie la autenticación: primero lo que el nuevo código necesita (por ejemplo `claves.php`), después los archivos PHP y HTML, y por último los `.htaccess` que cierran el acceso. Haz siempre copia antes (`~/backup_videos/`) y da los pasos para volver atrás.
-- **Pruebas:** prueba en local antes de entregar. Monta la misma estructura (`privado/` más `public_html/videos/`) con `php -S`, genera un HLS de prueba con ffmpeg y usa Playwright con Chromium. Comprueba también `php -l` y `node --check`. Avisa de lo que no se pudo probar (por ejemplo Safari o iOS, o el comportamiento real de LiteSpeed).
+- **Pruebas:** prueba en local antes de entregar. El entorno local no está en el repositorio: hay que montarlo en cada sesión con datos inventados (JSON de prueba, miniaturas e HLS generados con ffmpeg, contraseñas falsas en un `claves.php` local) y fusionar solo si pasan las comprobaciones de lo tocado y de lo anterior (transiciones, vuelta del vídeo, fin de escena, roles, inercia, colecciones). Monta la misma estructura (`privado/` más `public_html/videos/`) con `php -S`, genera un HLS de prueba con ffmpeg y usa Playwright con Chromium. Comprueba también `php -l` y `node --check`. Avisa de lo que no se pudo probar (por ejemplo Safari o iOS, o el comportamiento real de LiteSpeed).
 - **Operaciones largas en el servidor:** usa `nohup`, `flock` y la tarea programada de hPanel. No asumas que un proceso sobrevive más de una hora.
 - **Tras cada cambio relevante,** actualiza este documento en el mismo PR: estado de despliegue, pendientes y fechas.
 - **Sin compilación:** nada de npm en producción ni herramientas de build. Las librerías de terceros van en `vendor/` con versión fija.
