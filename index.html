@@ -12,8 +12,8 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/sala.css">
+<link rel="stylesheet" href="css/app.css?v=20261101c">
+<link rel="stylesheet" href="css/sala.css?v=20261101c">
 </head>
 <body>
 
@@ -115,7 +115,7 @@
         <span class="card-count" id="count-badge">Cargando...</span>
       </div>
       <div class="section-card" role="button" tabindex="0" onclick="showSection('caseros')" onkeydown="if(event.key==='Enter')this.click()">
-        <span class="card-icon cas"><svg class="ico"><use href="#i-video"/></svg></span>
+        <span class="card-icon cas"><svg class="ico"><use href="#i-tape"/></svg></span>
         <div>
           <div class="card-title">Vídeos caseros</div>
           <p class="card-desc">Recuerdos del día a día y momentos especiales.</p>
@@ -235,13 +235,13 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/estado.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/inicio.js"></script>
-<script src="js/navegacion.js"></script>
-<script src="js/caseros.js"></script>
-<script src="js/player.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/estado.js?v=20261101c"></script>
+<script src="js/auth.js?v=20261101c"></script>
+<script src="js/inicio.js?v=20261101c"></script>
+<script src="js/navegacion.js?v=20261101c"></script>
+<script src="js/caseros.js?v=20261101c"></script>
+<script src="js/player.js?v=20261101c"></script>
+<script src="js/ui.js?v=20261101c"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -256,7 +256,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css">
+<link rel="stylesheet" href="css/tv.css?v=20261101c">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -265,12 +265,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js"></script>
+<script src="js/tv.js?v=20261101c"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101c">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -283,7 +283,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js"></script>
+<script src="js/tv-actuaciones.js?v=20261101c"></script>
 
 </body>
 </html>

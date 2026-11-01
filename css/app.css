@@ -76,8 +76,9 @@
   .nav-item .ico { font-size:19px; }
   .nav-item:hover { color:var(--text); background:var(--surface); }
   .nav-item.active { color:var(--accent); }
-  body.rol-caseros .main-nav, body.rol-actuaciones .main-nav, body.rol-compartir .main-nav { display:none !important; }
-  body.rol-caseros .back-btn, body.rol-actuaciones .back-btn, body.rol-compartir .back-btn { display:none; }
+  body.rol-compartir .main-nav { display:none !important; }
+  body.rol-caseros .nav-item[data-nav="sevillanas"], body.rol-actuaciones .nav-item[data-nav="caseros"] { display:none !important; }
+  body.rol-compartir .back-btn { display:none; }
   body.rol-compartir .search-wrap { display:none !important; }
 
   /* HOME */
@@ -354,7 +355,8 @@
     body:not(.modo-tv) .main-nav { position:fixed; left:0; right:0; bottom:0; z-index:200; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; padding:6px 10px calc(8px + env(safe-area-inset-bottom)); background:rgba(14,16,20,0.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--line); }
     body:not(.modo-tv) .nav-item { flex-direction:column; gap:3px; height:54px; padding:0; font-size:11px; font-weight:500; background:none !important; }
     body:not(.modo-tv) .nav-item.active { font-weight:600; }
-    body:not(.modo-tv).rol-todo #app.visible { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+    body:not(.modo-tv):is(.rol-todo, .rol-caseros, .rol-actuaciones) #app.visible { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+    body:not(.modo-tv):is(.rol-caseros, .rol-actuaciones) .main-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
     #home-screen { padding:20px 20px 40px; }
     .home-title { font-size:30px; margin-bottom:20px; }
     .continue-card { aspect-ratio:16/9.5; margin-bottom:20px; border-radius:18px; }

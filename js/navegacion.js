@@ -34,7 +34,7 @@ function goHome() {
   document.getElementById('home-screen').style.display = '';
   currentSection = 'home';
   marcarNav('home');
-  if (document.body.classList.contains('rol-todo')) renderInicioExtras();
+  if (tieneInicio()) renderInicioExtras();
 }
 
 function switchTab(tab, btn) {
