@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `main`, apartado 0.3; transiciones en `main`, apartado 0.4).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -10,21 +10,12 @@
 
 **Repositorio:** `github.com/carlosmhz/archivo-familiar`, privado. Es la única fuente del código: ya no se pasan archivos sueltos por el chat.
 
-**Ramas:**
+**Ramas (desde el 2 nov 2026, decisión de Carlos: "proyecto casero, todo a `main`"):**
+- Los cambios normales van **directos a `main`**, sin PR. Antes de subir: `git pull --rebase` (puede haber trabajado otro agente) y la prueba local del apartado 11.
+- Solo un cambio grande que pueda romperlo todo va en una rama `feature/<tema>`, y se fusiona a `main` de una vez al terminar.
+- `develop` ya no existe. **Cada push a `main` es un despliegue a producción.** Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
 
-| Rama | Para qué | Se despliega en |
-|---|---|---|
-| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos`, con hPanel → GIT (conectado el 1 nov 2026) |
-| `develop` | Integración previa a `main` | No se despliega: **no hay entorno de pruebas** (decisión de Carlos, 1 nov 2026) |
-| `feature/<tema>` | Cada cambio concreto | No se despliega |
-
-**Cómo se mueve un cambio** (Carlos delega la fusión en el agente; no deja PR pendientes de revisar):
-1. Sale una rama `feature/*` desde `develop`.
-2. Se prueba en local (`php -S` + Playwright, ver apartado 11) y se abre el PR hacia `develop`.
-3. El agente lo fusiona él mismo; después abre y fusiona el PR de `develop` a `main`.
-4. Cuando hPanel → GIT esté conectado a `main`, **cada fusión a `main` es un despliegue a producción**: por eso la prueba local es obligatoria y no se fusiona nada sin pasarla. Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
-
-**Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al fusionar en `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
+**Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al subir a `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
 **Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101i`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
 
@@ -239,7 +230,7 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 
 **otp.json**: `[{ pass, rol, expira }]`. Contraseñas de 4 dígitos, de un solo uso, que caducan a las 24 horas.
 
-**compartir.json**: `[{ pin, caseroId, escenaIdx, t, expira, permanente }]`. Con `escenaIdx = -1` se comparte el vídeo completo. Si es permanente, `expira` vale `PHP_INT_MAX`.
+**compartir.json**: `[{ pin, caseroId, escenaIdx, t, expira, permanente }]`. El `pin` es de **6 cifras** desde el 2 nov 2026 (antes 4; los de 4 ya repartidos siguen valiendo) y nunca coincide con una contraseña fija, una OTP ni otro PIN vigente. Con `escenaIdx = -1` se comparte el vídeo completo. Si es permanente, `expira` vale `PHP_INT_MAX`.
 
 ---
 
@@ -251,8 +242,10 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 | `todo` | contraseña fija | caseros y actuaciones |
 | `caseros` | contraseña fija | solo caseros (con inicio adaptado desde el 1 nov 2026) |
 | `actuaciones` | contraseña fija | solo actuaciones (con inicio adaptado desde el 1 nov 2026) |
-| OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP |
-| `compartir` | PIN de 4 dígitos de un enlace compartido | **solo ese vídeo**; la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
+| OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP (con rol `todo` o `caseros` también puede compartir) |
+| `compartir` | PIN de 6 cifras de un enlace compartido (los antiguos, de 4) | **solo ese vídeo**; la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
+
+**Pantalla de acceso** (cambio de Carlos, 1–2 nov 2026): el campo dice "PIN" y abre el teclado numérico, **sin límite de longitud** (hay contraseñas fijas de más de 4 cifras).
 
 **Contraseñas:** viven en `privado/claves.php`, que devuelve un array con las claves `admin`, `todo`, `caseros` y `actuaciones`. Carlos las cambió el 30 de octubre de 2026.
 - **Nunca** pongas contraseñas en `api.php`, en este documento ni en la conversación.
@@ -288,7 +281,7 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `caseros-anadir` / `caseros-editar` / `caseros-eliminar` | POST JSON | `pass` de admin | Vídeos caseros |
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
 | `otp-listar` | GET `?pass=` | admin | |
-| `compartir-generar` | POST JSON | `pass` de `todo`/`caseros`, **o** un `token` con `f = true` | Una OTP no puede generar enlaces |
+| `compartir-generar` | POST JSON `{caseroId, escenaIdx, t, permanente}` + `&token=` | sesión con rol `todo` o `caseros` (`exigirSesion()`), también OTP y sesión restaurada | Devuelve `{ pin }` de 6 cifras. Arreglado el 2 nov 2026: antes exigía la contraseña en el cuerpo y fallaba al restaurar la sesión |
 | `comentarios-listar` | GET `?token=&caseroId=&dispositivo=` | sesión con acceso al vídeo | `{ comentarios[], megusta: { total, mio, nombres[≤5] }, nombre }` |
 | `comentarios-nombre` | POST JSON `{dispositivo, nombre}` + `&token=` | cualquier sesión | Crea o cambia el nombre del dispositivo |
 | `comentarios-anadir` | POST JSON `{dispositivo, caseroId, texto, escenaIdx}` + `&token=` | sesión con acceso al vídeo; dispositivo con nombre | Devuelve el comentario creado |
@@ -404,6 +397,8 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026, con el inicio para todos los roles y la corrección de caché. Pendiente de que Carlos confirme el efecto de vuelta en su móvil, y la app y la tele (`?tv=1`) en producción.
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
+- Compartir por WhatsApp arreglado (2 nov 2026, `?v=20261102a`): funciona tras restaurar la sesión y con OTP; PIN de 6 cifras. Probado en local; pendiente de que Carlos lo confirme en producción.
+
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
 **Decisiones de Carlos (1 nov 2026):**
@@ -431,9 +426,9 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 
 - **Idioma:** habla en español con Carlos. Es técnico (PHP, JS, Android, SSH), pero agradece los comandos listos para copiar, en orden y con el resultado esperado.
 - **Repositorio:** trabaja en el repositorio, no envíes archivos por el chat.
-  - Parte siempre de lo último de `develop`, en una rama `feature/<tema>`.
+  - Trabaja directo en `main` (apartado 0): `git pull --rebase`, prueba en local y sube. Rama `feature/<tema>` solo para cambios grandes que puedan romperlo todo.
   - Haz commits pequeños con mensajes claros en español.
-  - Abre PR hacia `develop` explicando qué cambia y cómo probarlo, y fusiónalo tú tras probarlo (ver apartado 0). No hagas push directo a `main`: llega siempre por PR.
+  - Si Carlos edita archivos desde la web de GitHub, haz `git pull` antes de tocar nada.
 - **Antes de tocar un archivo:** pide la versión actual del servidor (con `cat` por SSH o descargándola de hPanel). Las versiones de la conversación pueden estar desfasadas.
 - **Secretos:** revisa cada commit (`git diff --cached`) para que no entren secretos, JSON de datos ni vídeos.
 - **Contraseñas:**
@@ -441,7 +436,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
   - Si Carlos pega alguna, recomiéndale cambiarla.
   - **No subas un `api.php` con `define('PASS_…', '…')`**: pisaría `claves.php`.
 - **Orden de despliegue** cuando cambie la autenticación: primero lo que el nuevo código necesita (por ejemplo `claves.php`), después los archivos PHP y HTML, y por último los `.htaccess` que cierran el acceso. Haz siempre copia antes (`~/backup_videos/`) y da los pasos para volver atrás.
-- **Pruebas:** prueba en local antes de entregar. El entorno local no está en el repositorio: hay que montarlo en cada sesión con datos inventados (JSON de prueba, miniaturas e HLS generados con ffmpeg, contraseñas falsas en un `claves.php` local) y fusionar solo si pasan las comprobaciones de lo tocado y de lo anterior (transiciones, vuelta del vídeo, fin de escena, roles, inercia, colecciones). Monta la misma estructura (`privado/` más `public_html/videos/`) con `php -S`, genera un HLS de prueba con ffmpeg y usa Playwright con Chromium. Comprueba también `php -l` y `node --check`. Avisa de lo que no se pudo probar (por ejemplo Safari o iOS, o el comportamiento real de LiteSpeed).
+- **Pruebas:** prueba en local antes de entregar. El entorno local no está en el repositorio: hay que montarlo en cada sesión con datos inventados (JSON de prueba, miniaturas e HLS generados con ffmpeg, contraseñas falsas en un `claves.php` local) y subir solo si pasan las comprobaciones de lo tocado y de lo anterior (transiciones, vuelta del vídeo, fin de escena, roles, inercia, colecciones). Monta la misma estructura (`privado/` más `public_html/videos/`) con `php -S`, genera un HLS de prueba con ffmpeg y usa Playwright con Chromium. Comprueba también `php -l` y `node --check`. Avisa de lo que no se pudo probar (por ejemplo Safari o iOS, o el comportamiento real de LiteSpeed).
 - **Operaciones largas en el servidor:** usa `nohup`, `flock` y la tarea programada de hPanel. No asumas que un proceso sobrevive más de una hora.
 - **Tras cada cambio relevante,** actualiza este documento en el mismo PR: estado de despliegue, pendientes y fechas.
 - **Sin compilación:** nada de npm en producción ni herramientas de build. Las librerías de terceros van en `vendor/` con versión fija.
