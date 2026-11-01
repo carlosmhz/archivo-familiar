@@ -80,6 +80,17 @@ function mostrarFinEscena() {
   document.getElementById('escena-end-replay').className = 'escena-end-btn ' + (nextE ? 'ghost' : 'primary');
   // Salir de pantalla completa antes de mostrar el panel
   const showPanel = () => document.getElementById('escena-end-panel').classList.add('open');
+  // iPhone: la pantalla completa es la del propio <video> (reproductor nativo de iOS), no la del documento,
+  // y tapa el panel. Se sale con video.webkitExitFullscreen() y el panel se muestra al volver.
+  const v = document.getElementById('player-video');
+  if (v && v.webkitDisplayingFullscreen && typeof v.webkitExitFullscreen === 'function') {
+    let hecho = false;
+    const mostrar = () => { if (!hecho) { hecho = true; showPanel(); } };
+    v.addEventListener('webkitendfullscreen', mostrar, { once: true });
+    setTimeout(mostrar, 700);              // por si el evento no llega
+    try { v.webkitExitFullscreen(); } catch (err) { mostrar(); }
+    return;
+  }
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
     try { Promise.resolve(exitFs.call(document)).then(showPanel, showPanel); } catch (err) { showPanel(); }
