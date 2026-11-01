@@ -1,0 +1,58 @@
+/* Ventanas de aviso y confirmación propias (sustituyen a alert() y confirm() del navegador).
+   En index.html toman la paleta "sala"; en admin.html, sin esas variables, usan los valores de reserva (azul del panel). */
+.dlg-velo {
+  position:fixed; inset:0; z-index:3000;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  background:rgba(10,9,7,0.62);
+  opacity:0; transition:opacity 0.2s ease;
+}
+.dlg-velo.open { opacity:1; }
+.dlg-caja {
+  width:100%; max-width:400px;
+  background:var(--surface, #ffffff); color:var(--text, #1a2a4a);
+  border:1px solid var(--line, #d6deeb);
+  box-shadow:0 20px 60px rgba(0,0,0,0.45);
+  padding:24px 22px 18px;
+  font-family:var(--sans, 'Lato', system-ui, sans-serif);
+  transform:translateY(14px) scale(0.98); transition:transform 0.24s var(--ease-sala, cubic-bezier(0.2,0.8,0.2,1));
+}
+.dlg-velo.open .dlg-caja { transform:none; }
+.dlg-titulo {
+  font-family:var(--serif, 'Playfair Display', Georgia, serif); font-weight:500;
+  font-size:22px; line-height:1.2; margin-bottom:8px;
+}
+.dlg-texto { font-size:15px; line-height:1.5; color:var(--muted-2, #3a4a6a); white-space:pre-line; overflow-wrap:anywhere; }
+.dlg-botones { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; flex-wrap:wrap; }
+.dlg-btn {
+  min-height:44px; padding:0 20px; border:1px solid transparent; cursor:pointer;
+  font-family:inherit; font-size:14px; font-weight:600; letter-spacing:0.3px;
+  background:var(--accent, #2056a8); color:var(--accent-ink, #ffffff);
+}
+.dlg-btn:hover { background:var(--accent-hover, #5b8dee); }
+.dlg-btn:focus-visible { outline:2px solid var(--accent, #2056a8); outline-offset:2px; }
+.dlg-btn.sec { background:transparent; color:var(--text, #1a2a4a); border-color:var(--line, #c9d3e3); }
+.dlg-btn.sec:hover { background:var(--surface-2, #eef2f8); }
+.dlg-btn.peligro { background:#B3261E; color:#fff; }
+.dlg-btn.peligro:hover { background:#C9372E; }
+
+/* Admin (sin paleta "sala"): esquinas suaves como el resto del panel */
+body:not(:has(#home-screen)) .dlg-caja { border-radius:10px; }
+body:not(:has(#home-screen)) .dlg-btn { border-radius:6px; }
+
+/* Móvil: la ventana sube desde abajo, como las demás hojas */
+@media (max-width:760px) {
+  .dlg-velo { align-items:flex-end; padding:0; }
+  .dlg-caja { max-width:none; border-radius:18px 18px 0 0; padding-bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateY(100%); }
+  .dlg-botones { flex-direction:column-reverse; }
+  .dlg-btn { width:100%; }
+}
+
+/* Tele: letra grande para leer desde el sofá */
+body.modo-tv .dlg-caja { max-width:640px; padding:36px; }
+body.modo-tv .dlg-titulo { font-size:34px; }
+body.modo-tv .dlg-texto { font-size:24px; }
+body.modo-tv .dlg-btn { min-height:64px; font-size:22px; padding:0 32px; }
+
+@media (prefers-reduced-motion:reduce) {
+  .dlg-velo, .dlg-caja { transition:none; }
+}

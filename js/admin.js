@@ -199,7 +199,7 @@ async function guardarEdicion() {
 
 // ─── ELIMINAR ─────────────────────────────────────────────────────────────────
 async function eliminar(id, nombre) {
-  if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  if (!await confirmar(`Vas a eliminar "${nombre}". Esta acción no se puede deshacer.`, { titulo: '¿Eliminar actuación?', aceptar: 'Eliminar', peligro: true })) return;
   const r = await fetch(`${API}?action=eliminar`, {
     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pass:PASS, id})
   });
@@ -534,7 +534,7 @@ function generarMinisTodas() {
 }
 
 async function eliminarCasero(id, titulo) {
-  if (!confirm(`¿Eliminar "${titulo}"?`)) return;
+  if (!await confirmar(`Vas a eliminar "${titulo}". Esta acción no se puede deshacer.`, { titulo: '¿Eliminar vídeo?', aceptar: 'Eliminar', peligro: true })) return;
   const r = await fetch(`${API}?action=caseros-eliminar`, {
     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pass:PASS, id})
   });

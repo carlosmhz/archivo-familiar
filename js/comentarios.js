@@ -274,7 +274,7 @@ async function comGuardarNombre(ev) {
   const nombre = inp.value.trim();
   if (!nombre) { inp.focus(); return; }
   const d = await comApi('comentarios-nombre', '', { dispositivo: COM_DISP.id, nombre });
-  if (!d.ok) { alert(comMsg(d.msg)); return; }
+  if (!d.ok) { avisar(comMsg(d.msg)); return; }
   COM_DISP.nombre = d.data.nombre;
   comGuardarDispositivo(COM_DISP);
   comCargar();          // los comentarios propios ya salen con el nombre nuevo
@@ -298,7 +298,7 @@ async function comMeGusta() {
   const d = await comApi('comentarios-megusta', '', { dispositivo: COM_DISP.id, caseroId: id });
   if (id !== _com.caseroId) return;
   if (d.ok) _com.datos.megusta = d.data;
-  else { m.mio = !m.mio; m.total += m.mio ? 1 : -1; if (/nombre/i.test(d.msg || '')) comPedirNombre(); else alert(comMsg(d.msg)); }
+  else { m.mio = !m.mio; m.total += m.mio ? 1 : -1; if (/nombre/i.test(d.msg || '')) comPedirNombre(); else avisar(comMsg(d.msg)); }
   comPintarMeGusta();
 }
 
@@ -316,7 +316,7 @@ async function comPublicar(ev) {
   if (id !== _com.caseroId) return;
   if (!d.ok) {
     if (/falta el nombre/i.test(d.msg || '')) { COM_DISP.nombre = ''; comGuardarDispositivo(COM_DISP); comPedirNombre(); return; }
-    alert(comMsg(d.msg)); return;
+    avisar(comMsg(d.msg)); return;
   }
   ta.value = ''; ta.style.height = '';
   _com.datos.comentarios.unshift(d.data);
@@ -324,9 +324,9 @@ async function comPublicar(ev) {
 }
 
 async function comBorrar(idCom) {
-  if (!confirm('¿Borrar tu comentario?')) return;
+  if (!await confirmar('Se borrará para todos los que ven este vídeo.', { titulo: '¿Borrar tu comentario?', aceptar: 'Borrar', peligro: true })) return;
   const d = await comApi('comentarios-borrar', '', { dispositivo: COM_DISP.id, id: idCom });
-  if (!d.ok) { alert(comMsg(d.msg)); return; }
+  if (!d.ok) { avisar(comMsg(d.msg)); return; }
   _com.datos.comentarios = _com.datos.comentarios.filter(c => c.id !== idCom);
   comPintarLista();
 }

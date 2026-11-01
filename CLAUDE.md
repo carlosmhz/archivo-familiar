@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -41,8 +41,8 @@
 
 ```
 index.html, admin.html          solo maquetación
-css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), tv.css, tv-actuaciones.css, admin.css
-js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, transiciones.js (0.4), ui.js   (orden de carga en index.html)
+css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), dialogo.css (0.5), tv.css, tv-actuaciones.css, admin.css
+js/    dialogo.js (0.5), estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, transiciones.js (0.4), ui.js   (orden de carga en index.html)
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
@@ -94,6 +94,14 @@ Quien ve un vídeo casero puede comentarlo y darle "me gusta": la familia (`todo
 - **Pestañas bajo el vídeo** (petición de Carlos, 1 nov 2026): `#player-pestanas` muestra "Escenas" y "Comentarios" (con su número) y a la derecha el botón ❤. Solo se ve una vista a la vez (clase `vista-escenas` / `vista-comentarios` en `.player-box`); **Escenas es la predeterminada** al abrir un vídeo. Si el vídeo no tiene escenas (o es un enlace compartido, que no muestra la lista de escenas), solo aparece "Comentarios". Al cambiar de escena dentro del mismo vídeo se mantiene la pestaña elegida. El nombre se pide al entrar en "Comentarios" o al pulsar ❤ (que lleva a esa pestaña).
 - **Código:** `lib/comentarios.php` (base de datos, permisos, limpieza de texto), `lib/acciones/comentarios.php` (acciones), `js/comentarios.js` y `css/comentarios.css` (pestañas `#player-pestanas` y panel `#player-comentarios`, entre el vídeo y las escenas). `player.js` solo llama a `comentariosAbrir(url)` y `comentariosCerrar()`. Admin: pestaña "💬 Comentarios" (`js/admin-comentarios.js`) con los últimos 300 comentarios, borrado y "me gusta" por vídeo. No se muestra en el modo TV ni en las actuaciones.
 - **Límites:** nombre hasta 40 caracteres y comentario hasta 1000 (se quitan caracteres de control; los emojis compuestos se respetan). Freno: 10 comentarios por dispositivo en 10 minutos y 30 por IP en una hora. Cada uno puede borrar sus comentarios (mismo dispositivo); el admin, cualquiera. Todo se pinta escapado (sin HTML).
+
+## 0.5 Avisos y confirmaciones propios (2 nov 2026, petición de Carlos)
+
+No se usan `alert()`, `confirm()` ni `prompt()` del navegador: todo pasa por `js/dialogo.js` + `css/dialogo.css`, cargados en `index.html` (antes de `estado.js`) y en `admin.html` (antes de `admin.js`).
+- `await avisar(texto, { titulo, aceptar })` y `await confirmar(texto, { titulo, aceptar, cancelar, peligro })` → `true`/`false`. Escape, pulsar fuera o Atrás del mando LG (461) = cancelar. Si se abre otra mientras hay una, espera su turno.
+- `peligro: true` pinta el botón en rojo y deja el foco en "Cancelar" (un Intro no borra por accidente).
+- Aspecto: en `index.html` toma la paleta "sala"; en `admin.html` usa los valores de reserva (azul del panel). En el móvil sube desde abajo como una hoja; en la tele, letra grande.
+- **Regla:** cualquier mensaje nuevo usa `avisar()`/`confirmar()`; nunca los del navegador.
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -397,6 +405,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026, con el inicio para todos los roles y la corrección de caché. Pendiente de que Carlos confirme el efecto de vuelta en su móvil, y la app y la tele (`?tv=1`) en producción.
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
+- Avisos y confirmaciones en ventanas propias (apartado 0.5, 2 nov 2026, `?v=20261102b`). Probado en local (móvil, PC y admin); pendiente de verlo en la tele.
 - Compartir por WhatsApp arreglado (2 nov 2026, `?v=20261102a`): funciona tras restaurar la sesión y con OTP; PIN de 6 cifras. Probado en local; pendiente de que Carlos lo confirme en producción.
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.

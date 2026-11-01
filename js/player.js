@@ -128,7 +128,7 @@ function tiempoDeUrl(url) {
 function errorVideo(msg) {
   const txt = /caducada/i.test(msg || '') ? 'Tu sesión ha caducado. Vuelve a entrar.' : 'No se pudo cargar el vídeo (' + (msg || 'error') + ').';
   cerrarPlayer();
-  alert(txt);
+  avisar(txt, { titulo: /caducada/i.test(msg || '') ? 'Sesión caducada' : 'No se pudo reproducir' });
 }
 
 // Arranca el vídeo (HLS si existe, MP4 si no). 'min' = segundo de inicio.
@@ -409,7 +409,7 @@ async function generarYCompartir(caseroId, escenaIdx, t, permanente = false) {
     body: JSON.stringify({ caseroId, escenaIdx, t, permanente })
   });
   const d = await r.json();
-  if (!d.ok) { alert('Error al generar el código'); return; }
+  if (!d.ok) { avisar(d.msg || 'Inténtalo de nuevo en un momento.', { titulo: 'No se pudo generar el código' }); return; }
   const pin = d.data.pin;
   const c = CASEROS.find(x => x.id === caseroId);
   const escena = escenaIdx >= 0 && c && c.escenas ? c.escenas[escenaIdx] : null;

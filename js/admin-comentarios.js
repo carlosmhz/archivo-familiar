@@ -35,11 +35,11 @@ async function cargarComentariosAdmin() {
 }
 
 async function borrarComentarioAdmin(id) {
-  if (!confirm('¿Borrar este comentario?')) return;
+  if (!await confirmar('El comentario se borrará para todos.', { titulo: '¿Borrar este comentario?', aceptar: 'Borrar', peligro: true })) return;
   const r = await fetch(`${API}?action=comentarios-borrar&pass=${encodeURIComponent(PASS)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
   });
   const d = await r.json();
-  if (!d.ok) alert(d.msg || 'Error');
+  if (!d.ok) await avisar(d.msg || 'Error', { titulo: 'No se pudo borrar' });
   cargarComentariosAdmin();
 }
