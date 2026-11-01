@@ -89,26 +89,19 @@ async function restaurarSesion() {
 }
 window.addEventListener('DOMContentLoaded', restaurarSesion);
 
+// Todos los roles entran por el inicio. Quien solo ve una parte (caseros o actuaciones)
+// tiene un inicio adaptado: solo su colección, y en el menú solo Inicio y su sección.
+// En la tele (?tv=1) se mantiene lo de siempre: quien solo ve una parte entra directo en ella.
 function aplicarRol() {
   document.body.classList.remove('rol-todo', 'rol-caseros', 'rol-actuaciones');
   document.body.classList.add(ROL === 'caseros' ? 'rol-caseros' : ROL === 'actuaciones' ? 'rol-actuaciones' : 'rol-todo');
-  if (ROL !== 'caseros' && ROL !== 'actuaciones') renderInicioExtras();
-  if (ROL === 'caseros') {
-    const dc = document.getElementById('dia-card');
-    const sub = document.querySelector('#screen-caseros .section-subtitle');
-    if (dc && sub) sub.after(dc);
-    renderRecuerdoDia();
-  }
   const cardSev = document.querySelector('.section-card[onclick*="sevillanas"]');
   const cardCas = document.querySelector('.section-card[onclick*="caseros"]');
-  if (ROL === 'caseros') {
-    if (cardSev) cardSev.style.display = 'none';
-    showSection('caseros');
-  } else if (ROL === 'actuaciones') {
-    if (cardCas) cardCas.style.display = 'none';
-    showSection('sevillanas');
-  }
-  // 'todo' → acceso normal a todo, pantalla home normal
+  if (cardSev) cardSev.style.display = ROL === 'caseros' ? 'none' : '';
+  if (cardCas) cardCas.style.display = ROL === 'actuaciones' ? 'none' : '';
+  const solo = ROL === 'caseros' ? 'caseros' : ROL === 'actuaciones' ? 'sevillanas' : null;
+  if (solo && document.body.classList.contains('modo-tv')) { showSection(solo); return; }
+  goHome();
 }
 document.getElementById('pwd-input').addEventListener('keydown', e => { if(e.key==='Enter') checkLogin(); });
 

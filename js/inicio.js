@@ -6,8 +6,12 @@ function marcarNav(sec) {
   if (box && wrap) wrap.classList.toggle('oculto', box.style.display === 'none');
   window.scrollTo(0, 0);
 }
+function tieneInicio() {
+  const b = document.body.classList;
+  return b.contains('rol-todo') || b.contains('rol-caseros') || b.contains('rol-actuaciones');
+}
 function irInicio() {
-  if (document.body.classList.contains('rol-todo')) goHome();
+  if (tieneInicio()) goHome();
 }
 function saludo() {
   const h = new Date().getHours();
@@ -162,6 +166,10 @@ function elegirRecuerdo() {
       pool.push({ tipo: 'casero', c, f: fechaDMY(c.fecha) });
     }
   });
+  if (!pool.length) {
+    // Sin vídeos caseros (rol de solo actuaciones): una actuación del día
+    ACTUACIONES.forEach(a => { if (a.youtube) pool.push({ tipo: 'actuacion', a, f: fechaDMY(a.fecha) }); });
+  }
   if (!pool.length) return null;
   const elegir = (lista, extra) => lista[semillaDia(extra) % lista.length];
   const dia = pool.filter(x => x.f.d === d && x.f.m === m && x.f.y && x.f.y < y);
@@ -190,9 +198,16 @@ function renderRecuerdoDia() {
     th.innerHTML = thumbIcon(r.c.tipo, r.c.categoria) + (mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : '');
   } else {
     th.className = 'dia-thumb t-otros';
-    th.innerHTML = svgIcon('i-music');
+    const yt = idYoutube(r.a.youtube);
+    th.innerHTML = svgIcon('i-music') + (yt ? `<img src="https://i.ytimg.com/vi/${yt}/hqdefault.jpg" alt="" onerror="this.remove()">` : '');
   }
+  document.getElementById('dia-kicker').textContent = (r.tipo === 'actuacion' ? 'Actuación · ' : '') + document.getElementById('dia-kicker').textContent;
   card.classList.add('visible');
+}
+// Id de un vídeo de YouTube (watch?v=, youtu.be/, embed/, shorts/), para su miniatura pública
+function idYoutube(url) {
+  const m = String(url || '').match(/(?:[?&]v=|youtu\.be\/|\/embed\/|\/shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
 }
 function verRecuerdo() {
   const r = _recuerdo;

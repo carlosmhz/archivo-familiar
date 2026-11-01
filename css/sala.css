@@ -165,13 +165,25 @@ body.tema-claro .continue-card .cc-kicker { color:var(--accent); }
 .home-sections { max-width:none; gap:0; margin-top:28px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .section-card { background:none !important; border:none; border-radius:0; padding:28px 4px 26px; gap:6px; display:grid; grid-template-columns:1fr auto; grid-template-areas:'txt count'; align-items:end; transform:none !important; }
 .section-card + .section-card { border-left:1px solid var(--line); padding-left:28px; }
-.section-card .card-icon { display:none; }
+.section-card { grid-template-areas:'icon count' 'txt count'; row-gap:18px; }
+.section-card .card-icon {
+  grid-area:icon; display:flex; width:52px; height:52px; border-radius:0; font-size:26px;
+  background:none; border:1px solid currentColor; color:var(--col, var(--accent)); opacity:0.95;
+}
+.section-card .card-icon .ico { stroke-width:1.5; }
+.section-card[onclick*="sevillanas"] { --col:#D4652F; }
+.section-card[onclick*="caseros"] { --col:#9DB5A4; }
+body.tema-claro .section-card[onclick*="sevillanas"] { --col:#B54818; }
+body.tema-claro .section-card[onclick*="caseros"] { --col:#46705C; }
+body.tema-claro .section-card .card-icon.sev, body.tema-claro .section-card .card-icon.cas { background:none; color:var(--col); }
 .section-card > div { grid-area:txt; }
-.section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--col, var(--muted)); margin-bottom:8px; }
 .card-title { font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.01em; }
-.section-card:hover .card-title { color:var(--accent); }
+.section-card:hover .card-title { color:var(--col, var(--accent)); }
+.section-card:hover .card-icon { background:color-mix(in srgb, var(--col) 14%, transparent); }
 .card-desc { font-size:14px; margin-top:8px; max-width:30ch; }
 .card-count { grid-area:count; font-family:var(--serif); font-size:17px; font-weight:400; color:var(--muted-2); text-align:right; white-space:nowrap; }
+body:is(.rol-caseros, .rol-actuaciones) .card-desc { max-width:46ch; }
 @media (max-width:760px) {
   .home-sections, body.rol-caseros .home-sections, body.rol-actuaciones .home-sections { grid-template-columns:1fr; }
   .section-card { padding:22px 0; column-gap:16px; }
@@ -318,7 +330,7 @@ body:not(.modo-tv) .player-overlay {
   display:flex; visibility:hidden; opacity:0; pointer-events:none;
   background:rgba(8,7,5,0.66);
   -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
-  transition:opacity 0.24s ease, visibility 0s linear 0.26s;
+  transition:opacity 0.16s ease, visibility 0s linear 0.17s;
 }
 body:not(.modo-tv) .player-overlay.open {
   visibility:visible; opacity:1; pointer-events:auto;
@@ -326,8 +338,8 @@ body:not(.modo-tv) .player-overlay.open {
 }
 body.tema-claro:not(.modo-tv) .player-overlay { background:rgba(28,25,20,0.5); }
 body:not(.modo-tv) .player-box {
-  transform:scale(0.94) translateY(8px); opacity:0;
-  transition:transform 0.26s ease-in, opacity 0.22s ease-in;
+  transform:scale(0.96) translateY(6px); opacity:0;
+  transition:transform 0.18s ease-in, opacity 0.15s ease-in;
   will-change:transform, opacity;
 }
 body:not(.modo-tv) .player-overlay.open .player-box {
@@ -340,7 +352,7 @@ body:not(.modo-tv) .player-overlay:not(.open) .player-loading { display:none; }
 /* La página de detrás retrocede (la cabecera no, porque contiene la barra fija del móvil) */
 body:not(.modo-tv) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
   transform-origin:50% var(--sala-origen-y, 40vh);
-  transition:transform 0.45s var(--ease-sala), filter 0.45s ease;
+  transition:transform 0.3s var(--ease-sala), filter 0.3s ease;
 }
 body:not(.modo-tv):has(.player-overlay.open) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
   transform:scale(0.94); filter:brightness(0.55) saturate(0.8);
@@ -372,18 +384,18 @@ body.tema-claro:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
   body:not(.modo-tv) .tl-card:hover .tl-thumb::after { opacity:1; }
   body:not(.modo-tv) .nf-card:hover .nf-btn.primary:not([disabled])::after { opacity:0; }
 }
-@keyframes sala-alejar { from { transform:scale(1.1); } to { transform:scale(1); } }
-@keyframes sala-velo { from { opacity:1; } to { opacity:0; } }
+@keyframes sala-alejar { 0%, 30% { transform:scale(1.14); } 100% { transform:scale(1); } }
+@keyframes sala-velo { 0%, 45% { opacity:1; } 100% { opacity:0; } }
 @keyframes sala-insignia { from { opacity:0; } to { opacity:1; } }
 body:not(.modo-tv) .sala-vuelta :is(.nf-thumb, .recent-thumb img, .tl-thumb img, #cc-img img) {
-  animation:sala-alejar 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.18s both;
+  animation:sala-alejar 1.1s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both;
 }
-body:not(.modo-tv) .sala-vuelta .dia-thumb { animation:sala-alejar 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both; }
+body:not(.modo-tv) .sala-vuelta .dia-thumb { animation:sala-alejar 1.3s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both; }
 body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::before,
 body:not(.modo-tv) .sala-vuelta :is(.recent-thumb, .tl-thumb)::after {
-  animation:sala-velo 0.35s ease 0.24s both;
+  animation:sala-velo 0.9s ease 0.1s both;
 }
-body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::after { animation:sala-insignia 0.3s ease 0.45s both; }
+body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::after { animation:sala-insignia 0.3s ease 0.95s both; }
 
 /* ─── ACCESIBILIDAD: sin animaciones si el sistema lo pide ─── */
 @media (prefers-reduced-motion: reduce) {

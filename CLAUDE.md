@@ -26,6 +26,8 @@
 
 **Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al fusionar en `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
+**Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101c`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
+
 **Nunca entra en el repositorio** (regla fijada en `.gitignore`):
 - `claves.php` y `secret.key`;
 - los `datos/*.json`, porque contienen PIN, OTP y el catálogo;
@@ -53,7 +55,7 @@ js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.j
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
-api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v5), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
+api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v6), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
 ```
 
 El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
@@ -76,6 +78,9 @@ Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (
 - **"La tarjeta se aleja" (el efecto que Carlos quería de la maqueta de Gemini):** al volver de un vídeo, la tarjeta desde la que se abrió (`.nf-card`, `.recent-card`, `.tl-card`, `.continue-card`, `.dia-card`) aparece con la foto ampliada (escala 1,1), un velo oscuro y un ▶ grande, y en algo más de medio segundo la foto vuelve a su tamaño mientras el velo se desvanece. `player.js` apunta la última tarjeta pulsada (un `click` en captura; un clic en otro sitio fuera de las ventanas la olvida), `abrirPlayer()` la guarda y `cerrarPlayer()` llama a `animarVuelta()`, que le pone `.sala-vuelta`. Con ratón, al pasar por encima, se ve el mismo estado ampliado con velo.
 - Reproductor: al abrirse, la página retrocede (escala 0,94, más oscura) y el vídeo se acerca; al cerrarse se desvanece rápido (0,25 s) para que el protagonista sea la tarjeta. Funciona con la misma clase `.open`, así que el historial y el botón Atrás no cambian. `abrirPlayer()` fija `--sala-origen-y` (el centro de lo que se ve) y `cerrarPlayer()` deja el último fotograma como póster (`congelarFotograma()`). Se respeta `prefers-reduced-motion`.
 - Modo TV (`?tv=1`): conserva su maquetación de `tv.css`; solo hereda colores y fuentes.
+- **Inicio para todos los roles** (1 nov 2026): `aplicarRol()` lleva a todos al inicio. Quien solo ve caseros o solo actuaciones tiene un inicio adaptado (solo su colección; en el menú, solo Inicio y su sección; el botón Atrás vuelve al inicio). Con rol de solo actuaciones, la portada es una "actuación del día" (`elegirRecuerdo()` usa `ACTUACIONES` si no hay caseros), con la miniatura pública de YouTube (`i.ytimg.com`, `idYoutube()`). En la tele se mantiene lo anterior: quien solo ve una parte entra directo en ella. `tieneInicio()` (en `inicio.js`) dice si el rol tiene inicio (todos menos `compartir`).
+- Colecciones del inicio con icono propio: actuaciones con nota musical en terracota y caseros con una cinta de vídeo en verde salvia (`--col` en `sala.css`).
+- Ritmo del efecto de vuelta: el reproductor desaparece en 0,16 s; la tarjeta se queda un instante ampliada (escala 1,14) con el velo y el ▶, y en algo más de un segundo vuelve a su tamaño.
 - Colores de la barra del sistema: `#12110E` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
@@ -223,8 +228,8 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 |---|---|---|
 | `admin` | contraseña de admin | se le redirige a `admin.html` |
 | `todo` | contraseña fija | caseros y actuaciones |
-| `caseros` | contraseña fija | solo caseros |
-| `actuaciones` | contraseña fija | solo actuaciones |
+| `caseros` | contraseña fija | solo caseros (con inicio adaptado desde el 1 nov 2026) |
+| `actuaciones` | contraseña fija | solo actuaciones (con inicio adaptado desde el 1 nov 2026) |
 | OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP |
 | `compartir` | PIN de 4 dígitos de un enlace compartido | **solo ese vídeo**; la restricción a una escena se aplica solo en la pantalla |
 
@@ -289,7 +294,7 @@ Más detalles del reproductor:
 - **Escenas:** `video.ontimeupdate` controla el fin de escena, que muestra un panel, y los enlaces compartidos que no deben ir antes del inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
 - **Compartir:** `_urlActual` guarda la URL original. No se usa `video.src`, que con hls.js es un `blob:`.
 - **Cargas que se cruzan:** `_playToken` evita que una carga lenta pise a otra más nueva. `cerrarPlayer()` destruye hls.js.
-- **Service worker** (`sw.js`, versión v5): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
+- **Service worker** (`sw.js`, versión v6): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
 
 ---
 
@@ -369,7 +374,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Soporte de `#t=` en la URL.
 - Los 17 vídeos convertidos.
 - Fases 1 y 2 de la reestructuración y migración de datos (1 nov 2026).
-- Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026. Pendiente de que Carlos la vea en producción, en la app y en la tele (`?tv=1`).
+- Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026, con el inicio para todos los roles y la corrección de caché. Pendiente de que Carlos confirme el efecto de vuelta en su móvil, y la app y la tele (`?tv=1`) en producción.
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
