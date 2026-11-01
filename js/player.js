@@ -120,6 +120,27 @@ async function reproducirVideo(video, url, min, token) {
   }
 }
 
+// ─── Tarjeta desde la que se abre el vídeo ───────────────────────────────────
+// Al cerrar el reproductor, su foto "se aleja" a su tamaño normal (css/sala.css).
+// Se apunta la última tarjeta pulsada; cualquier otro clic fuera de las ventanas la olvida.
+const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card';
+let _tarjetaPulsada = null, _tarjetaVuelta = null;
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest(SEL_TARJETA);
+  if (t) _tarjetaPulsada = t;
+  else if (!(e.target.closest && e.target.closest('#caseros-modal, #player-overlay'))) _tarjetaPulsada = null;
+}, true);
+function animarVuelta() {
+  const el = _tarjetaVuelta;
+  _tarjetaVuelta = null;
+  if (!el || !el.isConnected || document.body.classList.contains('modo-tv')) return;
+  el.classList.remove('sala-vuelta');
+  void el.offsetWidth;            // reinicia la animación si se repite en la misma tarjeta
+  el.classList.add('sala-vuelta');
+  clearTimeout(el._salaT);
+  el._salaT = setTimeout(() => el.classList.remove('sala-vuelta'), 1400);
+}
+
 function abrirPlayer(url, titulo, fecha, min) {
   const iframe = document.getElementById('player-iframe');
   const video = document.getElementById('player-video');
@@ -135,6 +156,8 @@ function abrirPlayer(url, titulo, fecha, min) {
   document.getElementById('player-fecha').textContent = fecha || '';
   const overlay = document.getElementById('player-overlay');
   if (!overlay.classList.contains('open')) {
+    _tarjetaVuelta = _tarjetaPulsada;
+    _tarjetaPulsada = null;
     // La página de detrás "retrocede" hacia el centro de lo que se está viendo (ver css/sala.css)
     const vis = document.querySelector('#app > .content-screen.active, #search-results-screen.active, #screen-compartir.active') || document.getElementById('home-screen');
     if (vis) document.documentElement.style.setProperty('--sala-origen-y', Math.round(innerHeight / 2 - vis.getBoundingClientRect().top) + 'px');
@@ -398,6 +421,7 @@ function cerrarPlayer(e) {
   ocultarPanelEscena();
   _escenaActiva = null;
   document.body.style.overflow = '';
+  animarVuelta();
   // Si es modo compartir, mostrar pantalla de "ver de nuevo"
   if (window._compartirData) mostrarPantallaCompartir();
 }

@@ -186,7 +186,6 @@ body.tema-claro .continue-card .cc-kicker { color:var(--accent); }
 .recent-card { width:208px; }
 .recent-thumb { height:auto; aspect-ratio:16/9; border-radius:0; }
 .recent-thumb img { transition:transform 0.5s var(--ease-sala); }
-.recent-card:hover .recent-thumb img { transform:scale(1.04); }
 .recent-title { font-family:var(--serif); font-weight:400; font-size:20px; line-height:1.15; margin-top:12px; }
 .recent-date { font-size:13px; margin-top:4px; }
 .recent-new { border-radius:0; }
@@ -228,7 +227,6 @@ body:not(.modo-tv) .decada-row .nf-card { flex:0 0 232px; width:232px; }
 body:not(.modo-tv) .nf-card { position:relative; background:none; border:none; border-radius:0; overflow:visible; transform:none !important; }
 body:not(.modo-tv) .nf-thumb, body:not(.modo-tv) .nf-thumb-placeholder { aspect-ratio:16/9; border-radius:0; transition:transform 0.5s var(--ease-sala); }
 body:not(.modo-tv) .nf-card:not(.nf-proximamente) { overflow:hidden; }
-body:not(.modo-tv) .nf-card:hover .nf-thumb { transform:scale(1.04); }
 body:not(.modo-tv) .nf-info { padding:12px 0 4px; background:var(--bg); position:relative; z-index:1; }
 body:not(.modo-tv) .nf-cat { font-size:11px; margin-bottom:5px; }
 body:not(.modo-tv) .nf-titulo { font-family:var(--serif); font-weight:400; font-size:21px; line-height:1.12; margin-bottom:4px; }
@@ -236,7 +234,8 @@ body:not(.modo-tv) .nf-fecha { font-size:13px; margin-bottom:10px; }
 body:not(.modo-tv) .nf-badge { border-radius:0; font-weight:500; background:color-mix(in srgb, var(--bg) 82%, transparent); color:var(--text); z-index:2; }
 /* El botón "Ver" pasa a ser la propia imagen, con un círculo de reproducción en la esquina */
 body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]) {
-  position:absolute; top:0; left:0; right:0; aspect-ratio:16/9; height:auto; z-index:1;
+  /* se coloca justo encima de .nf-info, es decir, sobre la foto (bottom:100% de .nf-info) */
+  position:absolute; bottom:100%; left:0; right:0; aspect-ratio:16/9; height:auto; z-index:1;
   background:transparent; font-size:0; color:transparent; border-radius:0;
 }
 body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::after {
@@ -246,7 +245,7 @@ body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::after {
 }
 body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]):hover::after { background-color:var(--accent); transform:scale(1.08); }
 body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]):focus-visible { outline-offset:-2px; }
-body:not(.modo-tv) .nf-btns { position:relative; z-index:1; }
+body:not(.modo-tv) .nf-btns { position:static; }
 body:not(.modo-tv) .nf-btn.secondary { flex:0 0 auto; height:34px; padding:0; justify-content:flex-start; background:none; color:var(--accent); font-size:13px; font-weight:500; border-radius:0; }
 body:not(.modo-tv) .nf-btn.secondary:hover, body.tema-claro:not(.modo-tv) .nf-btn.secondary:hover { background:none; color:var(--accent-hover); }
 body:not(.modo-tv) .nf-btn.primary[disabled] { border-radius:0; height:34px; background:var(--surface-2); color:var(--muted); font-weight:500; }
@@ -319,7 +318,7 @@ body:not(.modo-tv) .player-overlay {
   display:flex; visibility:hidden; opacity:0; pointer-events:none;
   background:rgba(8,7,5,0.66);
   -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
-  transition:opacity 0.5s ease 0.05s, visibility 0s linear 0.6s;
+  transition:opacity 0.24s ease, visibility 0s linear 0.26s;
 }
 body:not(.modo-tv) .player-overlay.open {
   visibility:visible; opacity:1; pointer-events:auto;
@@ -327,8 +326,8 @@ body:not(.modo-tv) .player-overlay.open {
 }
 body.tema-claro:not(.modo-tv) .player-overlay { background:rgba(28,25,20,0.5); }
 body:not(.modo-tv) .player-box {
-  transform:scale(0.82) translateY(16px); opacity:0;
-  transition:transform 0.55s var(--ease-sala), opacity 0.45s ease-in 0.08s;
+  transform:scale(0.94) translateY(8px); opacity:0;
+  transition:transform 0.26s ease-in, opacity 0.22s ease-in;
   will-change:transform, opacity;
 }
 body:not(.modo-tv) .player-overlay.open .player-box {
@@ -341,16 +340,56 @@ body:not(.modo-tv) .player-overlay:not(.open) .player-loading { display:none; }
 /* La página de detrás retrocede (la cabecera no, porque contiene la barra fija del móvil) */
 body:not(.modo-tv) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
   transform-origin:50% var(--sala-origen-y, 40vh);
-  transition:transform 0.6s var(--ease-sala), filter 0.6s ease;
+  transition:transform 0.45s var(--ease-sala), filter 0.45s ease;
 }
 body:not(.modo-tv):has(.player-overlay.open) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
   transform:scale(0.94); filter:brightness(0.55) saturate(0.8);
 }
 
+/* ─── LA TARJETA "SE ALEJA" AL VOLVER DEL VÍDEO (idea de la maqueta de Gemini) ───
+   Con ratón, al pasar por encima, la foto se acerca y aparece un velo con ▶.
+   Al cerrar el vídeo, la tarjeta desde la que se abrió (clase .sala-vuelta, la pone
+   cerrarPlayer) arranca en ese estado y se aleja a su tamaño normal mientras el velo
+   se desvanece. En el móvil no hay "hover", así que solo se ve al volver. */
+body:not(.modo-tv) :is(.recent-thumb, .tl-thumb) { position:relative; overflow:hidden; }
+body:not(.modo-tv) .tl-thumb img { transition:transform 0.5s var(--ease-sala); }
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
+body:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0;
+  background:rgba(10,9,7,0.42) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%23D4652F'/><path fill='%231C0E08' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>") center / 48px no-repeat;
+  transition:opacity 0.3s ease;
+}
+body.tema-claro:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
+body.tema-claro:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%23B54818'/><path fill='%23FFF8F3' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>");
+}
+@media (hover:hover) {
+  body:not(.modo-tv) .nf-card:hover .nf-thumb,
+  body:not(.modo-tv) .recent-card:hover .recent-thumb img,
+  body:not(.modo-tv) .tl-card:hover .tl-thumb img { transform:scale(1.1); }
+  body:not(.modo-tv) .nf-card:hover .nf-btn.primary:not([disabled])::before,
+  body:not(.modo-tv) .recent-card:hover .recent-thumb::after,
+  body:not(.modo-tv) .tl-card:hover .tl-thumb::after { opacity:1; }
+  body:not(.modo-tv) .nf-card:hover .nf-btn.primary:not([disabled])::after { opacity:0; }
+}
+@keyframes sala-alejar { from { transform:scale(1.1); } to { transform:scale(1); } }
+@keyframes sala-velo { from { opacity:1; } to { opacity:0; } }
+@keyframes sala-insignia { from { opacity:0; } to { opacity:1; } }
+body:not(.modo-tv) .sala-vuelta :is(.nf-thumb, .recent-thumb img, .tl-thumb img, #cc-img img) {
+  animation:sala-alejar 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.18s both;
+}
+body:not(.modo-tv) .sala-vuelta .dia-thumb { animation:sala-alejar 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both; }
+body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::before,
+body:not(.modo-tv) .sala-vuelta :is(.recent-thumb, .tl-thumb)::after {
+  animation:sala-velo 0.35s ease 0.24s both;
+}
+body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::after { animation:sala-insignia 0.3s ease 0.45s both; }
+
 /* ─── ACCESIBILIDAD: sin animaciones si el sistema lo pide ─── */
 @media (prefers-reduced-motion: reduce) {
   body:not(.modo-tv) .player-overlay, body:not(.modo-tv) .player-box,
-  body:not(.modo-tv) #app > *, .home-hero .dia-card .dia-thumb, .nf-thumb, .recent-thumb img { transition:none !important; }
+  body:not(.modo-tv) #app > *, .home-hero .dia-card .dia-thumb, .nf-thumb, .recent-thumb img, .tl-thumb img { transition:none !important; }
+  .sala-vuelta *, .sala-vuelta *::before, .sala-vuelta *::after { animation:none !important; }
   body:not(.modo-tv) .player-box { transform:none !important; }
   body:not(.modo-tv):has(.player-overlay.open) #app > * { transform:none !important; }
 }
