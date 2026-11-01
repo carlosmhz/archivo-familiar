@@ -35,10 +35,10 @@ function urlImagen($rutaRelativa, $version) {
 // del vídeo (ruta relativa guardada en caseros.json) en una URL servida por stream.php.
 function anotarMinis($lista) {
     foreach ($lista as &$c) {
-        if (!empty($c['miniatura']) && is_string($c['miniatura']) && esRutaImagenValida(preg_replace('/\?.*$/', '', $c['miniatura']))) {
-            $ruta = preg_replace('/\?.*$/', '', $c['miniatura']);
+        $ruta = is_string($c['miniatura'] ?? null) ? rutaMiniaturaPropia($c['miniatura']) : null;
+        if ($ruta !== null) {
             $fich = RAIZ_DATOS . '/' . $ruta;
-            $c['miniatura'] = is_file($fich) ? urlImagen($ruta, filemtime($fich)) : $c['miniatura'];
+            if (is_file($fich)) $c['miniatura'] = urlImagen($ruta, filemtime($fich));
         }
         if (empty($c['escenas']) || !is_array($c['escenas'])) continue;
         foreach ($c['escenas'] as &$e) {
@@ -51,6 +51,16 @@ function anotarMinis($lista) {
     }
     unset($c);
     return $lista;
+}
+// Ruta relativa (caseros/miniaturas/x.jpg) de una miniatura nuestra, o null.
+// Acepta la ruta relativa y también la URL antigua de la web, absoluta o no
+// (https://app.mpi-sala.es/videos/caseros/miniaturas/x.jpg, /videos/caseros/miniaturas/x.jpg):
+// esas imágenes ya no están en la carpeta web desde que los datos se movieron a archivo-datos/.
+function rutaMiniaturaPropia($url) {
+    $r = preg_replace('/[?#].*$/', '', trim((string)$url));
+    $r = preg_replace('#^(?:https?://[^/]+)?/?(?:videos/)?#i', '', $r);
+    $r = rawurldecode($r);
+    return esRutaImagenValida($r) ? $r : null;
 }
 // Solo se sirven imágenes de miniaturas/ o caseros/miniaturas/, sin subcarpetas ni "..".
 function esRutaImagenValida($ruta) {
