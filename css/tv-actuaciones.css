@@ -1,0 +1,144 @@
+/* Ocultar vista original de sevillanas en TV */
+body.modo-tv #sevillanas-list { display: none !important; }
+
+/* Contenedor de décadas de actuaciones */
+body.modo-tv #tv-sev-decadas {
+  display: block;
+  padding: 0 0 40px;
+}
+
+/* Reutiliza los mismos estilos de decada-section y decada-row de caseros */
+body.modo-tv .sev-decada-section {
+  margin-bottom: 48px;
+  padding: 0 48px;
+}
+body.modo-tv .sev-decada-title {
+  font-size: 22px; color: #ECEDEF;
+  border-bottom: 2px solid rgba(236,237,239,0.15);
+  margin-bottom: 20px; padding-bottom: 10px;
+  font-family: 'Fraunces', Georgia, serif;
+}
+body.modo-tv .sev-decada-row {
+  display: flex; gap: 20px; padding: 20px 12px 20px;
+  overflow-x: auto; overflow-y: visible;
+  scrollbar-width: none;
+}
+body.modo-tv .sev-decada-row::-webkit-scrollbar { display: none; }
+
+/* Tarjeta de año */
+body.modo-tv .sev-year-card {
+  width: 200px; flex-shrink: 0;
+  background: #171A21; border-radius: 12px;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+body.modo-tv .sev-year-card.tv-focused {
+  border-color: #E8A33D !important;
+  box-shadow: 0 0 0 3px rgba(232,163,61,0.5), 0 8px 32px rgba(232,163,61,0.3) !important;
+  transform: translateY(-6px) scale(1.04) !important;
+}
+body.modo-tv .sev-card-header {
+  background: linear-gradient(135deg, #2A2F3A, #2A2F3A);
+  padding: 20px 16px 14px;
+  text-align: center;
+}
+body.modo-tv .sev-card-year {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 32px; font-weight: 700; color: #ECEDEF;
+  line-height: 1;
+}
+body.modo-tv .sev-card-count {
+  font-size: 11px; color: rgba(236,237,239,0.6);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 4px;
+}
+body.modo-tv .sev-card-preview {
+  padding: 12px 14px;
+}
+body.modo-tv .sev-preview-item {
+  font-size: 12px; color: rgba(236,237,239,0.7);
+  padding: 3px 0; border-bottom: 1px solid rgba(236,237,239,0.06);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.modo-tv .sev-preview-item:last-child { border-bottom: none; }
+
+/* Modal de actuaciones del año */
+body.modo-tv #tv-sev-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 600; display: none;
+  align-items: center; justify-content: center;
+  padding: 40px;
+}
+body.modo-tv #tv-sev-modal.open { display: flex; }
+body.modo-tv .tv-sev-modal-box {
+  background: #171A21; border-radius: 20px;
+  border: 1px solid rgba(236,237,239,0.2);
+  width: 100%; max-width: 760px;
+  max-height: 80vh; display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+body.modo-tv .tv-sev-modal-header {
+  background: #0E1014; border-radius: 20px 20px 0 0;
+  padding: 24px 32px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(236,237,239,0.1);
+}
+body.modo-tv .tv-sev-modal-year {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 28px; color: #ECEDEF;
+}
+body.modo-tv .tv-sev-modal-sub {
+  font-size: 13px; color: rgba(236,237,239,0.4);
+  margin-top: 4px; letter-spacing: 1px;
+}
+body.modo-tv .tv-sev-modal-list {
+  overflow-y: auto; flex: 1;
+  padding: 12px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232,163,61,0.3) transparent;
+}
+body.modo-tv .tv-sev-act-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px; border-radius: 10px;
+  border-bottom: 1px solid rgba(236,237,239,0.06);
+  cursor: pointer; transition: background 0.15s;
+}
+body.modo-tv .tv-sev-act-row:last-child { border-bottom: none; }
+body.modo-tv .tv-sev-act-row.tv-focused {
+  background: rgba(232,163,61,0.2) !important;
+  outline: 2px solid #E8A33D;
+  border-radius: 10px;
+}
+body.modo-tv .tv-sev-act-row.no-video {
+  opacity: 0.4; cursor: default;
+}
+body.modo-tv .tv-sev-fecha {
+  font-size: 12px; color: rgba(236,237,239,0.5);
+  min-width: 90px; font-weight: 300;
+}
+body.modo-tv .tv-sev-nombre {
+  flex: 1; font-size: 15px; font-weight: 600; color: #ECEDEF;
+}
+body.modo-tv .tv-sev-kw {
+  font-size: 11px; color: #E8A33D; font-style: italic;
+}
+body.modo-tv .tv-sev-play {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #E8A33D; color: #1A1206;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+body.modo-tv .tv-sev-act-row.no-video .tv-sev-play {
+  background: rgba(236,237,239,0.1); color: rgba(236,237,239,0.3);
+}
+body.modo-tv #screen-sevillanas {
+  padding: 0;
+  max-width: 100%;
+  background: #0E1014;
+  min-height: 100vh;
+}
+body.modo-tv #screen-sevillanas .back-btn { margin: 24px 48px 0; color: #ECEDEF; font-size: 15px; }
+body.modo-tv #screen-sevillanas .section-title { margin: 8px 48px 4px; color: #ECEDEF; font-size: 28px; }
+body.modo-tv #screen-sevillanas .section-subtitle { margin: 0 48px 24px; }

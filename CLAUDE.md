@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026.
+> Última actualización: 1 de noviembre de 2026 (fase 1 de la reestructuración).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -14,17 +14,15 @@
 
 | Rama | Para qué | Se despliega en |
 |---|---|---|
-| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos` con hPanel → GIT |
-| `develop` | Integración y pruebas | Entorno de pruebas (carpeta o subdominio aparte, por decidir) |
+| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos` con hPanel → GIT (cuando se conecte) |
+| `develop` | Integración previa a `main` | No se despliega: **no hay entorno de pruebas** (decisión de Carlos, 1 nov 2026) |
 | `feature/<tema>` | Cada cambio concreto | No se despliega |
 
-**Cómo se mueve un cambio:**
+**Cómo se mueve un cambio** (Carlos delega la fusión en el agente; no deja PR pendientes de revisar):
 1. Sale una rama `feature/*` desde `develop`.
-2. Se abre un PR hacia `develop`.
-3. Se prueba en el entorno de pruebas.
-4. Se abre un PR de `develop` a `main`, y **solo lo fusiona Carlos**.
-
-**Nadie hace push directo a `main`**, salvo el primer commit de base.
+2. Se prueba en local (`php -S` + Playwright, ver apartado 11) y se abre el PR hacia `develop`.
+3. El agente lo fusiona él mismo; después abre y fusiona el PR de `develop` a `main`.
+4. Cuando hPanel → GIT esté conectado a `main`, **cada fusión a `main` es un despliegue a producción**: por eso la prueba local es obligatoria y no se fusiona nada sin pasarla. Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
 
 **Despliegue:** con la herramienta **GIT de hPanel**, que conecta el repositorio y la rama a una carpeta y despliega al hacer push. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
@@ -43,7 +41,22 @@
 
 ---
 
-## 0.1 Reestructuración prevista (propuesta, por validar)
+## 0.1 Reestructuración (en curso)
+
+**Fase 1 — frontend (hecha, fusionada el 1 nov 2026):** el CSS y el JavaScript salen de `index.html` y `admin.html`. Se mantienen scripts clásicos, cargados en el mismo orden que antes, para no cambiar el comportamiento (los `onclick` del HTML siguen usando funciones globales). Layout resultante en la raíz del repositorio:
+
+```
+index.html, admin.html          solo maquetación
+css/   app.css, tv.css, tv-actuaciones.css, admin.css
+js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.js   (orden de carga en index.html)
+       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
+vendor/hls.min.js               hls.js 1.5.17
+api.php, auth.php, stream.php, sw.js (cache v4), manifest.json, icon-*.png, scripts/hls_convert.sh
+```
+
+El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
+
+**Fases siguientes (propuesta, por validar):** pasar los scripts a módulos ES y quitar los `onclick`, mover el PHP a `api/` y `lib/`, y separar código y datos. Objetivo final:
 
 Hoy todo el CSS y el JavaScript de la app van dentro de `index.html`, que tiene unas 2 300 líneas y unos 118 KB, y `admin.html` está igual. El objetivo es separarlos por responsabilidades sin añadir compilación.
 
@@ -53,14 +66,14 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 ├── .htaccess                     ← bloquea /docs, /scripts, /lib, /config, *.md por web
 ├── index.html                    ← solo maquetación
 ├── admin.html
-├── css/        app.css, player.css, tv.css, admin.css …
-├── js/         (módulos ES) api.js, auth.js, player.js, catalogo.js, compartir.js, tv.js, admin/*.js
-├── vendor/     hls.min.js (versión fija 1.5.17)
+├── css/        app.css, tv.css, tv-actuaciones.css, admin.css  [hecho]
+├── js/         de momento scripts clásicos por secciones [hecho]; pasar a módulos ES en la fase 2
+├── vendor/     hls.min.js (versión fija 1.5.17)  [hecho]
 ├── api/        index.php (rutas) o un archivo por grupo de acciones
 ├── stream.php
 ├── lib/        auth.php, datos.php, config.php (rutas, sin secretos)
-├── sw.js, manifest.json, icons/
-├── scripts/    hls_convert.sh y otras utilidades de servidor
+├── sw.js, manifest.json, icons/   (hoy icon-192.png e icon-512.png en la raíz)
+├── scripts/    hls_convert.sh y otras utilidades de servidor  
 └── docs/       documentación adicional
 ```
 
@@ -75,7 +88,7 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 
 Rutas en `lib/config.php`, calculadas de forma relativa. Las miniaturas, que hoy se piden por URL pública, tendrían que servirse también por PHP o desde una ruta pública separada.
 
-**Entorno de pruebas** (`develop`): con su propia copia de `datos/`, para no escribir en el catálogo real. Puede leer los mismos `hls/` y `caseros/` en solo lectura.
+**Sin entorno de pruebas:** Carlos lo descartó. Se prueba en local con datos de prueba.
 
 **Migración en producción:** se hace con copia de seguridad, por pasos y con plan para volver atrás. hPanel GIT suele exigir una carpeta de destino **vacía**, así que se despliega en una carpeta nueva y después se cambia, en lugar de desplegar encima de la actual.
 
@@ -139,7 +152,7 @@ Clientes:
     ├── api.php                   ← API JSON (sin contraseñas dentro)
     ├── auth.php                  ← tokens firmados, claves, nombres válidos, freno anti fuerza bruta
     ├── stream.php                ← sirve HLS/MP4 solo con token firmado
-    ├── sw.js                     ← service worker (cache archivo-familiar-v3)
+    ├── sw.js                     ← service worker (cache archivo-familiar-v4 desde la fase 1)
     ├── hls.min.js                ← hls.js 1.5.17 alojado localmente (413 952 bytes)
     ├── manifest.json, icon-*.png, apple-touch-icon.png
     ├── archivo-familiar.apk      ← app Android (WebView)
@@ -252,7 +265,7 @@ Más detalles del reproductor:
 - **Escenas:** `video.ontimeupdate` controla el fin de escena, que muestra un panel, y los enlaces compartidos que no deben ir antes del inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
 - **Compartir:** `_urlActual` guarda la URL original. No se usa `video.src`, que con hls.js es un `blob:`.
 - **Cargas que se cruzan:** `_playToken` evita que una carga lenta pise a otra más nueva. `cerrarPlayer()` destruye hls.js.
-- **Service worker** (`sw.js`, versión v3): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
+- **Service worker** (`sw.js`, versión v4): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
 
 ---
 
@@ -322,7 +335,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 **Primero, el repositorio:**
 1. Carlos sube a `main` el código actual de producción (solo código).
 2. El agente crea `develop`, añade `CLAUDE.md`, `.gitignore` y `README.md`, y prepara la propuesta de reestructuración en ramas `feature/*`.
-3. Hay que decidir el entorno de pruebas (carpeta o subdominio) y configurar hPanel → GIT para `develop` y, más adelante, para `main`.
+3. Configurar hPanel → GIT para `main` (no habrá entorno de pruebas).
 4. Hay que migrar los datos a `archivo-datos/` fuera de `public_html`.
 
 **Desplegado y confirmado:**
@@ -355,8 +368,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - **Repositorio:** trabaja en el repositorio, no envíes archivos por el chat.
   - Parte siempre de lo último de `develop`, en una rama `feature/<tema>`.
   - Haz commits pequeños con mensajes claros en español.
-  - Abre PR hacia `develop` explicando qué cambia y cómo probarlo.
-  - **No hagas push a `main` ni fusiones hacia `main`**: lo decide Carlos.
+  - Abre PR hacia `develop` explicando qué cambia y cómo probarlo, y fusiónalo tú tras probarlo (ver apartado 0). No hagas push directo a `main`: llega siempre por PR.
 - **Antes de tocar un archivo:** pide la versión actual del servidor (con `cat` por SSH o descargándola de hPanel). Las versiones de la conversación pueden estar desfasadas.
 - **Secretos:** revisa cada commit (`git diff --cached`) para que no entren secretos, JSON de datos ni vídeos.
 - **Contraseñas:**
