@@ -1,0 +1,398 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   SALA — capa visual sobre app.css (noviembre 2026)
+   Estética "sala de proyección": fondo cálido, acento terracota, tipografía
+   editorial (Newsreader + Outfit, alojadas en vendor/fonts), esquinas rectas,
+   grano de película y portada a sangre con el recuerdo del día.
+   Además: el reproductor se abre acercándose y se cierra alejándose, mientras
+   la página de detrás retrocede y vuelve.
+   Solo cambia la apariencia: no toca el HTML que genera el JavaScript.
+   El modo TV (?tv=1) conserva su maquetación (tv.css); solo hereda colores.
+   Para volver al aspecto anterior basta con quitar el <link> de index.html.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─── FUENTES (locales, sin Google Fonts) ─── */
+@font-face { font-family:'Newsreader'; font-style:normal; font-weight:400; font-display:swap; src:url('../vendor/fonts/newsreader-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family:'Newsreader'; font-style:italic; font-weight:400; font-display:swap; src:url('../vendor/fonts/newsreader-latin-400-italic.woff2') format('woff2'); }
+@font-face { font-family:'Newsreader'; font-style:normal; font-weight:500; font-display:swap; src:url('../vendor/fonts/newsreader-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:300; font-display:swap; src:url('../vendor/fonts/outfit-latin-300-normal.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:400; font-display:swap; src:url('../vendor/fonts/outfit-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:500; font-display:swap; src:url('../vendor/fonts/outfit-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family:'Outfit'; font-style:normal; font-weight:600; font-display:swap; src:url('../vendor/fonts/outfit-latin-600-normal.woff2') format('woff2'); }
+
+/* ─── PALETA: "sala" (oscuro) ─── */
+:root {
+  --bg:#12110E; --surface:#1C1915; --surface-2:#2A261F; --surface-3:#3A342C;
+  --line:#2E2923; --muted:#A3988A; --muted-2:#D3C9BB; --faint:#746C62;
+  --accent:#D4652F; --accent-hover:#E07A45; --accent-ink:#1C0E08; --accent-soft:rgba(212,101,47,0.15);
+  --serif:'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans:'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --th-boda:#3B2E26; --th-comunion:#2F3326; --th-cotidiano:#3E3125; --th-vacaciones:#263234; --th-navidad:#41262A; --th-otros:#352A33; --th-multi:#2E2B33;
+  --tl-tick:#3A342C; --tl-label:#8A8176; --tl-label-bg:rgba(18,17,14,0.88); --row-hover:#1C1915; --row-num:#2A261F;
+  --ease-sala:cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+body { --text:#F4EFE6; --dark:#F4EFE6; --shadow:rgba(0,0,0,0.5); --blue-pale:#3A342C; }
+
+/* ─── PALETA: "papel" (claro) ─── */
+body.tema-claro {
+  --bg:#F4EFE6; --surface:#FFFDF8; --surface-2:#E8E0D2; --surface-3:#DDD3C4;
+  --line:#DDD3C4; --muted:#5C554C; --muted-2:#3A342C; --faint:#8A8176;
+  --accent:#B54818; --accent-hover:#9A3C12; --accent-ink:#FFF8F3; --accent-soft:rgba(181,72,24,0.12);
+  --text:#1C1914; --dark:#1C1914; --blue-pale:#DDD3C4; --shadow:rgba(28,25,20,0.14);
+  --th-boda:#EADFD2; --th-comunion:#E2E4D3; --th-cotidiano:#EDE2D0; --th-vacaciones:#D9E2E0; --th-navidad:#EFD9D6; --th-otros:#E7DCE3; --th-multi:#E0DCE6;
+  --tl-tick:#DDD3C4; --tl-label:#8A8176; --tl-label-bg:rgba(244,239,230,0.92); --row-hover:#EFE8DC; --row-num:#E8E0D2;
+}
+
+/* ─── BASE ─── */
+body { font-family:var(--sans); background:var(--bg); color:var(--text); overflow-x:clip; }
+::selection { background:rgba(212,101,47,0.35); color:inherit; }
+body.tema-claro ::selection { background:rgba(181,72,24,0.22); color:inherit; }
+h1, h2, h3 { text-wrap:balance; }
+/* Grano de película: una textura casi invisible sobre todo, como en una proyección */
+body:not(.modo-tv)::before {
+  content:''; position:fixed; inset:0; z-index:60; pointer-events:none; opacity:0.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+body.tema-claro::before { opacity:0.07; }
+.kicker, .cc-kicker, .dia-kicker, .nf-cat, .tl-cat, .mc-cat { font-family:var(--sans); font-weight:500; letter-spacing:0.16em; text-transform:uppercase; }
+
+/* ─── LOGIN ─── */
+#login-screen { background:
+  radial-gradient(ellipse 70% 55% at 50% -10%, rgba(244,239,230,0.07), transparent 70%),
+  radial-gradient(ellipse 40% 30% at 50% 110%, rgba(212,101,47,0.10), transparent 70%),
+  var(--bg); }
+body.tema-claro #login-screen { background:radial-gradient(ellipse 70% 55% at 50% -10%, rgba(255,253,248,0.9), transparent 70%), var(--bg); }
+.login-box { display:flex; flex-direction:column; align-items:stretch; text-align:left; max-width:400px; padding:40px 28px; }
+.login-ornament { display:none; }
+.login-subtitle { order:-1; font-size:11px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:28px; }
+.login-title { font-family:var(--serif); font-weight:400; font-size:64px; line-height:0.95; letter-spacing:-0.02em; margin-bottom:44px; }
+.login-title em { display:block; font-style:italic; color:var(--accent); }
+.login-input { height:52px; padding:0 2px; background:transparent; border:none; border-bottom:1px solid var(--surface-3); border-radius:0; font-family:var(--sans); font-size:18px; letter-spacing:0.3em; text-align:left; margin-bottom:30px; }
+.login-input:focus { border-color:var(--accent); }
+.login-input::placeholder { letter-spacing:0.02em; color:var(--faint); font-size:16px; }
+.login-btn { height:52px; border-radius:0; font-family:var(--sans); font-weight:600; letter-spacing:0.04em; }
+.login-error { color:var(--accent); }
+
+/* ─── CABECERA Y NAVEGACIÓN ─── */
+.site-header { background:color-mix(in srgb, var(--bg) 94%, transparent); border-bottom:1px solid var(--line); }
+body.tema-claro .site-header { background:color-mix(in srgb, var(--bg) 94%, transparent); }
+.header-title { font-family:var(--serif); font-weight:400; font-size:22px; letter-spacing:-0.01em; }
+.header-title span { font-weight:400; }
+.logo-mark { display:none; }
+.nav-item { border-radius:0; font-weight:500; height:44px; box-shadow:inset 0 -2px 0 transparent; }
+.nav-item:hover { background:none; }
+.nav-item.active { color:var(--text); box-shadow:inset 0 -2px 0 var(--accent); }
+.nav-item.active .ico { color:var(--accent); }
+.logout-btn { border-radius:0; color:var(--faint); }
+.logout-btn:hover { background:none; color:var(--text); }
+.search-input { border-radius:0; background:transparent; border:none; border-bottom:1px solid var(--surface-3); }
+@media (max-width:760px) {
+  body:not(.modo-tv) .main-nav { background:color-mix(in srgb, var(--bg) 96%, transparent); border-top:1px solid var(--line); }
+  body.tema-claro:not(.modo-tv) .main-nav { background:color-mix(in srgb, var(--bg) 96%, transparent); }
+  body:not(.modo-tv) .nav-item { box-shadow:none; }
+  body:not(.modo-tv) .nav-item.active { color:var(--accent); }
+  .header-title { font-size:21px; }
+}
+
+/* ─── INICIO: PORTADA CON EL RECUERDO DEL DÍA ─── */
+#home-screen { padding-top:0; }
+.home-hello { font-size:14px; color:var(--muted); font-weight:400; padding-top:32px; }
+.home-title { font-family:var(--serif); font-weight:400; letter-spacing:-0.02em; }
+
+/* Si hay recuerdo del día, la cabecera del inicio se convierte en una portada a sangre */
+body:not(.modo-tv) .home-hero:has(.dia-card.visible) {
+  position:relative; z-index:0; isolation:isolate;
+  width:100vw; margin-left:calc(50% - 50vw);
+  min-height:min(74vh, 600px); padding:0 max(20px, calc(50vw - 518px)) 30px;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  color:#F4EFE6; overflow:hidden; margin-bottom:8px;
+}
+body:not(.modo-tv) .home-hero:has(.dia-card.visible)::before {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 55%, transparent) 38%, transparent 70%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--bg) 85%, transparent) 0%, transparent 22%);
+}
+.home-hero:has(.dia-card.visible) .home-hello { position:absolute; top:18px; left:max(20px, calc(50vw - 518px)); z-index:2; padding:0; color:#F4EFE6; }
+.home-hero:has(.dia-card.visible) .home-title { position:relative; z-index:2; font-style:italic; font-size:26px; margin:0 0 18px; color:#F4EFE6; }
+.home-hero .dia-card.visible {
+  position:static; display:flex; flex-direction:column; align-items:flex-start; gap:0;
+  max-width:none; width:auto; margin:0; padding:0; background:none; border:none; border-radius:0; color:inherit; transform:none;
+}
+.home-hero .dia-card.visible:hover { transform:none; }
+/* Toda la portada es pulsable */
+.home-hero .dia-card.visible::after { content:''; position:absolute; inset:0; z-index:3; }
+.home-hero .dia-card.visible .dia-thumb {
+  position:absolute; inset:0; z-index:0; width:auto; height:auto; border-radius:0; font-size:120px;
+  transition:transform 6s ease-out;
+}
+.home-hero .dia-card.visible:hover .dia-thumb { transform:scale(1.03); }
+.home-hero .dia-card.visible .dia-txt { position:relative; z-index:2; gap:0; max-width:760px; }
+.home-hero .dia-card.visible .dia-kicker { font-size:11px; color:var(--accent); }
+body.tema-claro .home-hero .dia-card.visible .dia-kicker { color:#F0A070; }
+.home-hero .dia-card.visible .dia-title { font-family:var(--serif); font-weight:400; font-size:44px; line-height:1; letter-spacing:-0.02em; margin-top:10px; -webkit-line-clamp:3; }
+.home-hero .dia-card.visible .dia-sub { font-size:14px; color:#D3C9BB; margin-top:12px; }
+.home-hero .dia-card.visible .dia-play {
+  position:relative; z-index:2; width:auto; height:48px; padding:0 22px; margin-top:22px; gap:10px;
+  border-radius:0; background:var(--accent); color:var(--accent-ink); font-size:14px;
+}
+.home-hero .dia-card.visible .dia-play::after { content:'Proyectar'; font-family:var(--sans); font-weight:600; letter-spacing:0.02em; }
+.home-hero .dia-card.visible:hover .dia-play { background:var(--accent-hover); }
+/* Con tema claro la portada sigue siendo oscura (es una foto), así que el texto se queda claro */
+body.tema-claro .home-hero:has(.dia-card.visible)::before {
+  background:
+    linear-gradient(to top, rgba(28,25,20,0.92) 0%, rgba(28,25,20,0.5) 40%, transparent 72%),
+    linear-gradient(to bottom, rgba(28,25,20,0.55) 0%, transparent 24%);
+}
+body.tema-claro .home-hero:has(.dia-card.visible) { box-shadow:0 1px 0 var(--line); }
+
+/* Continuar viendo: una fila discreta con barra de progreso */
+.continue-card { aspect-ratio:auto; display:none; max-width:640px; margin:22px 0 4px; padding:0; background:none !important; border-radius:0; overflow:visible; }
+.continue-card.visible { display:flex; align-items:center; gap:16px; }
+.continue-card .cc-icon { display:none; }
+#cc-img { position:relative; display:block; width:120px; aspect-ratio:16/9; flex-shrink:0; background:var(--surface-2); overflow:hidden; }
+#cc-img img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.continue-card .cc-bar { position:static; flex:1; min-width:0; padding:0; background:none; gap:14px; }
+.cc-kicker { font-size:11px; }
+.cc-title { font-family:var(--serif); font-weight:400; font-size:22px; line-height:1.15; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cc-sub { color:var(--muted); }
+body.tema-claro .continue-card .cc-bar { color:var(--text); }
+body.tema-claro .continue-card .cc-kicker { color:var(--accent); }
+.cc-progress { height:2px; border-radius:0; background:var(--surface-3); }
+#cc-progress { height:2px !important; border-radius:0 !important; }
+.cc-play { width:44px; height:44px; background:var(--accent-soft); color:var(--accent); }
+
+/* Colecciones: dos celdas separadas por líneas, con el recuento grande */
+.home-sections { max-width:none; gap:0; margin-top:28px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.section-card { background:none !important; border:none; border-radius:0; padding:28px 4px 26px; gap:6px; display:grid; grid-template-columns:1fr auto; grid-template-areas:'txt count'; align-items:end; transform:none !important; }
+.section-card + .section-card { border-left:1px solid var(--line); padding-left:28px; }
+.section-card .card-icon { display:none; }
+.section-card > div { grid-area:txt; }
+.section-card > div::before { content:'Colección'; display:block; font-size:11px; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.card-title { font-family:var(--serif); font-weight:400; font-size:30px; line-height:1.05; letter-spacing:-0.01em; }
+.section-card:hover .card-title { color:var(--accent); }
+.card-desc { font-size:14px; margin-top:8px; max-width:30ch; }
+.card-count { grid-area:count; font-family:var(--serif); font-size:17px; font-weight:400; color:var(--muted-2); text-align:right; white-space:nowrap; }
+@media (max-width:760px) {
+  .home-sections, body.rol-caseros .home-sections, body.rol-actuaciones .home-sections { grid-template-columns:1fr; }
+  .section-card { padding:22px 0; column-gap:16px; }
+  .section-card + .section-card { border-left:none; border-top:1px solid var(--line); padding-left:0; }
+  .card-title { font-size:28px; }
+  .card-desc { font-size:13px; }
+}
+
+/* Recién archivado */
+.home-row-head h2 { font-family:var(--serif); font-weight:400; font-size:30px; letter-spacing:-0.01em; }
+.recent-row { gap:20px; }
+.recent-card { width:208px; }
+.recent-thumb { height:auto; aspect-ratio:16/9; border-radius:0; }
+.recent-thumb img { transition:transform 0.5s var(--ease-sala); }
+.recent-title { font-family:var(--serif); font-weight:400; font-size:20px; line-height:1.15; margin-top:12px; }
+.recent-date { font-size:13px; margin-top:4px; }
+.recent-new { border-radius:0; }
+
+/* ─── PANTALLAS DE SECCIÓN ─── */
+.content-screen, #search-results-screen { padding-top:36px; }
+.section-title { font-family:var(--serif); font-weight:400; font-size:52px; line-height:1; letter-spacing:-0.02em; margin-bottom:10px; }
+.section-subtitle { font-size:15px; margin-bottom:26px; }
+.back-btn { font-weight:500; }
+
+/* Selector "Por décadas / Línea de tiempo": subrayado, sin caja */
+.subcategory-tabs { display:inline-flex; gap:24px; padding:0; background:none; border:none; border-radius:0; min-width:0; margin-bottom:6px; }
+.tab-btn { height:44px; padding:0; border-radius:0; font-size:14px; font-weight:500; color:var(--faint); box-shadow:inset 0 -2px 0 transparent; }
+.tab-btn.active { background:none; color:var(--text); box-shadow:inset 0 -2px 0 var(--accent); }
+
+/* Chips de años */
+.chip { border-radius:0; border-color:var(--surface-3); font-weight:500; color:var(--muted); }
+body.tema-claro .chip { border-color:var(--surface-3); }
+.chip.active { color:var(--accent-ink); }
+
+/* Años y actuaciones */
+.year-header { font-family:var(--serif); font-weight:400; font-size:30px; border-bottom:1px solid var(--line); padding:22px 0 10px; }
+.year-body { background:none; border:none; border-radius:0; }
+.actuacion-row { padding:14px 4px; border-bottom:1px solid var(--line); }
+body.tema-claro .actuacion-row { border-bottom-color:var(--line); }
+.actuacion-row:hover, body.tema-claro .actuacion-row:hover { background:var(--row-hover); }
+.act-day { font-family:var(--serif); font-weight:400; font-size:26px; }
+.act-name { font-family:var(--serif); font-weight:400; font-size:20px; line-height:1.2; }
+.act-row { border-radius:0; }
+#search-results-list .actuacion-row { border-radius:0; background:none; border:none; border-bottom:1px solid var(--line); }
+
+/* Décadas: los capítulos de la colección */
+.decada-section { margin-bottom:40px; }
+.decada-title { font-family:var(--serif); font-weight:400; font-size:34px; letter-spacing:-0.01em; margin:28px 0 16px; }
+.decada-title small { font-size:13px; }
+.decada-row { gap:20px; scrollbar-color:rgba(212,101,47,0.3) transparent; }
+.decada-row::-webkit-scrollbar-thumb { background:rgba(212,101,47,0.3); }
+body:not(.modo-tv) .decada-row .nf-card { flex:0 0 232px; width:232px; }
+body:not(.modo-tv) .nf-card { position:relative; background:none; border:none; border-radius:0; overflow:visible; transform:none !important; }
+body:not(.modo-tv) .nf-thumb, body:not(.modo-tv) .nf-thumb-placeholder { aspect-ratio:16/9; border-radius:0; transition:transform 0.5s var(--ease-sala); }
+body:not(.modo-tv) .nf-card:not(.nf-proximamente) { overflow:hidden; }
+body:not(.modo-tv) .nf-info { padding:12px 0 4px; background:var(--bg); position:relative; z-index:1; }
+body:not(.modo-tv) .nf-cat { font-size:11px; margin-bottom:5px; }
+body:not(.modo-tv) .nf-titulo { font-family:var(--serif); font-weight:400; font-size:21px; line-height:1.12; margin-bottom:4px; }
+body:not(.modo-tv) .nf-fecha { font-size:13px; margin-bottom:10px; }
+body:not(.modo-tv) .nf-badge { border-radius:0; font-weight:500; background:color-mix(in srgb, var(--bg) 82%, transparent); color:var(--text); z-index:2; }
+/* El botón "Ver" pasa a ser la propia imagen, con un círculo de reproducción en la esquina */
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]) {
+  /* se coloca justo encima de .nf-info, es decir, sobre la foto (bottom:100% de .nf-info) */
+  position:absolute; bottom:100%; left:0; right:0; aspect-ratio:16/9; height:auto; z-index:1;
+  background:transparent; font-size:0; color:transparent; border-radius:0;
+}
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::after {
+  content:''; position:absolute; left:10px; bottom:10px; width:34px; height:34px; border-radius:50%;
+  background:color-mix(in srgb, var(--bg) 80%, transparent) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23F4EFE6' d='M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z'/></svg>") 55% 50% / 14px no-repeat;
+  transition:background-color 0.2s, transform 0.2s;
+}
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]):hover::after { background-color:var(--accent); transform:scale(1.08); }
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]):focus-visible { outline-offset:-2px; }
+body:not(.modo-tv) .nf-btns { position:static; }
+body:not(.modo-tv) .nf-btn.secondary { flex:0 0 auto; height:34px; padding:0; justify-content:flex-start; background:none; color:var(--accent); font-size:13px; font-weight:500; border-radius:0; }
+body:not(.modo-tv) .nf-btn.secondary:hover, body.tema-claro:not(.modo-tv) .nf-btn.secondary:hover { background:none; color:var(--accent-hover); }
+body:not(.modo-tv) .nf-btn.primary[disabled] { border-radius:0; height:34px; background:var(--surface-2); color:var(--muted); font-weight:500; }
+@media (max-width:760px) {
+  body:not(.modo-tv) .decada-row { gap:14px; }
+  body:not(.modo-tv) .decada-row .nf-card { flex:0 0 172px; width:172px; }
+  body:not(.modo-tv) .nf-titulo { font-size:18px; }
+  .section-title { font-size:42px; }
+  .decada-title { font-size:30px; }
+}
+
+/* Línea de tiempo */
+.tl-card { border-radius:0; background:var(--surface); }
+.tl-title { font-family:var(--serif); font-weight:400; font-size:15px; }
+.tl-play { border-radius:0; }
+.tl-year-bar { background:var(--surface-2); color:var(--muted-2); }
+.tl-scroll { scrollbar-color:rgba(212,101,47,0.3) transparent; }
+.tl-scroll::-webkit-scrollbar-thumb { background:rgba(212,101,47,0.3); }
+.tl-scroll-arrow { background:linear-gradient(to right, transparent, color-mix(in srgb, var(--bg) 95%, transparent)); }
+body.tema-claro .tl-scroll-arrow { background:linear-gradient(to right, transparent, color-mix(in srgb, var(--bg) 95%, transparent)); }
+
+/* ─── VENTANAS: ESCENAS DE UNA CINTA, COMPARTIR, FIN DE ESCENA ─── */
+.caseros-modal-overlay { background:rgba(10,9,7,0.72); }
+.caseros-modal-box { background:var(--bg); border-radius:0; border-color:var(--line); }
+.caseros-modal-header h3 { font-family:var(--serif); font-weight:400; font-size:28px; }
+.caseros-modal-close { border-radius:0; }
+.caseros-modal-card { border-radius:0; background:var(--surface); }
+.caseros-modal-card .mc-title { font-family:var(--serif); font-weight:400; font-size:15px; }
+.caseros-modal-card .mc-btn { border-radius:0; }
+.share-modal { background:color-mix(in srgb, var(--bg) 97%, transparent); }
+body.tema-claro .share-modal, body.tema-claro .escena-end-panel { background:color-mix(in srgb, var(--bg) 96%, transparent); }
+.share-modal-title, .escena-end-title { font-family:var(--serif); font-weight:400; font-size:32px; }
+.share-btn, .escena-end-btn { border-radius:0; font-weight:600; }
+.escena-end-panel { background:color-mix(in srgb, var(--bg) 92%, transparent); }
+.compartir-card { border-radius:0; background:var(--surface); }
+.compartir-titulo { font-family:var(--serif); font-weight:400; font-size:30px; }
+.compartir-btn { border-radius:0; }
+@media (max-width:760px) { .caseros-modal-box { border-radius:0; } }
+
+/* ─── REPRODUCTOR ─── */
+.player-box { background:var(--bg); border-radius:0; border-color:var(--line); }
+.player-header { border-bottom:none; padding:16px 14px 14px 22px; }
+.player-title { font-family:var(--serif); font-weight:400; font-size:28px; line-height:1.1; letter-spacing:-0.01em; }
+.player-fecha { font-size:13px; margin-top:4px; }
+.player-close { border-radius:0; }
+.player-share { border-radius:0; }
+.player-escenas { padding:8px 22px 26px; }
+.pe-head { border-bottom:1px solid var(--line); padding:16px 0 12px; }
+.pe-head h4 { font-family:var(--serif); font-weight:400; font-size:24px; }
+.pe-list { background:none; border:none; border-radius:0; }
+.pe-item { padding:12px 2px; border-bottom:1px solid var(--line); }
+body.tema-claro .pe-item { border-bottom-color:var(--line); }
+.pe-item:hover, body.tema-claro .pe-item:hover { background:var(--row-hover); }
+.pe-item.actual, body.tema-claro .pe-item.actual { background:none; }
+.pe-tit { font-weight:500; }
+.pe-item.actual .pe-tit { color:var(--accent); }
+.pe-mini { border-radius:0; }
+@media (max-width:760px) {
+  .player-title { font-size:22px; }
+  .player-header { padding:10px 8px 10px 18px; }
+  .player-escenas { padding:4px 18px 26px; }
+}
+
+/* ─── ACERCAR AL ABRIR, ALEJAR AL CERRAR ───
+   El reproductor no aparece de golpe: el fondo de la página retrocede y se apaga,
+   y el vídeo se acerca. Al cerrarlo ocurre al revés: el vídeo se aleja y se
+   desvanece mientras la página vuelve a su sitio. Todo con la clase .open que ya
+   pone el JavaScript, así que el botón Atrás y el historial no cambian. */
+body:not(.modo-tv) .player-overlay {
+  display:flex; visibility:hidden; opacity:0; pointer-events:none;
+  background:rgba(8,7,5,0.66);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  transition:opacity 0.24s ease, visibility 0s linear 0.26s;
+}
+body:not(.modo-tv) .player-overlay.open {
+  visibility:visible; opacity:1; pointer-events:auto;
+  transition:opacity 0.3s ease, visibility 0s;
+}
+body.tema-claro:not(.modo-tv) .player-overlay { background:rgba(28,25,20,0.5); }
+body:not(.modo-tv) .player-box {
+  transform:scale(0.94) translateY(8px); opacity:0;
+  transition:transform 0.26s ease-in, opacity 0.22s ease-in;
+  will-change:transform, opacity;
+}
+body:not(.modo-tv) .player-overlay.open .player-box {
+  transform:none; opacity:1;
+  transition:transform 0.46s var(--ease-sala), opacity 0.26s ease;
+}
+/* Mientras se aleja, sin controles ni indicador de carga del navegador encima del fotograma */
+body:not(.modo-tv) .player-overlay:not(.open) #player-video::-webkit-media-controls { display:none !important; }
+body:not(.modo-tv) .player-overlay:not(.open) .player-loading { display:none; }
+/* La página de detrás retrocede (la cabecera no, porque contiene la barra fija del móvil) */
+body:not(.modo-tv) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
+  transform-origin:50% var(--sala-origen-y, 40vh);
+  transition:transform 0.45s var(--ease-sala), filter 0.45s ease;
+}
+body:not(.modo-tv):has(.player-overlay.open) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
+  transform:scale(0.94); filter:brightness(0.55) saturate(0.8);
+}
+
+/* ─── LA TARJETA "SE ALEJA" AL VOLVER DEL VÍDEO (idea de la maqueta de Gemini) ───
+   Con ratón, al pasar por encima, la foto se acerca y aparece un velo con ▶.
+   Al cerrar el vídeo, la tarjeta desde la que se abrió (clase .sala-vuelta, la pone
+   cerrarPlayer) arranca en ese estado y se aleja a su tamaño normal mientras el velo
+   se desvanece. En el móvil no hay "hover", así que solo se ve al volver. */
+body:not(.modo-tv) :is(.recent-thumb, .tl-thumb) { position:relative; overflow:hidden; }
+body:not(.modo-tv) .tl-thumb img { transition:transform 0.5s var(--ease-sala); }
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
+body:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0;
+  background:rgba(10,9,7,0.42) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%23D4652F'/><path fill='%231C0E08' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>") center / 48px no-repeat;
+  transition:opacity 0.3s ease;
+}
+body.tema-claro:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
+body.tema-claro:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%23B54818'/><path fill='%23FFF8F3' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>");
+}
+@media (hover:hover) {
+  body:not(.modo-tv) .nf-card:hover .nf-thumb,
+  body:not(.modo-tv) .recent-card:hover .recent-thumb img,
+  body:not(.modo-tv) .tl-card:hover .tl-thumb img { transform:scale(1.1); }
+  body:not(.modo-tv) .nf-card:hover .nf-btn.primary:not([disabled])::before,
+  body:not(.modo-tv) .recent-card:hover .recent-thumb::after,
+  body:not(.modo-tv) .tl-card:hover .tl-thumb::after { opacity:1; }
+  body:not(.modo-tv) .nf-card:hover .nf-btn.primary:not([disabled])::after { opacity:0; }
+}
+@keyframes sala-alejar { from { transform:scale(1.1); } to { transform:scale(1); } }
+@keyframes sala-velo { from { opacity:1; } to { opacity:0; } }
+@keyframes sala-insignia { from { opacity:0; } to { opacity:1; } }
+body:not(.modo-tv) .sala-vuelta :is(.nf-thumb, .recent-thumb img, .tl-thumb img, #cc-img img) {
+  animation:sala-alejar 0.6s cubic-bezier(0.25, 1, 0.5, 1) 0.18s both;
+}
+body:not(.modo-tv) .sala-vuelta .dia-thumb { animation:sala-alejar 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both; }
+body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::before,
+body:not(.modo-tv) .sala-vuelta :is(.recent-thumb, .tl-thumb)::after {
+  animation:sala-velo 0.35s ease 0.24s both;
+}
+body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::after { animation:sala-insignia 0.3s ease 0.45s both; }
+
+/* ─── ACCESIBILIDAD: sin animaciones si el sistema lo pide ─── */
+@media (prefers-reduced-motion: reduce) {
+  body:not(.modo-tv) .player-overlay, body:not(.modo-tv) .player-box,
+  body:not(.modo-tv) #app > *, .home-hero .dia-card .dia-thumb, .nf-thumb, .recent-thumb img, .tl-thumb img { transition:none !important; }
+  .sala-vuelta *, .sala-vuelta *::before, .sala-vuelta *::after { animation:none !important; }
+  body:not(.modo-tv) .player-box { transform:none !important; }
+  body:not(.modo-tv):has(.player-overlay.open) #app > * { transform:none !important; }
+}
+
+/* ─── MODO TV: hereda colores y fuentes; su maquetación sigue en tv.css ─── */
+body.modo-tv .home-hero { display:contents; }
