@@ -403,10 +403,10 @@ function cerrarShareModal() {
 
 async function generarYCompartir(caseroId, escenaIdx, t, permanente = false) {
   cerrarShareModal();
-  const r = await fetch(`${API}?action=compartir-generar`, {
+  const r = await fetch(`\( {API}?action=compartir-generar&token= \){encodeURIComponent(TOKEN)}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ pass: PASS, token: TOKEN, caseroId, escenaIdx, t, permanente })
+    body: JSON.stringify({ caseroId, escenaIdx, t, permanente })
   });
   const d = await r.json();
   if (!d.ok) { alert('Error al generar el código'); return; }
