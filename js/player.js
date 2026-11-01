@@ -26,7 +26,7 @@ function abrirPlayerEscena(caseroId, escenaIdx) {
   if (!c || !c.escenas) return;
   const e = c.escenas[escenaIdx];
   const nextE = c.escenas[escenaIdx + 1] || null;
-  _escenaActiva = { caseroId, escenaIdx, finT: nextE ? nextE.t : (c.duracion || null) };
+  _escenaActiva = { caseroId, escenaIdx, inicioT: e.t || 0, finT: nextE ? nextE.t : (c.duracion || null) };
   abrirPlayer(c.youtube, e.titulo, e.fecha, e.t);
 }
 
@@ -40,6 +40,60 @@ function siguienteEscena() {
 function ocultarPanelEscena() {
   const p = document.getElementById('escena-end-panel');
   if (p) p.classList.remove('open');
+}
+
+// ─── FIN DE ESCENA ────────────────────────────────────────────────────────────
+// Con una escena activa, al llegar a su final el vídeo se pausa y aparece el panel
+// "Fin de escena" (Siguiente escena / Ver de nuevo / Cerrar). La vigilancia no se
+// suelta nunca: si después se pulsa reproducir, vuelve a pararse.
+// En una escena COMPARTIDA (enlace con PIN) tampoco se puede salir de ella: si se
+// mueve la barra antes del inicio o después del final, se devuelve dentro de la escena.
+const panelEscenaAbierto = () => document.getElementById('escena-end-panel').classList.contains('open');
+function inicioEscena(e) {
+  if (e.inicioT != null) return e.inicioT;
+  const c = CASEROS.find(x => x.id === e.caseroId);
+  return (c && c.escenas && c.escenas[e.escenaIdx] && c.escenas[e.escenaIdx].t) || 0;
+}
+function vigilarEscena(video) {
+  const e = _escenaActiva;
+  if (!e || video.style.display === 'none') return;
+  const ini = inicioEscena(e);
+  if (e.compartido) {
+    if (video.currentTime < ini - 0.5) { video.currentTime = ini; return; }
+    if (e.finT && video.currentTime > e.finT) video.currentTime = Math.max(ini, e.finT - 0.6);
+  }
+  if (!e.finT) return;
+  const alFinal = video.currentTime >= e.finT - 0.5;
+  if (!alFinal && !panelEscenaAbierto()) return;
+  if (!video.paused) video.pause();
+  if (alFinal && !panelEscenaAbierto()) mostrarFinEscena();
+}
+function mostrarFinEscena() {
+  const e = _escenaActiva;
+  const c = CASEROS.find(x => x.id === e.caseroId);
+  const isLast = !c || !c.escenas || e.escenaIdx >= c.escenas.length - 1;
+  const nextE = (isLast || e.compartido) ? null : c.escenas[e.escenaIdx + 1];
+  document.getElementById('escena-end-title').textContent = 'Fin de escena';
+  document.getElementById('escena-end-sub').textContent = nextE ? ('Siguiente: ' + nextE.titulo + ' · ' + nextE.fecha) : '';
+  document.getElementById('escena-end-next').style.display = nextE ? '' : 'none';
+  // Si no hay siguiente escena, "Ver de nuevo" pasa a ser el botón principal
+  document.getElementById('escena-end-replay').className = 'escena-end-btn ' + (nextE ? 'ghost' : 'primary');
+  // Salir de pantalla completa antes de mostrar el panel
+  const showPanel = () => document.getElementById('escena-end-panel').classList.add('open');
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
+    try { Promise.resolve(exitFs.call(document)).then(showPanel, showPanel); } catch (err) { showPanel(); }
+  } else {
+    showPanel();
+  }
+}
+function repetirEscena() {
+  const e = _escenaActiva;
+  const v = document.getElementById('player-video');
+  if (!e || !v) return;
+  ocultarPanelEscena();
+  v.currentTime = inicioEscena(e);
+  v.play().catch(() => {});
 }
 
 // ─── VÍDEO PROTEGIDO (HLS) ────────────────────────────────────────────────────
@@ -185,37 +239,9 @@ function abrirPlayer(url, titulo, fecha, min) {
     iframe.src = '';
     video.oncanplay = () => loading.classList.add('hidden');
     reproducirVideo(video, url, min, token);
-    video.ontimeupdate = function() {
-      if (!_escenaActiva) return;
-      // Restringir seek fuera del rango si es escena compartida
-      if (_escenaActiva.compartido) {
-        if (video.currentTime < _escenaActiva.inicioT - 0.5) {
-          video.currentTime = _escenaActiva.inicioT;
-          return;
-        }
-      }
-      if (!_escenaActiva.finT) return;
-      if (video.currentTime >= _escenaActiva.finT - 0.5) {
-        video.pause();
-        video.ontimeupdate = null;
-        const c = CASEROS.find(x => x.id === _escenaActiva.caseroId);
-        const isLast = _escenaActiva.escenaIdx >= c.escenas.length - 1;
-        const isCompartido = !!_escenaActiva.compartido;
-        const nextE = (isLast || isCompartido) ? null : c.escenas[_escenaActiva.escenaIdx + 1];
-        document.getElementById('escena-end-title').textContent = 'Fin de escena';
-        document.getElementById('escena-end-sub').textContent = nextE ? ('Siguiente: ' + nextE.titulo + ' · ' + nextE.fecha) : '';
-        const btnNext = document.getElementById('escena-end-next');
-        btnNext.style.display = (isLast || isCompartido) ? 'none' : '';
-        // Salir de pantalla completa antes de mostrar el panel
-        const showPanel = () => document.getElementById('escena-end-panel').classList.add('open');
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-          const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
-          exitFs.call(document).then(showPanel).catch(showPanel);
-        } else {
-          showPanel();
-        }
-      }
-    };
+    video.ontimeupdate = () => vigilarEscena(video);
+    video.onseeking = () => vigilarEscena(video);
+    video.onplay = () => vigilarEscena(video);
   }
 }
 
@@ -416,6 +442,8 @@ function cerrarPlayer(e) {
   detenerHls();
   vid.pause();
   vid.ontimeupdate = null;
+  vid.onseeking = null;
+  vid.onplay = null;
   vid.src = '';
   _urlActual = '';
   document.getElementById('player-loading').classList.add('hidden');

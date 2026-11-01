@@ -26,7 +26,7 @@
 
 **Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al fusionar en `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
-**Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101d`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
+**Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101f`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
 
 **Nunca entra en el repositorio** (regla fijada en `.gitignore`):
 - `claves.php` y `secret.key`;
@@ -241,7 +241,7 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 | `caseros` | contraseña fija | solo caseros (con inicio adaptado desde el 1 nov 2026) |
 | `actuaciones` | contraseña fija | solo actuaciones (con inicio adaptado desde el 1 nov 2026) |
 | OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP |
-| `compartir` | PIN de 4 dígitos de un enlace compartido | **solo ese vídeo**; la restricción a una escena se aplica solo en la pantalla |
+| `compartir` | PIN de 4 dígitos de un enlace compartido | **solo ese vídeo**; la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
 
 **Contraseñas:** viven en `privado/claves.php`, que devuelve un array con las claves `admin`, `todo`, `caseros` y `actuaciones`. Carlos las cambió el 30 de octubre de 2026.
 - **Nunca** pongas contraseñas en `api.php`, en este documento ni en la conversación.
@@ -307,7 +307,7 @@ Valida el nombre con la expresión `^[\p{L}\p{N}._ \-]+$`, sin `..` y sin punto 
   4. `min` lo fija la escena. Si no hay escena, se usa el `#t=` de la URL.
 
 Más detalles del reproductor:
-- **Escenas:** `video.ontimeupdate` controla el fin de escena, que muestra un panel, y los enlaces compartidos que no deben ir antes del inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
+- **Escenas:** `vigilarEscena()` (en `ontimeupdate`, `onseeking` y `onplay`) controla el fin de escena: pausa el vídeo y muestra el panel "Fin de escena" (Siguiente escena / **Ver de nuevo** / Cerrar; sin siguiente, "Ver de nuevo" es el botón principal). La vigilancia no se suelta: si se vuelve a pulsar reproducir, se para otra vez. En una **escena compartida** tampoco se puede salir de ella: si se mueve la barra antes del inicio o después del final, vuelve dentro de la escena (corregido el 1 nov 2026; antes, tras el panel, el vídeo seguía reproduciéndose de fondo fuera de la escena). `repetirEscena()` vuelve al inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
 - **Compartir:** `_urlActual` guarda la URL original. No se usa `video.src`, que con hls.js es un `blob:`.
 - **Cargas que se cruzan:** `_playToken` evita que una carga lenta pise a otra más nueva. `cerrarPlayer()` destruye hls.js.
 - **Service worker** (`sw.js`, versión v6): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.

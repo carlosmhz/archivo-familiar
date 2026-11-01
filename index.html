@@ -12,9 +12,9 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261101e">
-<link rel="stylesheet" href="css/sala.css?v=20261101e">
-<link rel="stylesheet" href="css/comentarios.css?v=20261101e">
+<link rel="stylesheet" href="css/app.css?v=20261101f">
+<link rel="stylesheet" href="css/sala.css?v=20261101f">
+<link rel="stylesheet" href="css/comentarios.css?v=20261101f">
 </head>
 <body>
 
@@ -217,6 +217,7 @@
           <div class="escena-end-sub" id="escena-end-sub"></div>
           <div class="escena-end-btns">
             <button class="escena-end-btn primary" id="escena-end-next" onclick="siguienteEscena()">Siguiente escena ›</button>
+            <button class="escena-end-btn ghost" id="escena-end-replay" onclick="repetirEscena()"><svg class="ico"><use href="#i-replay"/></svg> Ver de nuevo</button>
             <button class="escena-end-btn ghost" onclick="cerrarPlayer()">Cerrar</button>
           </div>
         </div>
@@ -237,14 +238,14 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/estado.js?v=20261101e"></script>
-<script src="js/auth.js?v=20261101e"></script>
-<script src="js/inicio.js?v=20261101e"></script>
-<script src="js/navegacion.js?v=20261101e"></script>
-<script src="js/caseros.js?v=20261101e"></script>
-<script src="js/player.js?v=20261101e"></script>
-<script src="js/comentarios.js?v=20261101e"></script>
-<script src="js/ui.js?v=20261101e"></script>
+<script src="js/estado.js?v=20261101f"></script>
+<script src="js/auth.js?v=20261101f"></script>
+<script src="js/inicio.js?v=20261101f"></script>
+<script src="js/navegacion.js?v=20261101f"></script>
+<script src="js/caseros.js?v=20261101f"></script>
+<script src="js/player.js?v=20261101f"></script>
+<script src="js/comentarios.js?v=20261101f"></script>
+<script src="js/ui.js?v=20261101f"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -259,7 +260,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css?v=20261101e">
+<link rel="stylesheet" href="css/tv.css?v=20261101f">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -268,12 +269,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js?v=20261101e"></script>
+<script src="js/tv.js?v=20261101f"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101e">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101f">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -286,7 +287,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js?v=20261101e"></script>
+<script src="js/tv-actuaciones.js?v=20261101f"></script>
 
 </body>
 </html>
