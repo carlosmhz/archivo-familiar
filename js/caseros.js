@@ -266,15 +266,11 @@ function renderCaseros() {
   cardsEl.innerHTML = html;
   rulerEl.innerHTML = '';
 
-  // Drag to scroll
+  // Arrastrar con el ratón para desplazar (con inercia)
   const scroll = document.getElementById('tl-scroll');
   if (scroll && !scroll._dragInit) {
     scroll._dragInit = true;
-    let isDown=false, startX, scrollLeft;
-    scroll.addEventListener('mousedown', e => { isDown=true; scroll.style.cursor='grabbing'; startX=e.pageX-scroll.offsetLeft; scrollLeft=scroll.scrollLeft; });
-    scroll.addEventListener('mouseleave', ()=>{ isDown=false; scroll.style.cursor='grab'; });
-    scroll.addEventListener('mouseup', ()=>{ isDown=false; scroll.style.cursor='grab'; });
-    scroll.addEventListener('mousemove', e=>{ if(!isDown)return; e.preventDefault(); scroll.scrollLeft=scrollLeft-(e.pageX-scroll.offsetLeft-startX)*1.5; });
+    arrastrarConInercia(scroll);
   }
 
     // Flecha de scroll — se oculta al llegar al final
@@ -382,13 +378,51 @@ function renderDecadas() {
     </div>`;
   }).join('');
 
-  // Drag to scroll each row
-  el.querySelectorAll('.decada-row').forEach(row => {
-    let isDown=false, startX, scrollLeft;
-    row.addEventListener('mousedown', e=>{isDown=true;row.style.cursor='grabbing';startX=e.pageX-row.offsetLeft;scrollLeft=row.scrollLeft;});
-    row.addEventListener('mouseleave',()=>{isDown=false;row.style.cursor='grab';});
-    row.addEventListener('mouseup',()=>{isDown=false;row.style.cursor='grab';});
-    row.addEventListener('mousemove',e=>{if(!isDown)return;e.preventDefault();row.scrollLeft=scrollLeft-(e.pageX-row.offsetLeft-startX)*1.5;});
+  // Arrastrar con el ratón para desplazar cada fila (con inercia)
+  el.querySelectorAll('.decada-row').forEach(arrastrarConInercia);
+}
+
+// ─── Arrastre con el ratón con inercia ────────────────────────────────────────
+// En pantallas táctiles el navegador ya desplaza con inercia, así que aquí solo se trata
+// el ratón. Al soltar, el desplazamiento sigue con la velocidad que llevaba y se va
+// frenando poco a poco. Si se arrastró, el clic de después se ignora (no abre un vídeo).
+function arrastrarConInercia(el) {
+  let down = false, moved = false, x0 = 0, left0 = 0, last = 0, lastT = 0, vel = 0, raf = 0;
+  const FRICCION = 0.94;        // más cerca de 1 = más inercia
+  const parar = () => { cancelAnimationFrame(raf); raf = 0; };
+  const inercia = () => {
+    vel *= FRICCION;
+    if (Math.abs(vel) < 0.15) { raf = 0; return; }
+    const antes = el.scrollLeft;
+    el.scrollLeft += vel;
+    if (el.scrollLeft === antes) { raf = 0; return; }   // llegó al borde
+    raf = requestAnimationFrame(inercia);
+  };
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    parar(); down = true; moved = false; x0 = e.clientX; left0 = el.scrollLeft; last = e.clientX; lastT = performance.now(); vel = 0;
+    el.style.cursor = 'grabbing'; el.style.scrollSnapType = 'none';
   });
+  window.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - x0;
+    if (!moved && Math.abs(dx) > 5) { moved = true; try { el.setPointerCapture(e.pointerId); } catch (err) {} }
+    if (!moved) return;
+    e.preventDefault();
+    el.scrollLeft = left0 - dx * 1.3;
+    const ahora = performance.now(), dt = Math.max(1, ahora - lastT);
+    const v = -(e.clientX - last) * 1.3 / dt * 16;   // píxeles por fotograma (~16 ms)
+    vel = vel * 0.6 + v * 0.4;                         // suavizado: ignora un último gesto brusco
+    last = e.clientX; lastT = ahora;
+  }, { passive: false });
+  const soltar = () => {
+    if (!down) return;
+    down = false; el.style.cursor = 'grab'; el.style.scrollSnapType = '';
+    if (moved && performance.now() - lastT < 80 && Math.abs(vel) > 0.5) raf = requestAnimationFrame(inercia);
+  };
+  window.addEventListener('pointerup', soltar);
+  window.addEventListener('pointercancel', soltar);
+  el.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  el.addEventListener('wheel', parar, { passive: true });
 }
 
