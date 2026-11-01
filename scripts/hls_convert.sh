@@ -1,5 +1,10 @@
 #!/bin/bash
-cd ~/domains/app.mpi-sala.es/public_html/videos || exit 1
+# Carpeta de datos: ARCHIVO_DATOS si está definida; si no, ~/domains/app.mpi-sala.es/archivo-datos
+# (disposición nueva) y, si no existe, la carpeta de la web (disposición antigua).
+APP=~/domains/app.mpi-sala.es
+RAIZ=${ARCHIVO_DATOS:-$APP/archivo-datos}
+[ -d "$RAIZ/caseros" ] || RAIZ=$APP/public_html/videos
+cd "$RAIZ" || exit 1
 mkdir -p hls
 files=("$@"); [ ${#files[@]} -eq 0 ] && files=(caseros/*.mp4)
 for f in "${files[@]}"; do
