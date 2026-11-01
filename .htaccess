@@ -1,0 +1,6 @@
+# Bloquea por web lo que no es parte de la app: documentación, scripts, código de lib/ y .git.
+# (RewriteRule [F,L] funciona en LiteSpeed; <FilesMatch> no.)
+RewriteEngine On
+RewriteRule (^|/)\.git(/|$) - [F,L]
+RewriteRule ^(docs|scripts|lib)(/|$) - [F,L]
+RewriteRule \.(md|sh)$ - [F,L]

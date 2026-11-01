@@ -1,6 +1,6 @@
 <?php
-// Utilidades de seguridad compartidas por api.php y stream.php.
-// No imprime nada: solo define funciones.
+// Utilidades de seguridad compartidas por la API y el streaming.
+// No imprime nada: solo define funciones. Requiere config.php.
 
 function falloConfig($msg) {
     http_response_code(500);
@@ -13,7 +13,7 @@ function falloConfig($msg) {
 function cargarClaves() {
     static $c = null;
     if ($c !== null) return $c;
-    foreach ([dirname(__DIR__, 2) . '/privado/claves.php', __DIR__ . '/claves.php'] as $f) {
+    foreach ([DIR_PRIVADO . '/claves.php', RAIZ_CODIGO . '/claves.php'] as $f) {
         if (!is_file($f)) continue;
         $r = require $f;
         if (!is_array($r)) falloConfig('claves.php no es valido');
@@ -29,7 +29,7 @@ function cargarClaves() {
 function secretoHmac() {
     static $s = null;
     if ($s) return $s;
-    $dirs = [dirname(__DIR__, 2) . '/privado', __DIR__ . '/datos'];
+    $dirs = [DIR_PRIVADO, DIR_DATOS];
     foreach ($dirs as $d) {
         $f = $d . '/secret.key';
         if (is_file($f)) { $x = trim((string)file_get_contents($f)); if ($x !== '') return $s = $x; }
@@ -79,7 +79,7 @@ function nombreVideo($url) {
 }
 
 // ── Freno a la fuerza bruta: 8 fallos en 15 min -> bloqueo temporal por IP ───
-define('FILE_INTENTOS', __DIR__ . '/datos/intentos.json');
+define('FILE_INTENTOS', DIR_DATOS . '/intentos.json');
 
 function ipCliente() { return $_SERVER['REMOTE_ADDR'] ?? '0'; }
 
