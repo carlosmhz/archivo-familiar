@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fase 1 de la reestructuración).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas en producción).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -14,7 +14,7 @@
 
 | Rama | Para qué | Se despliega en |
 |---|---|---|
-| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos` con hPanel → GIT (cuando se conecte) |
+| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos`, con hPanel → GIT (conectado el 1 nov 2026) |
 | `develop` | Integración previa a `main` | No se despliega: **no hay entorno de pruebas** (decisión de Carlos, 1 nov 2026) |
 | `feature/<tema>` | Cada cambio concreto | No se despliega |
 
@@ -24,7 +24,7 @@
 3. El agente lo fusiona él mismo; después abre y fusiona el PR de `develop` a `main`.
 4. Cuando hPanel → GIT esté conectado a `main`, **cada fusión a `main` es un despliegue a producción**: por eso la prueba local es obligatoria y no se fusiona nada sin pasarla. Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
 
-**Despliegue:** con la herramienta **GIT de hPanel**, que conecta el repositorio y la rama a una carpeta y despliega al hacer push. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
+**Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Después de fusionar a `main`, Carlos debe pulsar **Implementar** en hPanel; no está comprobado que despliegue solo al hacer push, así que tras cada fusión relevante el agente le recuerda que implemente. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
 **Nunca entra en el repositorio** (regla fijada en `.gitignore`):
 - `claves.php` y `secret.key`;
@@ -34,10 +34,11 @@
 - el APK;
 - copias de seguridad.
 
-**Estado del repositorio (1 de noviembre de 2026):**
-- Estaba vacío.
-- Carlos sube a `main` el código que hay ahora en producción, como foto de partida.
-- La reestructuración se hará en `develop` y en ramas `feature/*`.
+**Estado del repositorio y del servidor (1 de noviembre de 2026):**
+- `main` es lo que sirve producción: Carlos desplegó las fases 1 y 2 con hPanel → GIT y lo comprobó (acceso, vídeos, miniaturas, app del móvil, 403 en `datos/` y `lib/`).
+- Los datos siguen donde estaban, pero la carpeta antigua se renombró a `public_html/videos_antiguo/` y `privado/config.php` apunta a ella (`'datos' => '/home/u962444875/domains/app.mpi-sala.es/public_html/videos_antiguo'`). Contiene también el código viejo, ya sin uso, y el APK.
+- `public_html/videos-nuevo/` fue la prueba en paralelo y se puede borrar (también su despliegue de GIT, si sigue en hPanel).
+- Pendiente cuando Carlos tenga ordenador: renombrar `videos_antiguo` a `archivo-datos` (mismo nivel que `privado/`), borrar `privado/config.php` y retirar el código viejo y el APK de esa carpeta.
 
 ---
 
@@ -56,7 +57,7 @@ api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, accione
 
 El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
 
-**Fase 2 — PHP y datos (hecha, fusionada el 1 nov 2026; falta desplegar):** el PHP se parte en `lib/` y los datos se separan del código.
+**Fase 2 — PHP y datos (hecha, fusionada y desplegada el 1 nov 2026):** el PHP se parte en `lib/` y los datos se separan del código.
 - `api.php` y `stream.php` siguen en la raíz como punto de entrada (**las URL no cambian**) y solo hacen `require` de `lib/api.php` y `lib/stream.php`.
 - `lib/config.php`: rutas. Los datos (`datos/`, `hls/`, `caseros/`, `miniaturas/`) se buscan en `privado/config.php` (`'datos'`), si no en `../archivo-datos/` y, si no, junto al código (disposición antigua). Así el código funciona antes y después de migrar los datos.
 - `lib/auth.php` (tokens, claves, freno), `lib/datos.php` (JSON, ids, miniaturas), `lib/sesion.php` (claves, roles, sesión) y `lib/acciones/*.php` (una por grupo: login, actuaciones, caseros, miniaturas, otp, compartir, video).
@@ -147,7 +148,7 @@ Clientes:
 
 ## 3. Estructura de archivos en producción (antes de reestructurar)
 
-> Así está el servidor el 1 de noviembre de 2026. La estructura objetivo está en el apartado 0.1.
+> **Histórico:** así estaba el servidor antes del despliegue del 1 de noviembre de 2026. Hoy `public_html/videos/` contiene el código del repositorio (apartado 0.1) y los datos están en `public_html/videos_antiguo/` con la misma disposición que se describe aquí (`datos/`, `hls/`, `caseros/`). El árbol de abajo sigue valiendo para entender los datos.
 
 ```
 ~/domains/app.mpi-sala.es/
@@ -345,7 +346,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 **Primero, el repositorio:**
 1. Carlos sube a `main` el código actual de producción (solo código).
 2. El agente crea `develop`, añade `CLAUDE.md`, `.gitignore` y `README.md`, y prepara la propuesta de reestructuración en ramas `feature/*`.
-3. Configurar hPanel → GIT para `main` y migrar los datos a `archivo-datos/` (ver `docs/DESPLIEGUE.md`).
+3. Hecho el 1 nov 2026: hPanel → GIT conectado a `main`. Falta solo renombrar la carpeta de datos (ver pendiente 0).
 
 **Desplegado y confirmado:**
 - HLS con hls.js en local.
@@ -359,7 +360,8 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
 
 **Pendiente:**
-0. **Desplegar la fase 2** siguiendo `docs/DESPLIEGUE.md` (conectar hPanel → GIT y migrar los datos a `archivo-datos/`). Hasta entonces el servidor sigue con el código antiguo.
+0. **Terminar la migración** (con ordenador): renombrar `videos_antiguo` a `archivo-datos`, borrar `privado/config.php`, quitar de ahí el código viejo y el APK, y borrar `videos-nuevo`. Si el APK debe seguir descargándose desde la web, decidir cómo servirlo (no está en el repositorio).
+0b. Actualizar la tarea programada del script HLS para usar `public_html/videos/scripts/hls_convert.sh` (busca solo la carpeta de datos) y comparar ese script con `~/hls_convert.sh`, que era el original.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
 3. Probar varios vídeos desde la app, entre ellos `comunion-javier-carlos` con `#t=1755`.
