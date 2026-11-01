@@ -299,7 +299,9 @@ body.tema-claro .tl-scroll-arrow { background:linear-gradient(to right, transpar
 body.tema-claro .share-modal, body.tema-claro .escena-end-panel { background:color-mix(in srgb, var(--bg) 96%, transparent); }
 .share-modal-title, .escena-end-title { font-family:var(--serif); font-weight:400; font-size:32px; }
 .share-btn, .escena-end-btn { border-radius:0; font-weight:600; }
-.escena-end-panel { background:color-mix(in srgb, var(--bg) 92%, transparent); }
+.escena-end-panel { background:color-mix(in srgb, var(--bg) 96%, transparent); }
+.escena-end-btn { display:inline-flex; align-items:center; gap:8px; }
+.player-embed:has(.escena-end-panel.open) #player-video::-webkit-media-controls { display:none !important; }
 .compartir-card { border-radius:0; background:var(--surface); }
 .compartir-titulo { font-family:var(--serif); font-weight:400; font-size:30px; }
 .compartir-btn { border-radius:0; }
