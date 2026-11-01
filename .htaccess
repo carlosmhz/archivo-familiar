@@ -4,3 +4,12 @@ RewriteEngine On
 RewriteRule (^|/)\.git(/|$) - [F,L]
 RewriteRule ^(docs|scripts|lib)(/|$) - [F,L]
 RewriteRule \.(md|sh)$ - [F,L]
+
+# La página, el service worker y el manifiesto: el navegador debe preguntar siempre si hay
+# versión nueva (si no la hay, el servidor responde 304 y no se descarga nada). Sin esto,
+# el navegador puede reutilizar un index.html viejo durante horas tras un despliegue.
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|admin\.html|sw\.js|manifest\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
