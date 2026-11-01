@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026.
+> Última actualización: 1 de noviembre de 2026 (fase 1 de la reestructuración).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -43,7 +43,22 @@
 
 ---
 
-## 0.1 Reestructuración prevista (propuesta, por validar)
+## 0.1 Reestructuración (en curso)
+
+**Fase 1 — frontend (hecha en `feature/reestructura-frontend`, pendiente de fusionar):** el CSS y el JavaScript salen de `index.html` y `admin.html`. Se mantienen scripts clásicos, cargados en el mismo orden que antes, para no cambiar el comportamiento (los `onclick` del HTML siguen usando funciones globales). Layout resultante en la raíz del repositorio:
+
+```
+index.html, admin.html          solo maquetación
+css/   app.css, tv.css, tv-actuaciones.css, admin.css
+js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.js   (orden de carga en index.html)
+       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
+vendor/hls.min.js               hls.js 1.5.17
+api.php, auth.php, stream.php, sw.js (cache v4), manifest.json, icon-*.png, scripts/hls_convert.sh
+```
+
+El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
+
+**Fases siguientes (propuesta, por validar):** pasar los scripts a módulos ES y quitar los `onclick`, mover el PHP a `api/` y `lib/`, y separar código y datos. Objetivo final:
 
 Hoy todo el CSS y el JavaScript de la app van dentro de `index.html`, que tiene unas 2 300 líneas y unos 118 KB, y `admin.html` está igual. El objetivo es separarlos por responsabilidades sin añadir compilación.
 
@@ -53,14 +68,14 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 ├── .htaccess                     ← bloquea /docs, /scripts, /lib, /config, *.md por web
 ├── index.html                    ← solo maquetación
 ├── admin.html
-├── css/        app.css, player.css, tv.css, admin.css …
-├── js/         (módulos ES) api.js, auth.js, player.js, catalogo.js, compartir.js, tv.js, admin/*.js
-├── vendor/     hls.min.js (versión fija 1.5.17)
+├── css/        app.css, tv.css, tv-actuaciones.css, admin.css  [hecho]
+├── js/         de momento scripts clásicos por secciones [hecho]; pasar a módulos ES en la fase 2
+├── vendor/     hls.min.js (versión fija 1.5.17)  [hecho]
 ├── api/        index.php (rutas) o un archivo por grupo de acciones
 ├── stream.php
 ├── lib/        auth.php, datos.php, config.php (rutas, sin secretos)
-├── sw.js, manifest.json, icons/
-├── scripts/    hls_convert.sh y otras utilidades de servidor
+├── sw.js, manifest.json, icons/   (hoy icon-192.png e icon-512.png en la raíz)
+├── scripts/    hls_convert.sh y otras utilidades de servidor  (en PR #1)
 └── docs/       documentación adicional
 ```
 
@@ -139,7 +154,7 @@ Clientes:
     ├── api.php                   ← API JSON (sin contraseñas dentro)
     ├── auth.php                  ← tokens firmados, claves, nombres válidos, freno anti fuerza bruta
     ├── stream.php                ← sirve HLS/MP4 solo con token firmado
-    ├── sw.js                     ← service worker (cache archivo-familiar-v3)
+    ├── sw.js                     ← service worker (cache archivo-familiar-v4 desde la fase 1)
     ├── hls.min.js                ← hls.js 1.5.17 alojado localmente (413 952 bytes)
     ├── manifest.json, icon-*.png, apple-touch-icon.png
     ├── archivo-familiar.apk      ← app Android (WebView)
@@ -252,7 +267,7 @@ Más detalles del reproductor:
 - **Escenas:** `video.ontimeupdate` controla el fin de escena, que muestra un panel, y los enlaces compartidos que no deben ir antes del inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
 - **Compartir:** `_urlActual` guarda la URL original. No se usa `video.src`, que con hls.js es un `blob:`.
 - **Cargas que se cruzan:** `_playToken` evita que una carga lenta pise a otra más nueva. `cerrarPlayer()` destruye hls.js.
-- **Service worker** (`sw.js`, versión v3): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
+- **Service worker** (`sw.js`, versión v4): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
 
 ---
 
@@ -337,6 +352,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
 
 **Pendiente:**
+0. Falta `apple-touch-icon.png` en el repositorio (index.html y la PWA lo referencian y existe en producción, pero no se subió). Carlos debe añadirlo.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
 3. Probar varios vídeos desde la app, entre ellos `comunion-javier-carlos` con `#t=1755`.

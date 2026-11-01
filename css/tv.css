@@ -1,0 +1,126 @@
+body.modo-tv { background: #0E1014 !important; }
+body.modo-tv .search-wrap { display: none !important; }
+
+body.modo-tv .site-header { padding: 16px 48px; }
+body.modo-tv .search-input,
+body.modo-tv .logout-btn { display: none !important; }
+
+body.modo-tv #home-screen { gap: 60px; padding: 80px 60px; }
+body.modo-tv .section-card { width: 320px; padding: 70px 60px; }
+body.modo-tv .card-title { font-size: 26px; }
+body.modo-tv .card-desc  { font-size: 15px; }
+
+/* Ocultar tab Timeline */
+body.modo-tv .subcategory-tabs { display: none !important; }
+body.modo-tv #tab-anos         { display: none !important; }
+body.modo-tv #tab-decadas      { display: block !important; }
+
+body.modo-tv #screen-caseros {
+  padding: 0; max-width: 100%; background: #0E1014; min-height: 100vh;
+}
+body.modo-tv #screen-caseros .back-btn { margin: 24px 48px 0; color: #ECEDEF; font-size: 15px; }
+body.modo-tv #screen-caseros .section-title { margin: 8px 48px 4px; color: #ECEDEF; font-size: 28px; }
+body.modo-tv #screen-caseros .section-subtitle { margin: 0 48px 24px; }
+
+body.modo-tv .decada-section { margin-bottom: 48px; padding: 0 48px; }
+body.modo-tv .decada-title {
+  font-size: 22px; color: #ECEDEF;
+  border-bottom: 2px solid rgba(236,237,239,0.15);
+  margin-bottom: 20px; padding-bottom: 10px;
+}
+
+body.modo-tv .decada-row {
+  gap: 20px; padding: 8px 0 20px;
+  scrollbar-width: none; overflow-x: auto; overflow-y: visible;
+}
+body.modo-tv .decada-row::-webkit-scrollbar { display: none; }
+
+body.modo-tv .nf-card {
+  width: 220px; flex-shrink: 0; background: #171A21;
+  border-radius: 12px; border: 3px solid transparent;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+body.modo-tv .nf-thumb { aspect-ratio: 16/9; }
+body.modo-tv .nf-thumb-placeholder { aspect-ratio: 16/9; font-size: 40px; }
+body.modo-tv .nf-info { padding: 12px 14px 14px; }
+body.modo-tv .nf-cat    { font-size: 10px; color: #E8A33D; margin-bottom: 4px; }
+body.modo-tv .nf-titulo { font-size: 14px; font-weight: 700; color: #ECEDEF; margin-bottom: 3px; }
+body.modo-tv .nf-fecha  { font-size: 12px; color: rgba(236,237,239,0.6); margin-bottom: 10px; }
+body.modo-tv .nf-btns { gap: 8px; }
+body.modo-tv .nf-btn  { padding: 10px 8px; font-size: 13px; border-radius: 8px; }
+body.modo-tv .nf-btn.primary   { background: #2A2F3A; }
+body.modo-tv .nf-btn.secondary { background: rgba(232,163,61,0.2); color: #ECEDEF; border: 1px solid rgba(232,163,61,0.3); }
+
+/* FOCO VISUAL */
+body.modo-tv .tv-focused {
+  outline: none !important;
+  border-color: #E8A33D !important;
+  box-shadow: 0 0 0 3px rgba(232,163,61,0.5), 0 8px 32px rgba(232,163,61,0.3) !important;
+  transform: translateY(-6px) scale(1.04) !important;
+}
+body.modo-tv .section-card.tv-focused { transform: translateY(-12px) scale(1.05) !important; }
+
+/* Modal de escenas */
+body.modo-tv .caseros-modal-box {
+  max-width: 700px; background: #171A21;
+  border-radius: 20px; border: 1px solid rgba(236,237,239,0.2);
+}
+body.modo-tv .caseros-modal-header {
+  background: #0E1014; border-bottom: 1px solid rgba(236,237,239,0.1); padding: 24px 28px;
+}
+body.modo-tv .caseros-modal-header h3 { color: #ECEDEF; font-size: 22px; }
+body.modo-tv .caseros-modal-header p  { color: rgba(236,237,239,0.5); font-size: 13px; }
+body.modo-tv .caseros-modal-close { color: rgba(236,237,239,0.5); font-size: 28px; }
+body.modo-tv .caseros-modal-grid { background: #171A21; max-height: 70vh; }
+body.modo-tv .caseros-modal-grid [onclick*="abrirPlayerEscena"] {
+  border-radius: 12px !important;
+  border-bottom: 1px solid rgba(236,237,239,0.08) !important;
+  padding: 16px 18px !important;
+}
+body.modo-tv .caseros-modal-grid [onclick*="abrirPlayerEscena"].tv-focused {
+  background: rgba(232,163,61,0.2) !important;
+  outline: 2px solid #E8A33D !important;
+}
+
+/* FIX 3: Player pantalla completa */
+body.modo-tv .player-overlay {
+  background: #000 !important;
+}
+body.modo-tv .player-box {
+  width: 100% !important; height: 100% !important;
+  max-width: 100% !important; border-radius: 0 !important;
+  background: #000 !important;
+  display: flex !important; flex-direction: column !important;
+  position: relative !important;
+}
+body.modo-tv .player-header {
+  position: absolute !important;
+  top: 0; left: 0; right: 0; z-index: 10;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%) !important;
+  padding: 20px 32px !important;
+  flex-shrink: 0;
+}
+body.modo-tv .player-embed {
+  position: absolute !important;
+  inset: 0 !important;
+  flex: 1 !important;
+}
+body.modo-tv .player-header { display: none !important; }
+body.modo-tv #player-video,
+body.modo-tv #player-iframe {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Indicador mando */
+#tv-remote-indicator {
+  display: none;
+  position: fixed; bottom: 28px; right: 28px;
+  background: rgba(14,16,20,0.9); border: 1px solid rgba(236,237,239,0.2);
+  border-radius: 10px; padding: 12px 16px;
+  z-index: 9999; color: rgba(255,255,255,0.6); font-size: 12px; line-height: 2;
+  backdrop-filter: blur(8px); pointer-events: none;
+}
+body.modo-tv #tv-remote-indicator { display: block; }
