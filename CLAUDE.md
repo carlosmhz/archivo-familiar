@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -24,7 +24,7 @@
 3. El agente lo fusiona él mismo; después abre y fusiona el PR de `develop` a `main`.
 4. Cuando hPanel → GIT esté conectado a `main`, **cada fusión a `main` es un despliegue a producción**: por eso la prueba local es obligatoria y no se fusiona nada sin pasarla. Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
 
-**Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Después de fusionar a `main`, Carlos debe pulsar **Implementar** en hPanel; no está comprobado que despliegue solo al hacer push, así que tras cada fusión relevante el agente le recuerda que implemente. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
+**Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al fusionar en `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
 **Nunca entra en el repositorio** (regla fijada en `.gitignore`):
 - `claves.php` y `secret.key`;
@@ -67,7 +67,7 @@ El script inline que aplica el tema claro antes de pintar se queda en `index.htm
 - `scripts/hls_convert.sh` busca la carpeta de datos (`ARCHIVO_DATOS`, `../archivo-datos`, o la carpeta antigua).
 - Despliegue paso a paso: `docs/DESPLIEGUE.md`.
 
-## 0.2 Interfaz "sala" (rama `feature/interfaz-sala`, propuesta del 1 nov 2026, pendiente de que Carlos la apruebe)
+## 0.2 Interfaz "sala" (aprobada por Carlos y fusionada en `main` el 1 nov 2026)
 
 Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (efecto de zoom al cerrar el vídeo). **Solo apariencia**: no cambia la API, la autenticación ni el HTML que genera el JavaScript.
 - `css/sala.css`, cargada después de `app.css`, redefine la paleta (oscuro "sala" `#12110E` con acento terracota `#D4652F`; claro "papel" `#F4EFE6` con `#B54818`), las fuentes (Newsreader para títulos, Outfit para el texto, alojadas en `vendor/fonts/`), esquinas rectas y un grano de película muy suave. **Para volver al aspecto anterior basta con quitar su `<link>` de `index.html`.**
@@ -369,6 +369,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Soporte de `#t=` en la URL.
 - Los 17 vídeos convertidos.
 - Fases 1 y 2 de la reestructuración y migración de datos (1 nov 2026).
+- Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026. Pendiente de que Carlos la vea en producción, en la app y en la tele (`?tv=1`).
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
