@@ -58,7 +58,33 @@ function miniHtml(c) {
   const tc = thumbClass(c.tipo, c.categoria);
   return `<div class="recent-thumb t-${tc}">${thumbIcon(c.tipo, c.categoria)}${c.miniatura ? `<img src="${c.miniatura}" alt="" onerror="this.remove()">` : ''}</div>`;
 }
+// ─── Mosaicos de las tarjetas de colección ───────────────────────────────────
+// Cada tarjeta lleva de fondo hasta 5 miniaturas de su colección (caseros) o 3 (actuaciones,
+// con la miniatura pública de YouTube). La selección cambia cada día pero es la misma
+// durante todo el día, así no parpadea al volver al inicio.
+function escogerDelDia(lista, n, extra) {
+  const u = [...new Set(lista)];
+  const orden = u.map((x, i) => ({ x, k: semillaDia(extra + i) })).sort((a, b) => a.k - b.k);
+  return orden.slice(0, n).map(o => o.x);
+}
+function pintarMosaico(id, urls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const clave = urls.join('|');
+  if (el.dataset.clave === clave) return;
+  el.dataset.clave = clave;
+  el.className = 'card-mos n' + Math.min(urls.length, 3);
+  el.innerHTML = urls.map(u => `<img src="${escAttr(u)}" alt="" loading="lazy" onerror="this.remove()">`).join('');
+}
+function renderMosaicos() {
+  const cas = CASEROS.map(c => c.miniatura).filter(Boolean);
+  const act = ACTUACIONES.map(a => idYoutube(a.youtube)).filter(Boolean).map(id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
+  pintarMosaico('mos-caseros', escogerDelDia(cas, 5, 'mc'));
+  pintarMosaico('mos-sev', escogerDelDia(act, 3, 'ma'));
+}
+
 function renderInicioExtras() {
+  renderMosaicos();
   const hola = document.getElementById('home-hello');
   if (hola) hola.textContent = saludo();
   // Continuar viendo
@@ -253,7 +279,9 @@ async function cargarDatos() {
   const d = await r.json();
   if (d.ok) {
     ACTUACIONES = d.data;
-    document.getElementById('count-badge').textContent = `${ACTUACIONES.length} ${ACTUACIONES.length === 1 ? 'actuación' : 'actuaciones'}`;
+    const n = ACTUACIONES.length, tv = document.body.classList.contains('modo-tv');
+    document.getElementById('count-badge').textContent = !n ? 'Sin actuaciones aún'
+      : tv ? `${n} ${n === 1 ? 'actuación' : 'actuaciones'}` : (n === 1 ? 'Ver la actuación' : `Ver las ${n} actuaciones`);
     renderSevillanas();
   }
   await cargarCaseros();

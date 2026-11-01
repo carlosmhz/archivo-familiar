@@ -12,9 +12,9 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261101f">
-<link rel="stylesheet" href="css/sala.css?v=20261101f">
-<link rel="stylesheet" href="css/comentarios.css?v=20261101f">
+<link rel="stylesheet" href="css/app.css?v=20261101g">
+<link rel="stylesheet" href="css/sala.css?v=20261101g">
+<link rel="stylesheet" href="css/comentarios.css?v=20261101g">
 </head>
 <body>
 
@@ -32,6 +32,7 @@
     <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></symbol>
     <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
     <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
     <symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
@@ -108,20 +109,22 @@
 
     <div class="home-sections">
       <div class="section-card" role="button" tabindex="0" onclick="showSection('sevillanas')" onkeydown="if(event.key==='Enter')this.click()">
+        <span class="card-mos" id="mos-sev" aria-hidden="true"></span>
         <span class="card-icon sev"><svg class="ico"><use href="#i-music"/></svg></span>
         <div>
           <div class="card-title">Actuaciones</div>
           <p class="card-desc">Sevillanas y flamenco. Desde 1995 hasta hoy.</p>
         </div>
-        <span class="card-count" id="count-badge">Cargando...</span>
+        <span class="card-pie"><span class="card-count" id="count-badge">Cargando...</span><span class="card-flecha" aria-hidden="true"><svg class="ico"><use href="#i-arrow"/></svg></span></span>
       </div>
       <div class="section-card" role="button" tabindex="0" onclick="showSection('caseros')" onkeydown="if(event.key==='Enter')this.click()">
+        <span class="card-mos" id="mos-caseros" aria-hidden="true"></span>
         <span class="card-icon cas"><svg class="ico"><use href="#i-tape"/></svg></span>
         <div>
           <div class="card-title">Vídeos caseros</div>
           <p class="card-desc">Recuerdos del día a día y momentos especiales.</p>
         </div>
-        <span class="card-count" id="count-caseros">Cargando...</span>
+        <span class="card-pie"><span class="card-count" id="count-caseros">Cargando...</span><span class="card-flecha" aria-hidden="true"><svg class="ico"><use href="#i-arrow"/></svg></span></span>
       </div>
     </div>
 
@@ -239,14 +242,14 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/estado.js?v=20261101f"></script>
-<script src="js/auth.js?v=20261101f"></script>
-<script src="js/inicio.js?v=20261101f"></script>
-<script src="js/navegacion.js?v=20261101f"></script>
-<script src="js/caseros.js?v=20261101f"></script>
-<script src="js/player.js?v=20261101f"></script>
-<script src="js/comentarios.js?v=20261101f"></script>
-<script src="js/ui.js?v=20261101f"></script>
+<script src="js/estado.js?v=20261101g"></script>
+<script src="js/auth.js?v=20261101g"></script>
+<script src="js/inicio.js?v=20261101g"></script>
+<script src="js/navegacion.js?v=20261101g"></script>
+<script src="js/caseros.js?v=20261101g"></script>
+<script src="js/player.js?v=20261101g"></script>
+<script src="js/comentarios.js?v=20261101g"></script>
+<script src="js/ui.js?v=20261101g"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -261,7 +264,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css?v=20261101f">
+<link rel="stylesheet" href="css/tv.css?v=20261101g">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -270,12 +273,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js?v=20261101f"></script>
+<script src="js/tv.js?v=20261101g"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101f">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101g">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -288,7 +291,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js?v=20261101f"></script>
+<script src="js/tv-actuaciones.js?v=20261101g"></script>
 
 </body>
 </html>
