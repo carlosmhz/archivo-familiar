@@ -1,11 +1,15 @@
 // ─── COMENTARIOS Y "ME GUSTA" ─────────────────────────────────────────────────
 // Panel debajo del vídeo (#player-comentarios). Solo para vídeos caseros, no en la tele.
+// Bajo el vídeo hay dos pestañas (#player-pestanas): "Escenas" (por defecto, si el vídeo
+// tiene escenas) y "Comentarios", más el botón de "me gusta". La vista se marca con la
+// clase vista-escenas / vista-comentarios en .player-box (ver css/comentarios.css).
 // Cada dispositivo tiene un identificador aleatorio y un nombre que se pide una vez
 // (localStorage + cookie, como la sesión, por el WebView de la app Android).
 // Lo llama player.js: comentariosAbrir(url) al abrir y comentariosCerrar() al cerrar.
 
 const COM_MAX = 1000;
 let _com = { caseroId: null, datos: null, todos: false, cargando: 0 };
+let _comVista = 'escenas';
 
 // ── Dispositivo ──────────────────────────────────────────────────────────────
 function comLeerDispositivo() {
@@ -87,16 +91,59 @@ function comentariosAbrir(url) {
   const c = document.body.classList.contains('modo-tv') ? null : comCaseroDeUrl(url);
   if (!c) { comentariosCerrar(); return; }
   box.classList.add('visible');
-  if (_com.caseroId === c.id && _com.datos) { comPintarEscena(); return; }   // otra escena del mismo vídeo
+  const hayEscenas = document.getElementById('player-escenas').classList.contains('visible');
+  if (_com.caseroId === c.id && _com.datos) {          // otra escena del mismo vídeo: se queda la pestaña
+    comPestanas(hayEscenas);
+    comVista(hayEscenas ? _comVista : 'comentarios');
+    comPintarEscena(); return;
+  }
   _com = { caseroId: c.id, datos: null, todos: false, cargando: 0 };
   box.innerHTML = comEsqueleto();
+  comPestanas(hayEscenas);
+  comVista(hayEscenas ? 'escenas' : 'comentarios');    // Escenas, por defecto
   comPintarEscena();
   comCargar();
 }
 function comentariosCerrar() {
   const box = document.getElementById('player-comentarios');
   if (box) { box.classList.remove('visible'); box.innerHTML = ''; }
+  const bar = document.getElementById('player-pestanas');
+  if (bar) { bar.classList.remove('visible'); bar.innerHTML = ''; }
+  const pb = document.querySelector('.player-box');
+  if (pb) pb.classList.remove('vista-escenas', 'vista-comentarios');
   _com = { caseroId: null, datos: null, todos: false, cargando: 0 };
+}
+
+// Pestañas Escenas / Comentarios y botón de "me gusta"
+function comPestanas(hayEscenas) {
+  const bar = document.getElementById('player-pestanas');
+  if (!bar) return;
+  const nEsc = document.querySelectorAll('#player-escenas .pe-item').length;
+  const nCom = _com.datos ? _com.datos.comentarios.length : '';
+  bar.innerHTML = `
+    <div class="pp-tabs" role="tablist">
+      ${hayEscenas ? `<button type="button" role="tab" class="pp-tab" data-v="escenas" onclick="comVista('escenas')">Escenas <span class="pp-n">${nEsc}</span></button>` : ''}
+      <button type="button" role="tab" class="pp-tab" data-v="comentarios" onclick="comVista('comentarios')">Comentarios <span class="pp-n pp-n-com">${nCom}</span></button>
+    </div>
+    <button class="pc-like" type="button" onclick="comMeGusta()" aria-pressed="false" aria-label="Me gusta">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8.1 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.6 0 5.7 3.6 4.5 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg>
+      <span class="pc-like-n">${_com.datos ? _com.datos.megusta.total : 0}</span>
+    </button>`;
+  bar.classList.add('visible');
+  if (_com.datos) comPintarMeGusta();
+}
+function comVista(v) {
+  const pb = document.querySelector('.player-box');
+  if (!pb) return;
+  if (v === 'escenas' && !document.querySelector('#player-pestanas .pp-tab[data-v="escenas"]')) v = 'comentarios';
+  if (document.querySelector('#player-pestanas .pp-tab[data-v="escenas"]')) _comVista = v;
+  pb.classList.toggle('vista-escenas', v === 'escenas');
+  pb.classList.toggle('vista-comentarios', v === 'comentarios');
+  document.querySelectorAll('#player-pestanas .pp-tab').forEach(t => {
+    const sel = t.dataset.v === v;
+    t.classList.toggle('activa', sel);
+    t.setAttribute('aria-selected', sel ? 'true' : 'false');
+  });
 }
 
 async function comCargar() {
@@ -118,14 +165,7 @@ async function comCargar() {
 // ── Pintar ───────────────────────────────────────────────────────────────────
 function comEsqueleto() {
   return `
-    <div class="pc-barra">
-      <button class="pc-like" type="button" onclick="comMeGusta()" aria-pressed="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8.1 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.6 0 5.7 3.6 4.5 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg>
-        <span class="pc-like-n">0</span><span class="pc-like-txt">Me gusta</span>
-      </button>
-      <span class="pc-quien-like"></span>
-    </div>
-    <div class="pc-cab"><h4>Comentarios</h4><span class="pc-cuenta"></span></div>
+    <p class="pc-quien-like"></p>
     <div class="pc-zona-form"></div>
     <ul class="pc-lista"><li class="pc-vacio">Cargando…</li></ul>
     <button class="pc-mas" type="button" onclick="comVerTodos()" hidden></button>`;
@@ -140,12 +180,13 @@ function comPintar() {
 }
 
 function comPintarMeGusta() {
-  const box = document.getElementById('player-comentarios');
   const m = _com.datos.megusta;
-  const btn = box.querySelector('.pc-like');
-  btn.classList.toggle('activo', !!m.mio);
-  btn.setAttribute('aria-pressed', m.mio ? 'true' : 'false');
-  box.querySelector('.pc-like-n').textContent = m.total;
+  const btn = document.querySelector('#player-pestanas .pc-like');
+  if (btn) {
+    btn.classList.toggle('activo', !!m.mio);
+    btn.setAttribute('aria-pressed', m.mio ? 'true' : 'false');
+    btn.querySelector('.pc-like-n').textContent = m.total;
+  }
   let quien = '';
   if (m.total > 0) {
     const n = m.nombres.slice(0, 3);
@@ -153,7 +194,9 @@ function comPintarMeGusta() {
     quien = 'A ' + (resto > 0 ? n.join(', ') + ' y ' + resto + (resto === 1 ? ' persona más' : ' personas más')
       : n.length > 1 ? n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1] : n[0]) + (m.total === 1 ? ' le gusta' : ' les gusta');
   }
-  box.querySelector('.pc-quien-like').textContent = quien;
+  const q = document.querySelector('#player-comentarios .pc-quien-like');
+  if (q) { q.textContent = quien; q.hidden = !quien; }
+  if (btn) btn.title = quien || 'Me gusta';
 }
 
 function comPintarForm(editarNombre) {
@@ -197,7 +240,8 @@ function comPintarEscena() {
 function comPintarLista() {
   const box = document.getElementById('player-comentarios');
   const lista = _com.datos.comentarios;
-  box.querySelector('.pc-cuenta').textContent = lista.length ? lista.length + (lista.length === 1 ? ' comentario' : ' comentarios') : '';
+  const n = document.querySelector('#player-pestanas .pp-n-com');
+  if (n) n.textContent = lista.length;
   const ver = _com.todos ? lista : lista.slice(0, 3);
   box.querySelector('.pc-lista').innerHTML = ver.length ? ver.map(c => `
     <li class="pc-item${c.mio ? ' mio' : ''}">
@@ -238,6 +282,7 @@ async function comGuardarNombre(ev) {
 }
 
 function comPedirNombre() {
+  comVista('comentarios');
   comPintarForm(true);
   const z = document.querySelector('#player-comentarios .pc-zona-form');
   if (z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
