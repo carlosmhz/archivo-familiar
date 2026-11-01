@@ -14,17 +14,15 @@
 
 | Rama | Para qué | Se despliega en |
 |---|---|---|
-| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos` con hPanel → GIT |
-| `develop` | Integración y pruebas | Entorno de pruebas (carpeta o subdominio aparte, por decidir) |
+| `main` | Producción. Siempre estable | `app.mpi-sala.es/videos` con hPanel → GIT (cuando se conecte) |
+| `develop` | Integración previa a `main` | No se despliega: **no hay entorno de pruebas** (decisión de Carlos, 1 nov 2026) |
 | `feature/<tema>` | Cada cambio concreto | No se despliega |
 
-**Cómo se mueve un cambio:**
+**Cómo se mueve un cambio** (Carlos delega la fusión en el agente; no deja PR pendientes de revisar):
 1. Sale una rama `feature/*` desde `develop`.
-2. Se abre un PR hacia `develop`.
-3. Se prueba en el entorno de pruebas.
-4. Se abre un PR de `develop` a `main`, y **solo lo fusiona Carlos**.
-
-**Nadie hace push directo a `main`**, salvo el primer commit de base.
+2. Se prueba en local (`php -S` + Playwright, ver apartado 11) y se abre el PR hacia `develop`.
+3. El agente lo fusiona él mismo; después abre y fusiona el PR de `develop` a `main`.
+4. Cuando hPanel → GIT esté conectado a `main`, **cada fusión a `main` es un despliegue a producción**: por eso la prueba local es obligatoria y no se fusiona nada sin pasarla. Si algo toca la autenticación, los datos o el servidor, el agente avisa antes a Carlos.
 
 **Despliegue:** con la herramienta **GIT de hPanel**, que conecta el repositorio y la rama a una carpeta y despliega al hacer push. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
@@ -45,7 +43,7 @@
 
 ## 0.1 Reestructuración (en curso)
 
-**Fase 1 — frontend (hecha en `feature/reestructura-frontend`, pendiente de fusionar):** el CSS y el JavaScript salen de `index.html` y `admin.html`. Se mantienen scripts clásicos, cargados en el mismo orden que antes, para no cambiar el comportamiento (los `onclick` del HTML siguen usando funciones globales). Layout resultante en la raíz del repositorio:
+**Fase 1 — frontend (hecha, fusionada el 1 nov 2026):** el CSS y el JavaScript salen de `index.html` y `admin.html`. Se mantienen scripts clásicos, cargados en el mismo orden que antes, para no cambiar el comportamiento (los `onclick` del HTML siguen usando funciones globales). Layout resultante en la raíz del repositorio:
 
 ```
 index.html, admin.html          solo maquetación
@@ -75,7 +73,7 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 ├── stream.php
 ├── lib/        auth.php, datos.php, config.php (rutas, sin secretos)
 ├── sw.js, manifest.json, icons/   (hoy icon-192.png e icon-512.png en la raíz)
-├── scripts/    hls_convert.sh y otras utilidades de servidor  (en PR #1)
+├── scripts/    hls_convert.sh y otras utilidades de servidor  
 └── docs/       documentación adicional
 ```
 
@@ -90,7 +88,7 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 
 Rutas en `lib/config.php`, calculadas de forma relativa. Las miniaturas, que hoy se piden por URL pública, tendrían que servirse también por PHP o desde una ruta pública separada.
 
-**Entorno de pruebas** (`develop`): con su propia copia de `datos/`, para no escribir en el catálogo real. Puede leer los mismos `hls/` y `caseros/` en solo lectura.
+**Sin entorno de pruebas:** Carlos lo descartó. Se prueba en local con datos de prueba.
 
 **Migración en producción:** se hace con copia de seguridad, por pasos y con plan para volver atrás. hPanel GIT suele exigir una carpeta de destino **vacía**, así que se despliega en una carpeta nueva y después se cambia, en lugar de desplegar encima de la actual.
 
@@ -337,7 +335,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 **Primero, el repositorio:**
 1. Carlos sube a `main` el código actual de producción (solo código).
 2. El agente crea `develop`, añade `CLAUDE.md`, `.gitignore` y `README.md`, y prepara la propuesta de reestructuración en ramas `feature/*`.
-3. Hay que decidir el entorno de pruebas (carpeta o subdominio) y configurar hPanel → GIT para `develop` y, más adelante, para `main`.
+3. Configurar hPanel → GIT para `main` (no habrá entorno de pruebas).
 4. Hay que migrar los datos a `archivo-datos/` fuera de `public_html`.
 
 **Desplegado y confirmado:**
@@ -352,7 +350,6 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
 
 **Pendiente:**
-0. Falta `apple-touch-icon.png` en el repositorio (index.html y la PWA lo referencian y existe en producción, pero no se subió). Carlos debe añadirlo.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
 3. Probar varios vídeos desde la app, entre ellos `comunion-javier-carlos` con `#t=1755`.
@@ -371,8 +368,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - **Repositorio:** trabaja en el repositorio, no envíes archivos por el chat.
   - Parte siempre de lo último de `develop`, en una rama `feature/<tema>`.
   - Haz commits pequeños con mensajes claros en español.
-  - Abre PR hacia `develop` explicando qué cambia y cómo probarlo.
-  - **No hagas push a `main` ni fusiones hacia `main`**: lo decide Carlos.
+  - Abre PR hacia `develop` explicando qué cambia y cómo probarlo, y fusiónalo tú tras probarlo (ver apartado 0). No hagas push directo a `main`: llega siempre por PR.
 - **Antes de tocar un archivo:** pide la versión actual del servidor (con `cat` por SSH o descargándola de hPanel). Las versiones de la conversación pueden estar desfasadas.
 - **Secretos:** revisa cada commit (`git diff --cached`) para que no entren secretos, JSON de datos ni vídeos.
 - **Contraseñas:**
