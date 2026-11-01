@@ -52,7 +52,7 @@
     <h1 class="login-title">Archivo <em>Familiar</em></h1>
     <p class="login-subtitle">Acceso privado</p>
     <div class="login-divider"></div>
-    <input type="password" id="pwd-input" class="login-input" placeholder="Contraseña" autocomplete="current-password" aria-label="Contraseña">
+    <input type="password" id="pwd-input" class="login-input" placeholder="PIN" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" aria-label="PIN de 4 cifras">
     <button class="login-btn" onclick="checkLogin()">Entrar</button>
     <p class="login-error" id="login-error"></p>
   </div>
