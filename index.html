@@ -12,8 +12,9 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261101d">
-<link rel="stylesheet" href="css/sala.css?v=20261101d">
+<link rel="stylesheet" href="css/app.css?v=20261101e">
+<link rel="stylesheet" href="css/sala.css?v=20261101e">
+<link rel="stylesheet" href="css/comentarios.css?v=20261101e">
 </head>
 <body>
 
@@ -227,6 +228,7 @@
         <iframe id="player-iframe" allowfullscreen allow="autoplay; encrypted-media" style="display:none"></iframe>
         <video id="player-video" controls controlsList="nodownload" disablePictureInPicture playsinline style="position:absolute;inset:0;width:100%;height:100%;display:none;background:#000"></video>
       </div>
+      <section class="player-comentarios" id="player-comentarios" aria-label="Comentarios"></section>
       <div class="player-escenas" id="player-escenas"></div>
     </div>
   </div>
@@ -235,13 +237,14 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/estado.js?v=20261101d"></script>
-<script src="js/auth.js?v=20261101d"></script>
-<script src="js/inicio.js?v=20261101d"></script>
-<script src="js/navegacion.js?v=20261101d"></script>
-<script src="js/caseros.js?v=20261101d"></script>
-<script src="js/player.js?v=20261101d"></script>
-<script src="js/ui.js?v=20261101d"></script>
+<script src="js/estado.js?v=20261101e"></script>
+<script src="js/auth.js?v=20261101e"></script>
+<script src="js/inicio.js?v=20261101e"></script>
+<script src="js/navegacion.js?v=20261101e"></script>
+<script src="js/caseros.js?v=20261101e"></script>
+<script src="js/player.js?v=20261101e"></script>
+<script src="js/comentarios.js?v=20261101e"></script>
+<script src="js/ui.js?v=20261101e"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -256,7 +259,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css?v=20261101d">
+<link rel="stylesheet" href="css/tv.css?v=20261101e">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -265,12 +268,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js?v=20261101d"></script>
+<script src="js/tv.js?v=20261101e"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101d">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101e">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -283,7 +286,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js?v=20261101d"></script>
+<script src="js/tv-actuaciones.js?v=20261101e"></script>
 
 </body>
 </html>

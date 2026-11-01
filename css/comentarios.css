@@ -1,0 +1,69 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMENTARIOS Y "ME GUSTA" — panel bajo el vídeo (js/comentarios.js)
+   Usa las variables de sala.css (paleta, fuentes). No se muestra en la tele.
+   ───────────────────────────────────────────────────────────────────────────── */
+.player-comentarios { display:none; padding:6px 22px 8px; }
+.player-comentarios.visible { display:block; }
+body.modo-tv .player-comentarios { display:none !important; }
+@media (max-width:760px) { .player-comentarios { padding:4px 18px 8px; } }
+
+/* Barra de "me gusta" */
+.pc-barra { display:flex; align-items:center; gap:14px; padding:14px 0 6px; flex-wrap:wrap; }
+.pc-like { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px 0 12px; border:1px solid var(--line); border-radius:0;
+  background:transparent; color:var(--text); font:500 14px var(--sans); cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
+.pc-like svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; transition:transform .25s var(--ease-sala, ease); }
+.pc-like:hover { border-color:var(--accent); }
+.pc-like.activo { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+.pc-like.activo svg { fill:currentColor; animation:pc-latido .35s var(--ease-sala, ease); }
+.pc-like-n { font-variant-numeric:tabular-nums; font-weight:600; }
+.pc-like-txt { color:var(--muted); }
+.pc-like.activo .pc-like-txt { color:inherit; }
+.pc-quien-like { font-size:13px; color:var(--muted); }
+@keyframes pc-latido { 50% { transform:scale(1.25); } }
+@media (prefers-reduced-motion:reduce) { .pc-like.activo svg { animation:none; } }
+
+/* Cabecera */
+.pc-cab { display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); padding:16px 0 12px; }
+.pc-cab h4 { font-family:var(--serif); font-weight:400; font-size:24px; margin:0; }
+.pc-cab span { font-size:12px; color:var(--muted); }
+
+/* Formularios */
+.pc-form, .pc-nombre { padding:14px 0 6px; }
+.pc-nombre label { display:block; font-family:var(--serif); font-size:18px; margin-bottom:10px; }
+.pc-fila { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.pc-nombre .pc-fila { margin-top:0; }
+.pc-form textarea, .pc-nombre input {
+  width:100%; box-sizing:border-box; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:0;
+  font:15px/1.45 var(--sans); padding:11px 12px; resize:none; outline:none; transition:border-color .2s; }
+.pc-nombre input { flex:1; min-width:160px; width:auto; height:42px; }
+.pc-form textarea:focus, .pc-nombre input:focus { border-color:var(--accent); }
+.pc-form textarea::placeholder, .pc-nombre input::placeholder { color:var(--faint); }
+.pc-btn { height:40px; padding:0 18px; border:none; border-radius:0; background:var(--accent); color:var(--accent-ink);
+  font:600 14px var(--sans); letter-spacing:.03em; cursor:pointer; transition:background .2s; }
+.pc-btn:hover { background:var(--accent-hover); }
+.pc-btn:disabled { opacity:.5; cursor:default; }
+.pc-btn.ghost { background:transparent; color:var(--muted); border:1px solid var(--line); }
+.pc-form .pc-btn { margin-left:auto; }
+.pc-como { font-size:12px; color:var(--muted); }
+.pc-como b { color:var(--text); font-weight:600; }
+.pc-como button, .pc-borrar { background:none; border:none; padding:0; color:var(--accent); font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+.pc-aviso { font-size:12px; color:var(--faint); margin:8px 0 0; }
+.pc-escena-chip { font-size:12px; color:var(--accent); border:1px solid var(--accent-soft); background:var(--accent-soft); padding:4px 8px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Lista */
+.pc-lista { list-style:none; margin:0; padding:0; }
+.pc-item { padding:14px 0; border-bottom:1px solid var(--line); }
+.pc-item:last-child { border-bottom:none; }
+.pc-meta { display:flex; align-items:baseline; gap:10px; font-size:13px; }
+.pc-meta b { font-weight:600; color:var(--text); }
+.pc-meta span { color:var(--faint); font-size:12px; }
+.pc-borrar { margin-left:auto; font-size:12px; color:var(--muted); }
+.pc-escena { display:inline-block; margin-top:6px; background:none; border:none; padding:0; text-align:left;
+  font:500 12px var(--sans); color:var(--accent); cursor:pointer; }
+.pc-escena::before { content:'▸ '; }
+.pc-escena:hover { text-decoration:underline; text-underline-offset:2px; }
+.pc-texto { margin:6px 0 0; font-size:15px; line-height:1.5; color:var(--muted-2); white-space:pre-wrap; overflow-wrap:anywhere; }
+.pc-vacio { padding:18px 0; color:var(--muted); font-size:14px; font-style:italic; font-family:var(--serif); }
+.pc-mas { width:100%; height:42px; margin:4px 0 6px; background:transparent; border:1px solid var(--line); border-radius:0;
+  color:var(--text); font:500 13px var(--sans); cursor:pointer; }
+.pc-mas:hover { border-color:var(--accent); color:var(--accent); }

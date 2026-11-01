@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `main`, apartado 0.3).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -50,9 +50,9 @@
 
 ```
 index.html, admin.html          solo maquetación
-css/   app.css, sala.css (capa visual "sala", ver 0.2), tv.css, tv-actuaciones.css, admin.css
-js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.js   (orden de carga en index.html)
-       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
+css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), tv.css, tv-actuaciones.css, admin.css
+js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, ui.js   (orden de carga en index.html)
+       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
 api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v6), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
@@ -83,6 +83,15 @@ Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (
 - Ritmo del efecto de vuelta: el reproductor desaparece en 0,16 s; la tarjeta se queda un instante ampliada (escala 1,14) con el velo y el ▶, y en algo más de un segundo vuelve a su tamaño.
 - **Desplazamiento horizontal con inercia** (1 nov 2026): se quitó el `scroll-snap` de las filas de décadas (`sala.css`), que frenaba en seco el desplazamiento táctil; en el móvil manda la inercia nativa. Con ratón, `arrastrarConInercia()` (`caseros.js`) arrastra y, al soltar, sigue con la velocidad que llevaba (`FRICCION = 0.94`; más cerca de 1, más inercia), y el clic que sigue a un arrastre no abre el vídeo. Se usa en las filas de décadas y en la línea de tiempo.
 - Colores de la barra del sistema: `#12110E` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
+
+## 0.3 Comentarios y "me gusta" (en `main` desde el 1 nov 2026, autor de commits: "Agente comentarios")
+
+Quien ve un vídeo casero puede comentarlo y darle "me gusta": la familia (`todo`, `caseros`, `admin`) y los invitados con PIN (`compartir`, solo en su vídeo). Decisiones de Carlos (1 nov 2026): todos los que acceden a un vídeo ven todos sus comentarios (aunque vengan de enlaces distintos); la familia también comenta; los comentarios salen al momento, sin aprobación; el comentario es del vídeo entero, con una marca si se escribió viendo una escena.
+- **Datos:** SQLite en `<datos>/datos/comentarios.sqlite` (en producción `archivo-datos/datos/`, fuera de la web y del repositorio; `*.sqlite` está en `.gitignore`). Se crea sola con su esquema la primera vez. Necesita `pdo_sqlite` en el PHP del servidor. Tablas: `dispositivos (id, nombre, creado, visto)`, `comentarios (id, casero_id, dispositivo, texto, escena_idx, escena_titulo, escena_t, rol, ip, creado)` y `megusta (casero_id, dispositivo, creado)` con clave única por vídeo y dispositivo. `ip` es una huella HMAC, no la IP.
+- **Nombre por dispositivo:** cada navegador genera un id aleatorio de 32 hex y guarda `{id, nombre}` en `localStorage['af_dispositivo']` y en la cookie `af_dispositivo` (2 años, mismo `path` que la sesión). El nombre se pide la primera vez que se abre un vídeo (sin bloquear el vídeo) o al pulsar "Me gusta"; se cambia con "cambiar". El nombre vive en el servidor (tabla `dispositivos`), así que cambiarlo cambia también los comentarios anteriores. No es una identidad verificada.
+- **Escena:** si el vídeo se abrió en modo escena (`_escenaActiva`, también los enlaces de escena), el comentario guarda índice, título y segundo de esa escena; en la lista aparece "▸ Escena «…» · m:ss" y al pulsarlo el vídeo salta a ese segundo. Viendo el vídeo completo no se marca escena.
+- **Código:** `lib/comentarios.php` (base de datos, permisos, limpieza de texto), `lib/acciones/comentarios.php` (acciones), `js/comentarios.js` y `css/comentarios.css` (panel `#player-comentarios`, entre el vídeo y las escenas). `player.js` solo llama a `comentariosAbrir(url)` y `comentariosCerrar()`. Admin: pestaña "💬 Comentarios" (`js/admin-comentarios.js`) con los últimos 300 comentarios, borrado y "me gusta" por vídeo. No se muestra en el modo TV ni en las actuaciones.
+- **Límites:** nombre hasta 40 caracteres y comentario hasta 1000 (se quitan caracteres de control; los emojis compuestos se respetan). Freno: 10 comentarios por dispositivo en 10 minutos y 30 por IP en una hora. Cada uno puede borrar sus comentarios (mismo dispositivo); el admin, cualquiera. Todo se pinta escapado (sin HTML).
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -269,6 +278,12 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
 | `otp-listar` | GET `?pass=` | admin | |
 | `compartir-generar` | POST JSON | `pass` de `todo`/`caseros`, **o** un `token` con `f = true` | Una OTP no puede generar enlaces |
+| `comentarios-listar` | GET `?token=&caseroId=&dispositivo=` | sesión con acceso al vídeo | `{ comentarios[], megusta: { total, mio, nombres[≤5] }, nombre }` |
+| `comentarios-nombre` | POST JSON `{dispositivo, nombre}` + `&token=` | cualquier sesión | Crea o cambia el nombre del dispositivo |
+| `comentarios-anadir` | POST JSON `{dispositivo, caseroId, texto, escenaIdx}` + `&token=` | sesión con acceso al vídeo; dispositivo con nombre | Devuelve el comentario creado |
+| `comentarios-megusta` | POST JSON `{dispositivo, caseroId}` + `&token=` | igual | Alterna el "me gusta"; devuelve `megusta` |
+| `comentarios-borrar` | POST JSON `{id, dispositivo}` | `token` (solo los propios) o `pass` de admin (cualquiera) | |
+| `comentarios-recientes` | GET `?pass=` | admin | Últimos 300 comentarios y "me gusta" por vídeo |
 
 **`stream.php?v=<nombre>&f=<archivo>&t=<tokenVideo>`**, donde `f` puede ser:
 - `index.m3u8`: la lista, reescrita para que cada fragmento lleve el token.
@@ -385,6 +400,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - **Tarea programada de HLS:** sin prisa; no hay vídeos nuevos ni previsión de ellos.
 
 **Pendiente:**
+0a. **Comentarios (apartado 0.3):** pasado a `main` el 1 nov 2026 (Carlos confirmó que Hostinger tiene SQLite). Pendiente de que Carlos compruebe que se crea `archivo-datos/datos/comentarios.sqlite` al abrir un vídeo y que `videos/lib/comentarios.php` da 403.
 0b. **Script HLS** (baja prioridad, con ordenador; no hay vídeos nuevos): cambiar o borrar la tarea programada de hPanel que apunta a `~/hls_convert.sh` (ver apartado 8) y comparar ese original con `scripts/hls_convert.sh` del repositorio, que es una reconstrucción. Solo importa si algún día se añaden vídeos.
 0c. Opcional: borrar `datos/.htaccess`, `hls/.htaccess` y `caseros/.htaccess` del repositorio (protegían la disposición antigua; ya no hay datos junto al código). `lib/config.php` sigue admitiendo la disposición antigua, sin coste.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
