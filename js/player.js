@@ -124,6 +124,7 @@ function abrirPlayer(url, titulo, fecha, min) {
   const iframe = document.getElementById('player-iframe');
   const video = document.getElementById('player-video');
   const loading = document.getElementById('player-loading');
+  video.removeAttribute('poster');   // el póster solo sirve para la animación de cierre
   document.getElementById('player-titulo').textContent = titulo;
   _urlActual = url || '';
   const token = ++_playToken;
@@ -132,7 +133,13 @@ function abrirPlayer(url, titulo, fecha, min) {
   const isMp4 = url && !url.includes('youtube.com') && !url.includes('youtu.be');
   shareBtn.style.setProperty('display', (isMp4 && (ROL === 'caseros' || ROL === 'todo')) ? 'inline-flex' : 'none', 'important');
   document.getElementById('player-fecha').textContent = fecha || '';
-  document.getElementById('player-overlay').classList.add('open');
+  const overlay = document.getElementById('player-overlay');
+  if (!overlay.classList.contains('open')) {
+    // La página de detrás "retrocede" hacia el centro de lo que se está viendo (ver css/sala.css)
+    const vis = document.querySelector('#app > .content-screen.active, #search-results-screen.active, #screen-compartir.active') || document.getElementById('home-screen');
+    if (vis) document.documentElement.style.setProperty('--sala-origen-y', Math.round(innerHeight / 2 - vis.getBoundingClientRect().top) + 'px');
+  }
+  overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   loading.classList.remove('hidden');
 
@@ -362,11 +369,25 @@ async function generarYCompartir(caseroId, escenaIdx, t, permanente = false) {
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
 
+// Al cerrar, el vídeo se aleja (css/sala.css). Para que no se aleje un recuadro negro,
+// se deja como póster el último fotograma. Si el navegador no lo permite, no pasa nada.
+function congelarFotograma(vid) {
+  try {
+    if (vid.style.display === 'none' || vid.readyState < 2 || !vid.videoWidth) return;
+    const cv = document.createElement('canvas');
+    cv.width = Math.min(vid.videoWidth, 960);
+    cv.height = Math.round(cv.width * vid.videoHeight / vid.videoWidth);
+    cv.getContext('2d').drawImage(vid, 0, 0, cv.width, cv.height);
+    vid.poster = cv.toDataURL('image/jpeg', 0.7);
+  } catch (err) {}
+}
+
 function cerrarPlayer(e) {
   if (e && e.target !== document.getElementById('player-overlay')) return;
   document.getElementById('player-overlay').classList.remove('open');
   document.getElementById('player-iframe').src = '';
   const vid = document.getElementById('player-video');
+  congelarFotograma(vid);
   _playToken++;
   detenerHls();
   vid.pause();

@@ -48,11 +48,12 @@
 
 ```
 index.html, admin.html          solo maquetación
-css/   app.css, tv.css, tv-actuaciones.css, admin.css
+css/   app.css, sala.css (capa visual "sala", ver 0.2), tv.css, tv-actuaciones.css, admin.css
 js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.js   (orden de carga en index.html)
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
 vendor/hls.min.js               hls.js 1.5.17
-api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v4), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
+vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
+api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v5), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
 ```
 
 El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
@@ -65,6 +66,16 @@ El script inline que aplica el tema claro antes de pintar se queda en `index.htm
 - `.htaccess` en la raíz (bloquea `docs/`, `scripts/`, `lib/`, `.git` y `*.md`/`*.sh`) y `Require all denied` en `lib/` y `scripts/`. `CLAUDE.md` contiene datos del servidor: no debe poder leerse por web.
 - `scripts/hls_convert.sh` busca la carpeta de datos (`ARCHIVO_DATOS`, `../archivo-datos`, o la carpeta antigua).
 - Despliegue paso a paso: `docs/DESPLIEGUE.md`.
+
+## 0.2 Interfaz "sala" (rama `feature/interfaz-sala`, propuesta del 1 nov 2026, pendiente de que Carlos la apruebe)
+
+Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (efecto de zoom al cerrar el vídeo). **Solo apariencia**: no cambia la API, la autenticación ni el HTML que genera el JavaScript.
+- `css/sala.css`, cargada después de `app.css`, redefine la paleta (oscuro "sala" `#12110E` con acento terracota `#D4652F`; claro "papel" `#F4EFE6` con `#B54818`), las fuentes (Newsreader para títulos, Outfit para el texto, alojadas en `vendor/fonts/`), esquinas rectas y un grano de película muy suave. **Para volver al aspecto anterior basta con quitar su `<link>` de `index.html`.**
+- Inicio: si hay recuerdo del día, el saludo, "¿Qué recordamos hoy?" y el recuerdo forman una portada a sangre (`<section class="home-hero">`, usa `:has()`), con el botón "Proyectar". "Continuar viendo" pasa a ser una fila con barra de progreso, y las colecciones, dos celdas con líneas (en el móvil, una debajo de otra).
+- Tarjetas de década: la miniatura es el botón de reproducir (círculo en la esquina) y "Escenas" queda como enlace.
+- Reproductor: al abrirse, la página retrocede (escala 0,94, más oscura) y el vídeo se acerca; al cerrarse, el vídeo se aleja y se desvanece y la página vuelve. Funciona con la misma clase `.open`, así que el historial y el botón Atrás no cambian. `abrirPlayer()` fija `--sala-origen-y` (el centro de lo que se ve) y `cerrarPlayer()` deja el último fotograma como póster (`congelarFotograma()`) para que no se aleje un recuadro negro. Se respeta `prefers-reduced-motion`.
+- Modo TV (`?tv=1`): conserva su maquetación de `tv.css`; solo hereda colores y fuentes.
+- Colores de la barra del sistema: `#12110E` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -277,7 +288,7 @@ Más detalles del reproductor:
 - **Escenas:** `video.ontimeupdate` controla el fin de escena, que muestra un panel, y los enlaces compartidos que no deben ir antes del inicio. Funciona igual con HLS que con MP4, porque usa `currentTime`.
 - **Compartir:** `_urlActual` guarda la URL original. No se usa `video.src`, que con hls.js es un `blob:`.
 - **Cargas que se cruzan:** `_playToken` evita que una carga lenta pise a otra más nueva. `cerrarPlayer()` destruye hls.js.
-- **Service worker** (`sw.js`, versión v4): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
+- **Service worker** (`sw.js`, versión v5): estrategia de red primero, y nunca guarda en caché `api.php`, `stream.php`, `.mp4`, `.m3u8` ni `.ts`.
 
 ---
 

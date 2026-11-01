@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archivo-familiar-v4';
+const CACHE_NAME = 'archivo-familiar-v5';
 
 // Instalar — sin bloquear en errores de caché
 self.addEventListener('install', e => {

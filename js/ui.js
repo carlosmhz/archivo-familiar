@@ -2,7 +2,7 @@
 function cambiarTema() {
   const claro = document.body.classList.toggle('tema-claro');
   try { localStorage.setItem('af_tema', claro ? 'claro' : 'oscuro'); } catch (e) {}
-  document.querySelectorAll('meta[name=theme-color]').forEach(m => m.content = claro ? '#F6F7F9' : '#0E1014');
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => m.content = claro ? '#F4EFE6' : '#12110E');
   document.querySelectorAll('.tema-btn').forEach(b => b.setAttribute('aria-label', claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'));
 }
 
