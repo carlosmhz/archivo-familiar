@@ -168,6 +168,7 @@ function abrirPlayer(url, titulo, fecha, min) {
 
   ocultarPanelEscena();
   renderEscenasPlayer(url);
+  comentariosAbrir(url);          // js/comentarios.js
   registrarUltimo(url, titulo, fecha, min);
   const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
   if (isYoutube) {
@@ -420,6 +421,7 @@ function cerrarPlayer(e) {
   document.getElementById('player-loading').classList.add('hidden');
   ocultarPanelEscena();
   _escenaActiva = null;
+  comentariosCerrar();
   document.body.style.overflow = '';
   animarVuelta();
   // Si es modo compartir, mostrar pantalla de "ver de nuevo"

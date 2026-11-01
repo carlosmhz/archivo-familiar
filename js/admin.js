@@ -32,6 +32,7 @@ function switchTab(name, btn) {
   if (name === 'lista') renderLista();
   if (name === 'urls') renderUrls();
   if (name === 'caseros') filtrarCaseros();
+  if (name === 'comentarios') cargarComentariosAdmin();   // js/admin-comentarios.js
 }
 
 // ─── DATOS ────────────────────────────────────────────────────────────────────

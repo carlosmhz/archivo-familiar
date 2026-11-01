@@ -45,3 +45,9 @@ desktop.ini
 .vscode/
 .idea/
 node_modules/
+
+# ── Comentarios (SQLite, vive en archivo-datos/datos/) ─────
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
