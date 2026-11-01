@@ -358,7 +358,8 @@ body.tema-claro .share-modal, body.tema-claro .escena-end-panel { background:col
 .player-title { font-family:var(--serif); font-weight:400; font-size:28px; line-height:1.1; letter-spacing:-0.01em; }
 .player-fecha { font-size:13px; margin-top:4px; }
 .player-close { border-radius:0; }
-.player-share { border-radius:0; }
+.player-share { border-radius:50%; width:40px; height:40px; padding:0; justify-content:center; }
+.player-share .share-txt { display:none; }
 .player-escenas { padding:8px 22px 26px; }
 .pe-head { border-bottom:1px solid var(--line); padding:16px 0 12px; }
 .pe-head h4 { font-family:var(--serif); font-weight:400; font-size:24px; }
