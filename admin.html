@@ -40,6 +40,7 @@
       <button class="tab" onclick="switchTab('lista',this)">📋 Actuaciones</button>
       <button class="tab" onclick="switchTab('caseros',this)">🎞️ Vídeos caseros</button>
       <button class="tab" onclick="switchTab('otp',this)">🔑 Contraseñas</button>
+      <button class="tab" onclick="switchTab('comentarios',this)">💬 Comentarios</button>
     </div>
 
     <!-- TAB: NUEVA ACTUACIÓN -->
@@ -276,6 +277,18 @@
         <button class="btn btn-ghost" onclick="cargarOTPs()" style="margin-top:12px;color:#5a7299;border-color:#dce9fb;">↻ Actualizar</button>
       </div>
     </div>
+    <div class="tab-content" id="tab-comentarios">
+      <div class="form-card">
+        <div class="form-title">Comentarios recientes</div>
+        <p style="font-size:13px;color:#5a7299;margin-bottom:16px;">Salen al momento en el vídeo. Desde aquí puedes borrar cualquiera.</p>
+        <div id="com-admin-lista"><div class="loading">Cargando...</div></div>
+        <button class="btn btn-ghost" onclick="cargarComentariosAdmin()" style="margin-top:12px;color:#5a7299;border-color:#dce9fb;">↻ Actualizar</button>
+      </div>
+      <div class="form-card" style="margin-top:20px;">
+        <div class="form-title" style="margin-bottom:16px;">Me gusta por vídeo</div>
+        <div id="com-admin-megusta"></div>
+      </div>
+    </div>
 <div class="modal-overlay" id="modal-editar">
   <div class="modal">
     <div class="modal-title">Editar actuación</div>
@@ -377,6 +390,7 @@
   </div>
 </div>
 
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20261101e"></script>
+<script src="js/admin-comentarios.js?v=20261101e"></script>
 </body>
 </html>
