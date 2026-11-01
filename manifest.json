@@ -4,8 +4,8 @@
   "description": "Archivo familiar de vídeos y actuaciones",
   "start_url": "/videos/",
   "display": "standalone",
-  "background_color": "#0d1b35",
-  "theme_color": "#1a2a4a",
+  "background_color": "#12110E",
+  "theme_color": "#12110E",
   "orientation": "any",
   "icons": [
     {

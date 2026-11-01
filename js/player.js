@@ -120,10 +120,32 @@ async function reproducirVideo(video, url, min, token) {
   }
 }
 
+// ─── Tarjeta desde la que se abre el vídeo ───────────────────────────────────
+// Al cerrar el reproductor, su foto "se aleja" a su tamaño normal (css/sala.css).
+// Se apunta la última tarjeta pulsada; cualquier otro clic fuera de las ventanas la olvida.
+const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card';
+let _tarjetaPulsada = null, _tarjetaVuelta = null;
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest(SEL_TARJETA);
+  if (t) _tarjetaPulsada = t;
+  else if (!(e.target.closest && e.target.closest('#caseros-modal, #player-overlay'))) _tarjetaPulsada = null;
+}, true);
+function animarVuelta() {
+  const el = _tarjetaVuelta;
+  _tarjetaVuelta = null;
+  if (!el || !el.isConnected || document.body.classList.contains('modo-tv')) return;
+  el.classList.remove('sala-vuelta');
+  void el.offsetWidth;            // reinicia la animación si se repite en la misma tarjeta
+  el.classList.add('sala-vuelta');
+  clearTimeout(el._salaT);
+  el._salaT = setTimeout(() => el.classList.remove('sala-vuelta'), 1400);
+}
+
 function abrirPlayer(url, titulo, fecha, min) {
   const iframe = document.getElementById('player-iframe');
   const video = document.getElementById('player-video');
   const loading = document.getElementById('player-loading');
+  video.removeAttribute('poster');   // el póster solo sirve para la animación de cierre
   document.getElementById('player-titulo').textContent = titulo;
   _urlActual = url || '';
   const token = ++_playToken;
@@ -132,7 +154,15 @@ function abrirPlayer(url, titulo, fecha, min) {
   const isMp4 = url && !url.includes('youtube.com') && !url.includes('youtu.be');
   shareBtn.style.setProperty('display', (isMp4 && (ROL === 'caseros' || ROL === 'todo')) ? 'inline-flex' : 'none', 'important');
   document.getElementById('player-fecha').textContent = fecha || '';
-  document.getElementById('player-overlay').classList.add('open');
+  const overlay = document.getElementById('player-overlay');
+  if (!overlay.classList.contains('open')) {
+    _tarjetaVuelta = _tarjetaPulsada;
+    _tarjetaPulsada = null;
+    // La página de detrás "retrocede" hacia el centro de lo que se está viendo (ver css/sala.css)
+    const vis = document.querySelector('#app > .content-screen.active, #search-results-screen.active, #screen-compartir.active') || document.getElementById('home-screen');
+    if (vis) document.documentElement.style.setProperty('--sala-origen-y', Math.round(innerHeight / 2 - vis.getBoundingClientRect().top) + 'px');
+  }
+  overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   loading.classList.remove('hidden');
 
@@ -362,11 +392,25 @@ async function generarYCompartir(caseroId, escenaIdx, t, permanente = false) {
   window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }
 
+// Al cerrar, el vídeo se aleja (css/sala.css). Para que no se aleje un recuadro negro,
+// se deja como póster el último fotograma. Si el navegador no lo permite, no pasa nada.
+function congelarFotograma(vid) {
+  try {
+    if (vid.style.display === 'none' || vid.readyState < 2 || !vid.videoWidth) return;
+    const cv = document.createElement('canvas');
+    cv.width = Math.min(vid.videoWidth, 960);
+    cv.height = Math.round(cv.width * vid.videoHeight / vid.videoWidth);
+    cv.getContext('2d').drawImage(vid, 0, 0, cv.width, cv.height);
+    vid.poster = cv.toDataURL('image/jpeg', 0.7);
+  } catch (err) {}
+}
+
 function cerrarPlayer(e) {
   if (e && e.target !== document.getElementById('player-overlay')) return;
   document.getElementById('player-overlay').classList.remove('open');
   document.getElementById('player-iframe').src = '';
   const vid = document.getElementById('player-video');
+  congelarFotograma(vid);
   _playToken++;
   detenerHls();
   vid.pause();
@@ -377,6 +421,7 @@ function cerrarPlayer(e) {
   ocultarPanelEscena();
   _escenaActiva = null;
   document.body.style.overflow = '';
+  animarVuelta();
   // Si es modo compartir, mostrar pantalla de "ver de nuevo"
   if (window._compartirData) mostrarPantallaCompartir();
 }

@@ -3,25 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0E1014">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Archivo Familiar">
-  <link rel="manifest" href="/videos/manifest.json">
-  <link rel="apple-touch-icon" href="/videos/apple-touch-icon.png">
-  <meta name="theme-color" content="#0E1014">
+  <meta name="theme-color" content="#12110E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Archivo Familiar">
   <link rel="manifest" href="/videos/manifest.json">
   <link rel="apple-touch-icon" href="/videos/apple-touch-icon.png">
 <title>Archivo Familiar de Vídeos</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/sala.css">
 </head>
 <body>
 
-<script>try{if(localStorage.getItem('af_tema')==='claro'&&new URLSearchParams(location.search).get('tv')!=='1'){document.body.classList.add('tema-claro');document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content='#F6F7F9');}}catch(e){}</script>
+<script>try{if(localStorage.getItem('af_tema')==='claro'&&new URLSearchParams(location.search).get('tv')!=='1'){document.body.classList.add('tema-claro');document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content='#F4EFE6');}}catch(e){}</script>
 <!-- ICONOS -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -51,7 +47,7 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="login-ornament"><svg class="ico"><use href="#i-film"/></svg></div>
-    <h1 class="login-title">Archivo Familiar</h1>
+    <h1 class="login-title">Archivo <em>Familiar</em></h1>
     <p class="login-subtitle">Acceso privado</p>
     <div class="login-divider"></div>
     <input type="password" id="pwd-input" class="login-input" placeholder="Contraseña" autocomplete="current-password" aria-label="Contraseña">
@@ -81,8 +77,19 @@
 
   <!-- HOME -->
   <div id="home-screen">
-    <div class="home-hello" id="home-hello">Hola</div>
-    <h1 class="home-title">¿Qué recordamos hoy?</h1>
+    <section class="home-hero">
+      <div class="home-hello" id="home-hello">Hola</div>
+      <h1 class="home-title">¿Qué recordamos hoy?</h1>
+      <button class="dia-card" id="dia-card" onclick="verRecuerdo()">
+        <span class="dia-thumb" id="dia-thumb"></span>
+        <span class="dia-txt">
+          <span class="dia-kicker" id="dia-kicker">Recuerdo del día</span>
+          <span class="dia-title" id="dia-title"></span>
+          <span class="dia-sub" id="dia-sub"></span>
+        </span>
+        <span class="dia-play"><svg class="ico"><use href="#i-play"/></svg></span>
+      </button>
+    </section>
 
     <button class="continue-card" id="continue-card" onclick="continuarViendo()">
       <span class="cc-icon"><svg class="ico"><use href="#i-film"/></svg></span>
@@ -96,16 +103,6 @@
         </span>
         <span class="cc-play"><svg class="ico"><use href="#i-play"/></svg></span>
       </span>
-    </button>
-
-    <button class="dia-card" id="dia-card" onclick="verRecuerdo()">
-      <span class="dia-thumb" id="dia-thumb"></span>
-      <span class="dia-txt">
-        <span class="dia-kicker" id="dia-kicker">Recuerdo del día</span>
-        <span class="dia-title" id="dia-title"></span>
-        <span class="dia-sub" id="dia-sub"></span>
-      </span>
-      <span class="dia-play"><svg class="ico"><use href="#i-play"/></svg></span>
     </button>
 
     <div class="home-sections">
