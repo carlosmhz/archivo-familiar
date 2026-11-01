@@ -2,30 +2,44 @@
    COMENTARIOS Y "ME GUSTA" — panel bajo el vídeo (js/comentarios.js)
    Usa las variables de sala.css (paleta, fuentes). No se muestra en la tele.
    ───────────────────────────────────────────────────────────────────────────── */
-.player-comentarios { display:none; padding:6px 22px 8px; }
+.player-comentarios { display:none; padding:0 22px 8px; }
 .player-comentarios.visible { display:block; }
 body.modo-tv .player-comentarios { display:none !important; }
 @media (max-width:760px) { .player-comentarios { padding:4px 18px 8px; } }
 
-/* Barra de "me gusta" */
-.pc-barra { display:flex; align-items:center; gap:14px; padding:14px 0 6px; flex-wrap:wrap; }
-.pc-like { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px 0 12px; border:1px solid var(--line); border-radius:0;
-  background:transparent; color:var(--text); font:500 14px var(--sans); cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
+/* Pestañas Escenas / Comentarios + "me gusta" (bajo el vídeo) */
+.player-pestanas { display:none; align-items:center; gap:12px; padding:0 22px; border-bottom:1px solid var(--line); }
+.player-pestanas.visible { display:flex; }
+body.modo-tv .player-pestanas { display:none !important; }
+@media (max-width:760px) { .player-pestanas { padding:0 18px; } }
+.pp-tabs { display:flex; gap:22px; flex:1; min-width:0; }
+.pp-tab { position:relative; background:none; border:none; padding:16px 0 14px; color:var(--muted); cursor:pointer;
+  font-family:var(--serif); font-size:21px; font-weight:400; transition:color .2s; white-space:nowrap; }
+.pp-tab:hover { color:var(--text); }
+.pp-tab.activa { color:var(--text); }
+.pp-tab.activa::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--accent); }
+.pp-n { font-family:var(--sans); font-size:12px; color:var(--faint); margin-left:4px; font-variant-numeric:tabular-nums; }
+.pp-n:empty { display:none; }
+.pp-tab.activa .pp-n { color:var(--accent); }
+@media (max-width:420px) { .pp-tabs { gap:16px; } .pp-tab { font-size:19px; } }
+
+/* Qué se ve: una sola vista a la vez */
+.player-box.vista-escenas .player-comentarios { display:none !important; }
+.player-box.vista-comentarios .player-escenas { display:none !important; }
+.player-box.vista-escenas .pe-head { display:none; }   /* el título ya lo da la pestaña */
+.player-box.vista-escenas .player-escenas { padding-top:14px; }
+
+/* "Me gusta" */
+.pc-like { display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 12px; flex-shrink:0; border:1px solid var(--line); border-radius:0;
+  background:transparent; color:var(--text); font:600 14px var(--sans); cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
 .pc-like svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; transition:transform .25s var(--ease-sala, ease); }
 .pc-like:hover { border-color:var(--accent); }
 .pc-like.activo { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
 .pc-like.activo svg { fill:currentColor; animation:pc-latido .35s var(--ease-sala, ease); }
-.pc-like-n { font-variant-numeric:tabular-nums; font-weight:600; }
-.pc-like-txt { color:var(--muted); }
-.pc-like.activo .pc-like-txt { color:inherit; }
-.pc-quien-like { font-size:13px; color:var(--muted); }
+.pc-like-n { font-variant-numeric:tabular-nums; }
+.pc-quien-like { font-size:13px; color:var(--muted); margin:14px 0 0; }
 @keyframes pc-latido { 50% { transform:scale(1.25); } }
 @media (prefers-reduced-motion:reduce) { .pc-like.activo svg { animation:none; } }
-
-/* Cabecera */
-.pc-cab { display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); padding:16px 0 12px; }
-.pc-cab h4 { font-family:var(--serif); font-weight:400; font-size:24px; margin:0; }
-.pc-cab span { font-size:12px; color:var(--muted); }
 
 /* Formularios */
 .pc-form, .pc-nombre { padding:14px 0 6px; }
