@@ -19,7 +19,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 // Cada archivo trata sus acciones y termina con responder() (que hace exit).
-foreach (['login', 'actuaciones', 'caseros', 'miniaturas', 'otp', 'compartir', 'video'] as $grupo) {
+foreach (['login', 'actuaciones', 'caseros', 'miniaturas', 'otp', 'compartir', 'video', 'comentarios'] as $grupo) {
     require __DIR__ . '/acciones/' . $grupo . '.php';
 }
 
