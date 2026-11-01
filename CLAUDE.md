@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -43,7 +43,7 @@
 index.html, admin.html          solo maquetación
 css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), dialogo.css (0.5), tv.css, tv-actuaciones.css, admin.css
 js/    dialogo.js (0.5), estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, transiciones.js (0.4), ui.js   (orden de carga en index.html)
-       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js
+       tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js, admin-compartidos.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
 api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v6), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
@@ -290,6 +290,8 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
 | `otp-listar` | GET `?pass=` | admin | |
 | `compartir-generar` | POST JSON `{caseroId, escenaIdx, t, permanente}` + `&token=` | sesión con rol `todo` o `caseros` (`exigirSesion()`), también OTP y sesión restaurada | Devuelve `{ pin }` de 6 cifras. Arreglado el 2 nov 2026: antes exigía la contraseña en el cuerpo y fallaba al restaurar la sesión |
+| `compartir-listar` | GET `?pass=` | admin | Todos los PIN de compartir con `video` y `escena` (títulos; `video: null` si el vídeo ya no existe), `permanente`, `expira`, `caducado`. No borra nada |
+| `compartir-eliminar` | POST JSON `{pin}` + `pass` | admin | Borra un PIN: deja de funcionar al instante |
 | `comentarios-listar` | GET `?token=&caseroId=&dispositivo=` | sesión con acceso al vídeo | `{ comentarios[], megusta: { total, mio, nombres[≤5] }, nombre }` |
 | `comentarios-nombre` | POST JSON `{dispositivo, nombre}` + `&token=` | cualquier sesión | Crea o cambia el nombre del dispositivo |
 | `comentarios-anadir` | POST JSON `{dispositivo, caseroId, texto, escenaIdx}` + `&token=` | sesión con acceso al vídeo; dispositivo con nombre | Devuelve el comentario creado |
@@ -388,7 +390,7 @@ Verificación anterior (30 de octubre de 2026, con los datos aún dentro de la w
 | `caseros/miniaturas/*` | 200 (intencionado) |
 | `api.php?action=caseros-listar` sin token | `Sesion caducada` |
 
-Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` estuvieron **legibles por URL**. Carlos cambió las contraseñas. Vaciar los PIN de compartir (`echo '[]' > datos/compartir.json`) quedó como decisión suya, sin confirmar si lo hizo.
+Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` estuvieron **legibles por URL**. Carlos cambió las contraseñas. Vaciar los PIN de compartir quedó como decisión suya; desde el 2 nov 2026 puede revisarlos y borrarlos uno a uno en admin → Compartidos. El 2 nov había 8 PIN permanentes de 4 cifras, anteriores al cambio a 6.
 
 ---
 
@@ -405,6 +407,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Interfaz "sala" (apartado 0.2), fusionada en `main` el 1 nov 2026, con el inicio para todos los roles y la corrección de caché. Pendiente de que Carlos confirme el efecto de vuelta en su móvil, y la app y la tele (`?tv=1`) en producción.
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
+- Pestaña **"🔗 Compartidos"** del admin (2 nov 2026, `js/admin-compartidos.js`, `?v=20261102c`): lista los PIN con vídeo, escena, inicio y caducidad (marca los de 4 cifras y los de vídeos borrados) y permite borrarlos. Probada en local; pendiente de que Carlos la use en producción.
 - Avisos y confirmaciones en ventanas propias (apartado 0.5, 2 nov 2026, `?v=20261102b`). Probado en local (móvil, PC y admin); pendiente de verlo en la tele.
 - Compartir por WhatsApp arreglado (2 nov 2026, `?v=20261102a`): funciona tras restaurar la sesión y con OTP; PIN de 6 cifras. Probado en local; pendiente de que Carlos lo confirme en producción.
 

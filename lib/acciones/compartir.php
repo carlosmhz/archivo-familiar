@@ -37,3 +37,41 @@ if ($method === 'POST' && $action === 'compartir-generar') {
     guardarJSON(FILE_COMPARTIR, $compartidos);
     responder(true, ['pin' => $pin]);
 }
+
+// Admin: lista de PIN de compartir, con el título del vídeo y de la escena
+if ($method === 'GET' && $action === 'compartir-listar') {
+    if (($_GET['pass'] ?? '') !== PASS_ADMIN) responder(false, null, 'No autorizado');
+    $videos = [];
+    foreach (leerJSON(FILE_CASEROS) as $v) $videos[$v['id'] ?? 0] = $v;
+    $now = time();
+    $lista = [];
+    foreach (leerJSON(FILE_COMPARTIR) as $c) {
+        $v = $videos[$c['caseroId'] ?? 0] ?? null;
+        $idx = intval($c['escenaIdx'] ?? -1);
+        $escena = ($v && $idx >= 0) ? ($v['escenas'][$idx] ?? null) : null;
+        $lista[] = [
+            'pin'         => (string)$c['pin'],
+            'caseroId'    => $c['caseroId'] ?? 0,
+            'video'       => $v ? ($v['titulo'] ?? '') : null,   // null = el vídeo ya no existe
+            'escenaIdx'   => $idx,
+            'escena'      => $escena ? ($escena['titulo'] ?? '') : null,
+            't'           => intval($c['t'] ?? 0),
+            'permanente'  => !empty($c['permanente']),
+            'expira'      => !empty($c['permanente']) ? null : ($c['expira'] ?? 0),
+            'caducado'    => empty($c['permanente']) && ($c['expira'] ?? 0) <= $now,
+        ];
+    }
+    responder(true, $lista);
+}
+
+// Admin: borrar un PIN de compartir (deja de funcionar al instante)
+if ($method === 'POST' && $action === 'compartir-eliminar') {
+    $body = json_decode(file_get_contents('php://input'), true) ?: [];
+    if (($body['pass'] ?? '') !== PASS_ADMIN) responder(false, null, 'No autorizado');
+    $pin = (string)($body['pin'] ?? '');
+    if ($pin === '') responder(false, null, 'PIN requerido');
+    $antes = leerJSON(FILE_COMPARTIR);
+    $despues = array_values(array_filter($antes, fn($c) => (string)$c['pin'] !== $pin));
+    guardarJSON(FILE_COMPARTIR, $despues);
+    responder(true, null, count($antes) - count($despues) ? 'PIN eliminado' : 'Ese PIN ya no existía');
+}

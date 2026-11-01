@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin · Archivo Familiar</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=20261102b">
-<link rel="stylesheet" href="css/dialogo.css?v=20261102b">
+<link rel="stylesheet" href="css/admin.css?v=20261102c">
+<link rel="stylesheet" href="css/dialogo.css?v=20261102c">
 </head>
 <body>
 
@@ -41,6 +41,7 @@
       <button class="tab" onclick="switchTab('lista',this)">📋 Actuaciones</button>
       <button class="tab" onclick="switchTab('caseros',this)">🎞️ Vídeos caseros</button>
       <button class="tab" onclick="switchTab('otp',this)">🔑 Contraseñas</button>
+      <button class="tab" onclick="switchTab('compartidos',this)">🔗 Compartidos</button>
       <button class="tab" onclick="switchTab('comentarios',this)">💬 Comentarios</button>
     </div>
 
@@ -278,6 +279,14 @@
         <button class="btn btn-ghost" onclick="cargarOTPs()" style="margin-top:12px;color:#5a7299;border-color:#dce9fb;">↻ Actualizar</button>
       </div>
     </div>
+    <div class="tab-content" id="tab-compartidos">
+      <div class="form-card">
+        <div class="form-title">PIN de compartir</div>
+        <p style="font-size:13px;color:#5a7299;margin-bottom:16px;">Códigos generados con el botón de compartir. Al borrar uno deja de funcionar al instante.</p>
+        <div id="comp-admin-lista"><div class="loading">Cargando...</div></div>
+        <button class="btn btn-ghost" onclick="cargarCompartidosAdmin()" style="margin-top:12px;color:#5a7299;border-color:#dce9fb;">↻ Actualizar</button>
+      </div>
+    </div>
     <div class="tab-content" id="tab-comentarios">
       <div class="form-card">
         <div class="form-title">Comentarios recientes</div>
@@ -391,8 +400,9 @@
   </div>
 </div>
 
-<script src="js/dialogo.js?v=20261102b"></script>
-<script src="js/admin.js?v=20261102b"></script>
-<script src="js/admin-comentarios.js?v=20261102b"></script>
+<script src="js/dialogo.js?v=20261102c"></script>
+<script src="js/admin.js?v=20261102c"></script>
+<script src="js/admin-comentarios.js?v=20261102c"></script>
+<script src="js/admin-compartidos.js?v=20261102c"></script>
 </body>
 </html>
