@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -37,7 +37,7 @@
 **Estado del repositorio y del servidor (1 de noviembre de 2026, tarde):**
 - `main` es lo que sirve producción: hPanel → GIT despliega `main` en `public_html/videos/`. Carlos lo comprobó: acceso, vídeos, miniaturas, app del móvil y 403 en `datos/`, `lib/`, `docs/`, `scripts/` y `CLAUDE.md`.
 - **Datos migrados** a `~/domains/app.mpi-sala.es/archivo-datos/` (fuera de la web): `datos/`, `hls/`, `caseros/` (MP4 originales y `caseros/miniaturas/`), `miniaturas/` (de escenas). El código los encuentra solo (`lib/config.php`); **no hay `privado/config.php`**.
-- En `archivo-datos/` queda también `archivo-familiar.apk` (única copia de la app; ya no se puede descargar por web). Carlos está borrando de ahí el código viejo (`index.html`, `api.php`, etc.).
+- En `archivo-datos/` queda también `archivo-familiar.apk` (única copia; no se sirve por web, la app es la PWA). Carlos está borrando de ahí el código viejo (`index.html`, `api.php`, etc.).
 - `videos-nuevo/` y `videos_antiguo/` ya no existen.
 
 ---
@@ -358,14 +358,15 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Los 17 vídeos convertidos.
 - Fases 1 y 2 de la reestructuración y migración de datos (1 nov 2026).
 
-**Entregado, pendiente de que Carlos confirme que lo subió y funciona:**
-- `api.php` con la marca `f` en el token (necesaria para compartir con la sesión recordada).
-- `index.html` con la sesión recordada en `localStorage` y en cookie.
-- Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
+- Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
+
+**Decisiones de Carlos (1 nov 2026):**
+- **APK:** no se sirve por web. La app es la PWA y no se hace nada más. El APK queda guardado en `archivo-datos/`.
+- **Android Auto:** descartado, sin prisa. No se desarrolla nada.
+- **Tarea programada de HLS:** sin prisa; no hay vídeos nuevos ni previsión de ellos.
 
 **Pendiente:**
-0. **APK:** `archivo-familiar.apk` está en `archivo-datos/` y no se descarga por web. Decidir con Carlos si hay que servirlo (por ejemplo, una acción de `stream.php` con token admin o un enlace temporal).
-0b. **Script HLS** (con ordenador): cambiar o borrar la tarea programada de hPanel que apunta a `~/hls_convert.sh` (ver apartado 8) y comparar ese original con `scripts/hls_convert.sh` del repositorio, que es una reconstrucción.
+0b. **Script HLS** (baja prioridad, con ordenador; no hay vídeos nuevos): cambiar o borrar la tarea programada de hPanel que apunta a `~/hls_convert.sh` (ver apartado 8) y comparar ese original con `scripts/hls_convert.sh` del repositorio, que es una reconstrucción. Solo importa si algún día se añaden vídeos.
 0c. Opcional: borrar `datos/.htaccess`, `hls/.htaccess` y `caseros/.htaccess` del repositorio (protegían la disposición antigua; ya no hay datos junto al código). `lib/config.php` sigue admitiendo la disposición antigua, sin coste.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
@@ -375,7 +376,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
    - Login por POST: hoy la contraseña viaja en la URL y queda en los registros del servidor.
    - Que el panel de admin recuerde la sesión.
    - Restringir la escena compartida también en el servidor.
-6. **Android Auto:** se habló el 31 de octubre de 2026, sin decisión. No admite WebView. El vídeo con el coche parado aún se está desplegando (Android 17 y coches compatibles). Lo viable hoy sería una app nativa **solo de audio** (MediaBrowserService o Media3), instalada a mano con "Fuentes desconocidas" de Android Auto, sin revisión de Google. Falta saber si Carlos quiere audio al conducir o vídeo en parado.
+6. **Android Auto:** descartado por Carlos (1 nov 2026). No admite WebView; si algún día se retoma, lo viable sería una app nativa solo de audio.
 
 ---
 
