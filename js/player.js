@@ -138,7 +138,7 @@ function animarVuelta() {
   void el.offsetWidth;            // reinicia la animación si se repite en la misma tarjeta
   el.classList.add('sala-vuelta');
   clearTimeout(el._salaT);
-  el._salaT = setTimeout(() => el.classList.remove('sala-vuelta'), 1400);
+  el._salaT = setTimeout(() => el.classList.remove('sala-vuelta'), 1800);
 }
 
 function abrirPlayer(url, titulo, fecha, min) {

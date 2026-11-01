@@ -9,7 +9,7 @@ async function cargarCaseros() {
     document.getElementById('count-caseros').textContent = 
       CASEROS.length ? `${CASEROS.length} vídeo${CASEROS.length!==1?'s':''}` : 'Sin vídeos aún';
     renderCaseros();
-    if (document.body.classList.contains('rol-todo')) renderInicioExtras();
+    if (tieneInicio()) renderInicioExtras();
   }
 }
 

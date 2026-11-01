@@ -1,4 +1,4 @@
-const CACHE_NAME = 'archivo-familiar-v5';
+const CACHE_NAME = 'archivo-familiar-v6';
 
 // Instalar — sin bloquear en errores de caché
 self.addEventListener('install', e => {
@@ -26,9 +26,17 @@ self.addEventListener('fetch', e => {
   // Vídeos (stream.php, MP4 y HLS) — nunca cachear
   if (url.pathname.includes('stream.php') || /\.(mp4|m3u8|ts)$/i.test(url.pathname)) return;
 
-  // Resto — network first con fallback a cache
+  // De otros sitios (p. ej. miniaturas de YouTube): lo gestiona el navegador
+  if (url.origin !== self.location.origin) return;
+
+  // Resto — network first con fallback a cache. 'no-cache' obliga a preguntar al servidor
+  // si hay versión nueva (si no la hay, responde 304 y no se descarga nada), así un
+  // despliegue nuevo se ve al momento y no se mezclan archivos viejos con nuevos.
+  const req = e.request.mode === 'navigate'
+    ? new Request(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
+    : new Request(e.request, { cache: 'no-cache' });
   e.respondWith(
-    fetch(e.request)
+    fetch(req)
       .then(res => {
         if (res.ok && res.status === 200) {
           const clone = res.clone();

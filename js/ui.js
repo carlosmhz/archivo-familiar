@@ -41,7 +41,7 @@ function cambiarTema() {
   window.cerrarShareModal = function () { const ya = abierto('share-modal'); const r = o.cerrarShareModal.apply(this, arguments); if (ya) consumir(); return r; };
   window.showSection = function (sec) {
     const r = o.showSection.apply(this, arguments);
-    if (document.body.classList.contains('rol-todo')) sustituirOApilar('sec', ['sec', 'search']);
+    if (tieneInicio()) sustituirOApilar('sec', ['sec', 'search']);
     return r;
   };
   window.goHome = function () { const st = estado(); const r = o.goHome.apply(this, arguments); if (st === 'sec' || st === 'search') consumir(); return r; };
@@ -56,7 +56,7 @@ function cambiarTema() {
       else if (abierto('player-overlay')) o.cerrarPlayer();
       else if (abierto('caseros-modal')) o.cerrarModalCaseros();
       else if (document.getElementById('search-results-screen').classList.contains('active')) o.clearSearch();
-      else if (document.body.classList.contains('rol-todo') && currentSection !== 'home') o.goHome();
+      else if (tieneInicio() && currentSection !== 'home') o.goHome();
     } finally { desdeAtras = false; }
   });
 })();
