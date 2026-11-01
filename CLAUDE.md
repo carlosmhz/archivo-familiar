@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas en producción).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -34,11 +34,11 @@
 - el APK;
 - copias de seguridad.
 
-**Estado del repositorio y del servidor (1 de noviembre de 2026):**
-- `main` es lo que sirve producción: Carlos desplegó las fases 1 y 2 con hPanel → GIT y lo comprobó (acceso, vídeos, miniaturas, app del móvil, 403 en `datos/` y `lib/`).
-- Los datos siguen donde estaban, pero la carpeta antigua se renombró a `public_html/videos_antiguo/` y `privado/config.php` apunta a ella (`'datos' => '/home/u962444875/domains/app.mpi-sala.es/public_html/videos_antiguo'`). Contiene también el código viejo, ya sin uso, y el APK.
-- `public_html/videos-nuevo/` fue la prueba en paralelo y se puede borrar (también su despliegue de GIT, si sigue en hPanel).
-- Pendiente cuando Carlos tenga ordenador: renombrar `videos_antiguo` a `archivo-datos` (mismo nivel que `privado/`), borrar `privado/config.php` y retirar el código viejo y el APK de esa carpeta.
+**Estado del repositorio y del servidor (1 de noviembre de 2026, tarde):**
+- `main` es lo que sirve producción: hPanel → GIT despliega `main` en `public_html/videos/`. Carlos lo comprobó: acceso, vídeos, miniaturas, app del móvil y 403 en `datos/`, `lib/`, `docs/`, `scripts/` y `CLAUDE.md`.
+- **Datos migrados** a `~/domains/app.mpi-sala.es/archivo-datos/` (fuera de la web): `datos/`, `hls/`, `caseros/` (MP4 originales y `caseros/miniaturas/`), `miniaturas/` (de escenas). El código los encuentra solo (`lib/config.php`); **no hay `privado/config.php`**.
+- En `archivo-datos/` queda también `archivo-familiar.apk` (única copia de la app; ya no se puede descargar por web). Carlos está borrando de ahí el código viejo (`index.html`, `api.php`, etc.).
+- `videos-nuevo/` y `videos_antiguo/` ya no existen.
 
 ---
 
@@ -77,7 +77,7 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 ├── index.html                    ← solo maquetación
 ├── admin.html
 ├── css/        app.css, tv.css, tv-actuaciones.css, admin.css  [hecho]
-├── js/         de momento scripts clásicos por secciones [hecho]; pasar a módulos ES en la fase 2
+├── js/         de momento scripts clásicos por secciones [hecho]; pasar a módulos ES en la fase 3
 ├── vendor/     hls.min.js (versión fija 1.5.17)  [hecho]
 ├── api.php, stream.php           entradas públicas finas (las URL no cambian)  [hecho]
 ├── lib/        config.php, auth.php, datos.php, sesion.php, api.php, stream.php, acciones/*.php  [hecho]
@@ -86,12 +86,12 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 └── docs/       documentación adicional
 ```
 
-**Separar el código de los datos** es imprescindible para desplegar con GIT (código hecho; falta mover los datos en el servidor, ver `docs/DESPLIEGUE.md`). El despliegue no debe tocar los 25 GB de HLS ni los JSON vivos. La propuesta es esta:
+**Separar el código de los datos** era imprescindible para desplegar con GIT: **hecho y migrado** el 1 nov 2026. El despliegue no debe tocar los 25 GB de HLS ni los JSON vivos. La propuesta es esta:
 
 ```
 ~/domains/app.mpi-sala.es/
 ├── privado/        claves.php, secret.key                 (ya existe)
-├── archivo-datos/  datos/, hls/, caseros/ (MP4 + miniaturas)  (nuevo, fuera de public_html)
+├── archivo-datos/  datos/, hls/, caseros/ (MP4 + miniaturas), miniaturas/  (hecho)
 └── public_html/videos/   ← solo el código desplegado desde main
 ```
 
@@ -133,7 +133,8 @@ Clientes:
 |---|---|
 | Hosting | Hostinger, compartido, servidor **LiteSpeed** (`uk-fast-web2113`) |
 | SSH | `ssh -p 65002 u962444875@31.170.164.153` (la contraseña la tiene Carlos) |
-| Raíz de la app | `~/domains/app.mpi-sala.es/public_html/videos/` |
+| Raíz de la app (código, desplegado por GIT) | `~/domains/app.mpi-sala.es/public_html/videos/` |
+| Datos (fuera de la web) | `~/domains/app.mpi-sala.es/archivo-datos/` |
 | Carpeta privada (fuera de la web) | `~/domains/app.mpi-sala.es/privado/` |
 | ffmpeg | `~/bin/ffmpeg`, build estático 7.0.2 de johnvansickle. El servidor no trae ffmpeg ni `xz`: se descomprimió con Python `tarfile` |
 | PHP | 8.x. El código usa funciones flecha `fn` y desestructuración |
@@ -148,7 +149,7 @@ Clientes:
 
 ## 3. Estructura de archivos en producción (antes de reestructurar)
 
-> **Histórico:** así estaba el servidor antes del despliegue del 1 de noviembre de 2026. Hoy `public_html/videos/` contiene el código del repositorio (apartado 0.1) y los datos están en `public_html/videos_antiguo/` con la misma disposición que se describe aquí (`datos/`, `hls/`, `caseros/`). El árbol de abajo sigue valiendo para entender los datos.
+> **Histórico:** así estaba el servidor antes del 1 de noviembre de 2026. Hoy `public_html/videos/` contiene solo el código del repositorio (apartado 0.1) y los datos están en `~/domains/app.mpi-sala.es/archivo-datos/` con la misma disposición interna (`datos/`, `hls/`, `caseros/`, `miniaturas/`). El árbol sigue valiendo para entender los datos.
 
 ```
 ~/domains/app.mpi-sala.es/
@@ -297,21 +298,22 @@ Los nombres de los vídeos son:
 
 Los originales eran de 720x576, H.264 a unos 3,5 Mbps con AAC.
 
-**Parámetros de codificación** (en `~/hls_convert.sh`):
+**Parámetros de codificación** (en `scripts/hls_convert.sh` del repositorio; en el servidor sigue también `~/hls_convert.sh`, el original):
 ```
 -vf scale=-2:576 -c:v libx264 -preset veryfast -crf 25 -profile:v main -pix_fmt yuv420p
 -g 50 -keyint_min 50 -sc_threshold 0 -c:a aac -b:a 128k
 -f hls -hls_time 6 -hls_playlist_type vod  (+ -threads 2 para no superar el límite de CPU)
 ```
 
-**Cómo funciona `~/hls_convert.sh`:**
+**Cómo funciona `hls_convert.sh`:**
+- Trabaja en la carpeta de datos: `ARCHIVO_DATOS` si está definida, si no `~/domains/app.mpi-sala.es/archivo-datos`, y si no existe la carpeta antigua de la web. **El `~/hls_convert.sh` original del servidor hace `cd` a `public_html/videos`, que ya no tiene datos: no usarlo.** Usar `~/domains/app.mpi-sala.es/public_html/videos/scripts/hls_convert.sh` (necesita `chmod +x`, o lanzarlo con `bash`).
 - Sin argumentos convierte todo `caseros/*.mp4`. Con argumentos, solo los indicados.
 - Salta los vídeos que ya tienen `hls/<n>/index.m3u8`.
 - Escribe en `hls/<n>.tmp/` y solo al acabar sin errores lo renombra a `hls/<n>/`.
 - Registra cada paso en `~/hls.log` (`INICIO`, `OK tamaño`, `ERROR`, `SALTO`).
 - La velocidad es de unas 8 veces el tiempo real con todos los hilos, y algo menos con 2 hilos. Un vídeo de 2 horas tarda unos 15–20 minutos.
 
-**Tarea programada de hPanel** (para relanzar si el hosting mata el proceso):
+**Tarea programada de hPanel** (para relanzar si el hosting mata el proceso). La que existe apunta al script original y debe borrarse o cambiarse a `bash /home/u962444875/domains/app.mpi-sala.es/public_html/videos/scripts/hls_convert.sh`:
 ```
 */10 * * * *  /usr/bin/flock -n /home/u962444875/hls.lock /home/u962444875/hls_convert.sh >> /home/u962444875/hls.log 2>&1
 ```
@@ -320,14 +322,18 @@ Los originales eran de 720x576, H.264 a unos 3,5 Mbps con AAC.
 - Duración: `awk -F'[:,]' '/EXTINF/{s+=$2} END{print s}' hls/<n>/index.m3u8` debe coincidir con la del MP4. Por ejemplo, sahara dio 6205,04 s frente a 6205 del original.
 
 ### Añadir un vídeo nuevo
-1. Sube el MP4 a `caseros/`. El nombre solo puede llevar letras, números, `.`, `_`, `-` y espacios.
+1. Sube el MP4 a `~/domains/app.mpi-sala.es/archivo-datos/caseros/` (Administrador de archivos de hPanel o SFTP). El nombre solo puede llevar letras, números, `.`, `_`, `-` y espacios.
 2. En el admin, en la pestaña "Vídeos caseros", pon la URL `https://app.mpi-sala.es/videos/caseros/<nombre>.mp4`. Si quieres que empiece en un segundo concreto, añade `#t=SEGUNDOS`.
-3. Por SSH: `nohup ~/hls_convert.sh caseros/<nombre>.mp4 >> ~/hls.log 2>&1 &`
+3. Por SSH: `nohup bash ~/domains/app.mpi-sala.es/public_html/videos/scripts/hls_convert.sh caseros/<nombre>.mp4 >> ~/hls.log 2>&1 &` (la ruta `caseros/…` es relativa a `archivo-datos`).
 4. Hasta que termine la conversión, el vídeo se reproduce por MP4 a través de `stream.php`. Al terminar pasa a HLS automáticamente.
 
 ---
 
-## 9. Seguridad desplegada (verificada el 30 de octubre de 2026)
+## 9. Seguridad desplegada
+
+Desde el 1 nov 2026 los datos están fuera de la web, así que no hay URL directa a ellos. Las miniaturas se sirven por `stream.php?img=`. Comprobado por Carlos: 403 en `videos/CLAUDE.md`, `videos/lib/api.php`, `videos/docs/…`, `videos/scripts/…` y `videos/datos/caseros.json`.
+
+Verificación anterior (30 de octubre de 2026, con los datos aún dentro de la web):
 
 | URL directa | Resultado |
 |---|---|
@@ -343,16 +349,14 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 
 ## 10. Estado de despliegue y tareas pendientes
 
-**Primero, el repositorio:**
-1. Carlos sube a `main` el código actual de producción (solo código).
-2. El agente crea `develop`, añade `CLAUDE.md`, `.gitignore` y `README.md`, y prepara la propuesta de reestructuración en ramas `feature/*`.
-3. Hecho el 1 nov 2026: hPanel → GIT conectado a `main`. Falta solo renombrar la carpeta de datos (ver pendiente 0).
+**Repositorio y despliegue:** hecho el 1 nov 2026. `main` desplegado con hPanel → GIT y datos en `archivo-datos/`.
 
 **Desplegado y confirmado:**
 - HLS con hls.js en local.
 - Protección completa: `auth.php`, `stream.php`, `claves.php` en `privado/` y los tres `.htaccess`.
 - Soporte de `#t=` en la URL.
 - Los 17 vídeos convertidos.
+- Fases 1 y 2 de la reestructuración y migración de datos (1 nov 2026).
 
 **Entregado, pendiente de que Carlos confirme que lo subió y funciona:**
 - `api.php` con la marca `f` en el token (necesaria para compartir con la sesión recordada).
@@ -360,8 +364,9 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
 
 **Pendiente:**
-0. **Terminar la migración** (con ordenador): renombrar `videos_antiguo` a `archivo-datos`, borrar `privado/config.php`, quitar de ahí el código viejo y el APK, y borrar `videos-nuevo`. Si el APK debe seguir descargándose desde la web, decidir cómo servirlo (no está en el repositorio).
-0b. Actualizar la tarea programada del script HLS para usar `public_html/videos/scripts/hls_convert.sh` (busca solo la carpeta de datos) y comparar ese script con `~/hls_convert.sh`, que era el original.
+0. **APK:** `archivo-familiar.apk` está en `archivo-datos/` y no se descarga por web. Decidir con Carlos si hay que servirlo (por ejemplo, una acción de `stream.php` con token admin o un enlace temporal).
+0b. **Script HLS** (con ordenador): cambiar o borrar la tarea programada de hPanel que apunta a `~/hls_convert.sh` (ver apartado 8) y comparar ese original con `scripts/hls_convert.sh` del repositorio, que es una reconstrucción.
+0c. Opcional: borrar `datos/.htaccess`, `hls/.htaccess` y `caseros/.htaccess` del repositorio (protegían la disposición antigua; ya no hay datos junto al código). `lib/config.php` sigue admitiendo la disposición antigua, sin coste.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
 3. Probar varios vídeos desde la app, entre ellos `comunion-javier-carlos` con `#t=1755`.

@@ -1,6 +1,6 @@
 # Despliegue con hPanel → GIT (migración desde el servidor actual)
 
-> **Estado:** ejecutado el 1 de noviembre de 2026 con una variante sin mover los datos: la carpeta `videos` se renombró a `videos_antiguo` (con los datos dentro), `privado/config.php` apunta a ella y hPanel → GIT despliega `main` en `public_html/videos`. El paso 4 de abajo (mover a `archivo-datos`) queda para cuando haya terminal.
+> **Estado: completado el 1 de noviembre de 2026.** Variante usada: la carpeta `videos` se renombró a `videos_antiguo` con los datos dentro, se probó con `privado/config.php`, se desplegó `main` en `public_html/videos` y al final la carpeta de datos se movió a `~/domains/app.mpi-sala.es/archivo-datos/` y se borró `config.php`. Ojo: `archivo-datos` va **al lado** de `public_html`, no dentro (si queda dentro, la web no ve los datos).
 >
 > Guion para pasar de "subir archivos a mano" a "desplegar `main` con hPanel → GIT". Lo ejecuta Carlos en el servidor; el agente no tiene acceso. Cada paso trae su vuelta atrás.
 > Lo que ofrece exactamente hPanel → GIT (clave de despliegue, carpeta de destino, despliegue automático) no está verificado: ajusta el paso 3 a lo que veas en pantalla.
