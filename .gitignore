@@ -1,0 +1,47 @@
+# ── Secretos: NUNCA al repositorio ──────────────────────────
+claves.php
+**/claves.php
+secret.key
+**/secret.key
+privado/
+.env
+*.key
+*.pem
+
+# ── Datos vivos (catálogo, PIN, OTP, intentos) ──────────────
+datos/*.json
+**/datos/*.json
+intentos.json
+
+# ── Vídeos y miniaturas (viven en el servidor, fuera del código)
+*.mp4
+*.m4v
+*.mov
+*.mkv
+*.avi
+*.ts
+*.m3u8
+hls/*
+!hls/.htaccess
+caseros/*
+!caseros/.htaccess
+miniaturas/
+
+# ── Binarios y copias ───────────────────────────────────────
+*.apk
+*.bak
+*.orig
+*.zip
+*.tar
+*.tar.gz
+*.tar.xz
+backup*/
+
+# ── Logs y sistema ──────────────────────────────────────────
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+node_modules/

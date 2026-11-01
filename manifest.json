@@ -1,0 +1,24 @@
+{
+  "name": "Archivo Familiar",
+  "short_name": "Archivo Familiar",
+  "description": "Archivo familiar de vídeos y actuaciones",
+  "start_url": "/videos/",
+  "display": "standalone",
+  "background_color": "#0d1b35",
+  "theme_color": "#1a2a4a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/videos/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/videos/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

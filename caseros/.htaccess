@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule \.(mp4|m4v|mov|mkv|avi)$ - [F,L]

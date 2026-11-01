@@ -1,0 +1,3080 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0E1014">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Archivo Familiar">
+  <link rel="manifest" href="/videos/manifest.json">
+  <link rel="apple-touch-icon" href="/videos/apple-touch-icon.png">
+  <meta name="theme-color" content="#0E1014">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Archivo Familiar">
+  <link rel="manifest" href="/videos/manifest.json">
+  <link rel="apple-touch-icon" href="/videos/apple-touch-icon.png">
+<title>Archivo Familiar de Vídeos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0E1014;
+    --surface: #171A21;
+    --surface-2: #1F232C;
+    --surface-3: #2A2F3A;
+    --line: rgba(255,255,255,0.07);
+    --muted: #9AA0AB;
+    --muted-2: #C9CDD4;
+    --accent: #E8A33D;
+    --accent-hover: #F2B95E;
+    --accent-ink: #1A1206;
+    --accent-soft: rgba(232,163,61,0.14);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  body {
+    /* nombres antiguos (los usa el JS); van en body para que sigan al tema */
+    --cream: var(--bg);
+    --warm-white: var(--surface);
+    --sepia: var(--muted-2);
+    --dark: #ECEDEF;
+    --blue: var(--accent);
+    --blue-light: var(--accent-hover);
+    --blue-pale: #3a3f4b;
+    --blue-ghost: var(--surface-2);
+    --text: #ECEDEF;
+    --text-light: var(--muted);
+    --shadow: rgba(0,0,0,0.45);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+  button { font-family:inherit; }
+  ::selection { background:rgba(232,163,61,0.35); color:#fff; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .ico { width:1em; height:1em; display:inline-block; vertical-align:-0.125em; flex-shrink:0; }
+
+  /* ─── LOGIN ─── */
+  #login-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:1000; transition:opacity 0.5s ease; }
+  #login-screen.hidden { opacity:0; pointer-events:none; }
+  .login-box { text-align:center; padding:48px 32px; max-width:380px; width:100%; }
+  .login-ornament { width:64px; height:64px; margin:0 auto 22px; border-radius:18px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:32px; }
+  .login-title { font-family:var(--serif); font-weight:500; font-size:32px; color:var(--text); letter-spacing:-0.5px; margin-bottom:6px; }
+  .login-subtitle { font-size:13px; color:var(--muted); margin-bottom:34px; }
+  .login-divider { display:none; }
+  .login-input { width:100%; height:52px; padding:0 18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; color:var(--text); font-family:var(--sans); font-size:17px; letter-spacing:4px; text-align:center; outline:none; transition:border-color 0.2s; margin-bottom:12px; }
+  .login-input:focus { border-color:var(--accent); }
+  .login-input::placeholder { letter-spacing:0.5px; color:#6f7682; font-size:15px; }
+  .login-btn { width:100%; height:52px; background:var(--accent); border:none; border-radius:14px; color:var(--accent-ink); font-size:15px; font-weight:700; cursor:pointer; transition:background 0.2s,transform 0.1s; }
+  .login-btn:hover { background:var(--accent-hover); }
+  .login-btn:active { transform:scale(0.98); }
+  .login-error { color:#F08C8C; font-size:13px; margin-top:12px; height:18px; }
+
+  /* ─── APP ─── */
+  #app { display:none; }
+  #app.visible { display:block; }
+
+  .site-header { background:rgba(14,16,20,0.97); border-bottom:1px solid var(--line); padding:12px 32px; display:flex; align-items:center; gap:24px; position:sticky; top:0; z-index:100; }
+  .header-title { display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:19px; font-weight:600; color:var(--text); letter-spacing:-0.2px; background:none; border:none; cursor:pointer; padding:6px 0; }
+  .header-title span { font-style:normal; font-weight:600; }
+  .logo-mark { width:32px; height:32px; border-radius:9px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .header-right { display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .search-wrap { position:relative; display:flex; align-items:center; }
+  .search-wrap .ico { position:absolute; left:14px; color:var(--muted); font-size:17px; pointer-events:none; }
+  .search-input { height:42px; padding:0 16px 0 40px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--text); font-family:var(--sans); font-size:14px; outline:none; width:260px; transition:border-color 0.2s; }
+  .search-input:focus { border-color:var(--accent); }
+  .search-input::placeholder { color:#6f7682; }
+  .search-wrap.oculto { display:none; }
+  .logout-btn { width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:none; border:none; color:var(--muted); font-size:20px; border-radius:21px; cursor:pointer; transition:color 0.2s,background 0.2s; }
+  .logout-btn:hover { color:var(--text); background:var(--surface); }
+
+  /* Navegación: arriba en escritorio, barra inferior en móvil */
+  .main-nav { display:flex; gap:4px; }
+  .nav-item { display:flex; align-items:center; gap:8px; height:40px; padding:0 14px; border:none; background:none; color:var(--muted); font-size:14px; font-weight:600; border-radius:10px; cursor:pointer; transition:color 0.2s,background 0.2s; }
+  .nav-item .ico { font-size:19px; }
+  .nav-item:hover { color:var(--text); background:var(--surface); }
+  .nav-item.active { color:var(--accent); }
+  body.rol-caseros .main-nav, body.rol-actuaciones .main-nav, body.rol-compartir .main-nav { display:none !important; }
+  body.rol-caseros .back-btn, body.rol-actuaciones .back-btn, body.rol-compartir .back-btn { display:none; }
+  body.rol-compartir .search-wrap { display:none !important; }
+
+  /* HOME */
+  #home-screen { max-width:1100px; margin:0 auto; padding:36px 32px 60px; }
+  .home-hello { font-size:14px; color:var(--muted); font-weight:500; }
+  .home-title { font-family:var(--serif); font-size:40px; font-weight:500; letter-spacing:-0.8px; line-height:1.1; margin:6px 0 28px; }
+  .continue-card { display:none; position:relative; width:100%; max-width:640px; aspect-ratio:16/8; border-radius:20px; overflow:hidden; background:#2B3550; border:none; cursor:pointer; text-align:left; color:var(--text); margin-bottom:28px; }
+  .continue-card.visible { display:block; }
+  .continue-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .continue-card .cc-icon { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:72px; color:rgba(236,237,239,0.18); }
+  .continue-card .cc-bar { position:absolute; left:0; right:0; bottom:0; padding:16px 18px; background:rgba(10,12,16,0.78); display:flex; align-items:center; gap:14px; }
+  .cc-kicker { font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent); }
+  .cc-title { font-size:17px; font-weight:600; margin-top:3px; }
+  .cc-sub { font-size:12px; color:#B4B9C2; margin-top:2px; }
+  .cc-progress { height:3px; border-radius:2px; background:rgba(255,255,255,0.15); margin-top:10px; }
+  .cc-progress div { height:3px; border-radius:2px; background:var(--accent); width:0; }
+  .cc-play { width:50px; height:50px; border-radius:25px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .home-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; max-width:640px; }
+  body.rol-caseros .home-sections, body.rol-actuaciones .home-sections { grid-template-columns:1fr; }
+  .section-card { background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:20px; text-align:left; cursor:pointer; transition:transform 0.2s,border-color 0.2s,background 0.2s; display:flex; flex-direction:column; gap:16px; position:relative; }
+  .section-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,0.14); background:#1B1F27; }
+  .card-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:21px; }
+  .card-icon.sev { background:#3A2440; color:#E7B6F0; }
+  .card-icon.cas { background:#1F3D44; color:#9ED8E2; }
+  .card-title { font-size:16px; font-weight:600; color:var(--text); }
+  .card-desc { font-size:13px; color:var(--muted); line-height:1.5; margin-top:3px; }
+  .card-count { font-size:12px; font-weight:600; color:var(--muted-2); }
+  .home-row-head { display:flex; align-items:baseline; justify-content:space-between; margin:34px 0 12px; max-width:100%; }
+  .home-row-head h2 { font-size:17px; font-weight:600; }
+  .link-btn { background:none; border:none; color:var(--accent); font-size:13px; font-weight:600; cursor:pointer; padding:8px 0; }
+  .recent-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; }
+  .recent-row::-webkit-scrollbar { display:none; }
+  .recent-card { width:170px; flex-shrink:0; background:none; border:none; text-align:left; color:var(--text); cursor:pointer; padding:0; }
+  .recent-thumb { position:relative; height:100px; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:30px; color:rgba(236,237,239,0.35); }
+  .recent-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .recent-title { font-size:13px; font-weight:600; margin-top:8px; line-height:1.3; }
+  .recent-date { font-size:12px; color:var(--muted); margin-top:1px; }
+  #home-recientes { display:none; }
+  #home-recientes.visible { display:block; }
+
+  /* CONTENT */
+  .content-screen { display:none; padding:32px; max-width:1100px; margin:0 auto; animation:fadeIn 0.3s ease; }
+  .content-screen.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .back-btn { display:none; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; padding:6px 0; margin-bottom:14px; transition:color 0.2s; }
+  .back-btn:hover { color:var(--text); }
+  .section-title { font-family:var(--serif); font-size:36px; font-weight:500; letter-spacing:-0.6px; color:var(--text); margin-bottom:4px; }
+  .section-subtitle { color:var(--muted); font-size:14px; margin-bottom:22px; }
+
+  /* AÑOS (chips) */
+  .year-chips { display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; margin-bottom:6px; scrollbar-width:none; }
+  .year-chips::-webkit-scrollbar { display:none; }
+  .chip { height:36px; padding:0 15px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:var(--muted-2); font-size:13px; font-weight:600; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
+  .chip:hover { border-color:rgba(255,255,255,0.22); }
+  .chip.active { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+
+  /* YEAR GROUPS */
+  .year-group { margin-bottom:8px; }
+  .year-header { display:flex; align-items:baseline; justify-content:space-between; padding:18px 4px 10px; cursor:pointer; user-select:none; font-family:var(--serif); font-size:24px; font-weight:500; color:var(--text); }
+  .year-header .count-badge { font-family:var(--sans); font-size:12px; font-weight:500; color:var(--muted); }
+  .year-header .chevron { font-size:12px; color:var(--muted); transition:transform 0.3s; display:inline-block; }
+  .year-group:not(.open) .chevron { transform:rotate(-90deg); }
+  .year-body { display:none; background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .year-group.open .year-body { display:block; }
+
+  /* FILAS ACTUACIONES */
+  .actuacion-row { display:flex; align-items:center; gap:14px; padding:12px 12px 12px 16px; border-bottom:1px solid rgba(255,255,255,0.05); transition:background 0.15s; }
+  .actuacion-row:last-child { border-bottom:none; }
+  .actuacion-row:hover { background:#1B1F27; }
+  .act-date { width:44px; flex-shrink:0; text-align:center; }
+  .act-day { display:block; font-size:19px; font-weight:700; line-height:1; color:var(--text); }
+  .act-mon { display:block; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--muted); margin-top:4px; text-transform:uppercase; }
+  .act-year { display:block; font-size:10px; color:var(--muted); margin-top:1px; }
+  .act-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .act-name { font-size:15px; font-weight:600; color:var(--text); }
+  .act-meta { font-size:12px; color:var(--muted); }
+  .act-kw { color:var(--muted-2); font-style:italic; }
+  .act-fecha { font-size:12px; color:var(--muted); }
+  .act-link { width:44px; height:44px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; border-radius:22px; border:none; background:var(--accent-soft); color:var(--accent); font-size:16px; cursor:pointer; transition:background 0.2s,transform 0.1s; text-decoration:none; }
+  .act-link:hover { background:rgba(232,163,61,0.26); }
+  .act-link:active { transform:scale(0.94); }
+  .act-link.pending { width:auto; height:auto; padding:6px 10px; background:transparent; border:1px dashed rgba(255,255,255,0.18); color:var(--muted); font-size:11px; font-weight:600; cursor:default; pointer-events:none; border-radius:20px; }
+  .act-row { display:flex; align-items:center; gap:14px; padding:12px 16px; background:var(--surface); border:1px solid var(--line); border-radius:14px; margin-bottom:8px; }
+  .act-time { display:none; }
+
+  /* CASEROS: selector */
+  .subcategory-tabs { display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; padding:4px; border-radius:12px; background:var(--surface); border:1px solid var(--line); margin-bottom:10px; min-width:320px; }
+  .tab-btn { height:38px; padding:0 16px; border:none; border-radius:9px; background:transparent; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .tab-btn.active { background:var(--surface-3); color:var(--text); }
+  .tab-btn:hover:not(.active) { color:var(--text); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+  .placeholder-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
+  .placeholder-card { background:var(--surface); border-radius:12px; padding:30px 20px; text-align:center; border:1px dashed rgba(255,255,255,0.12); color:var(--muted); }
+
+  /* TIMELINE */
+  .tl-layout { display:flex; align-items:stretch; margin-bottom:16px; }
+  .tl-outer-wrapper { flex:1; position:relative; overflow:hidden; padding:0 0 16px; }
+  .tl-outer-wrapper::before, .tl-outer-wrapper::after { content:''; position:absolute; top:0; bottom:0; width:32px; z-index:10; pointer-events:none; }
+  .tl-outer-wrapper::before { left:0; background:linear-gradient(to right,var(--bg),transparent); }
+  .tl-outer-wrapper::after  { right:0; background:linear-gradient(to left,var(--bg),transparent); }
+  .tl-scroll { overflow-x:auto; overflow-y:visible; padding:0 48px; cursor:grab; user-select:none; scrollbar-width:thin; scrollbar-color:rgba(232,163,61,0.25) transparent; }
+  .tl-scroll:active { cursor:grabbing; }
+  .tl-scroll::-webkit-scrollbar { height:3px; }
+  .tl-scroll::-webkit-scrollbar-thumb { background:rgba(232,163,61,0.25); border-radius:2px; }
+  .tl-body { display:flex; flex-direction:column; min-width:max-content; }
+  .tl-item-wrap { position:absolute; display:flex; flex-direction:column; align-items:center; z-index:1; }
+  .tl-item-wrap:hover { z-index:20 !important; }
+  .tl-card { width:155px; background:var(--surface); border-radius:14px; overflow:hidden; cursor:pointer; transition:transform 0.2s,border-color 0.2s; border:1px solid var(--line); display:flex; flex-direction:column; min-height:195px; }
+  .tl-card:hover { transform:translateY(-4px); border-color:rgba(255,255,255,0.16); }
+  .tl-thumb { height:75px; display:flex; align-items:center; justify-content:center; font-size:30px; overflow:hidden; position:relative; color:rgba(236,237,239,0.4); }
+  .tl-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .tl-thumb.boda, .t-boda { background:#2B3550; }
+  .tl-thumb.comunion, .t-comunion { background:#263F33; }
+  .tl-thumb.cotidiano, .t-cotidiano { background:#42362A; }
+  .tl-thumb.vacaciones, .t-vacaciones { background:#1F3D44; }
+  .tl-thumb.navidad, .t-navidad { background:#4A2A2E; }
+  .tl-thumb.otros, .t-otros { background:#3A2440; }
+  .tl-thumb.multi, .t-multi { background:#2E2A4A; }
+  .tl-card-body { padding:9px 11px 9px; flex:1; }
+  .tl-cat { display:inline-block; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; color:var(--accent); }
+  .tl-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:2px; }
+  .tl-date { font-size:11px; color:var(--muted); }
+  .tl-play { margin-top:8px; height:30px; background:var(--accent); border-radius:8px; text-align:center; font-size:11px; font-weight:700; color:var(--accent-ink); transition:background 0.2s; border:none; width:100%; cursor:pointer; }
+  .tl-card:hover .tl-play { background:var(--accent-hover); }
+  .tl-year-bar { background:#0A0C10; color:var(--muted-2); font-size:10px; font-weight:700; letter-spacing:2px; text-align:center; padding:4px; }
+  .tl-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); box-shadow:0 0 0 2px var(--accent); flex-shrink:0; }
+  .tl-scroll-arrow { position:absolute; right:0; top:50%; transform:translateY(-50%); width:36px; height:60px; background:linear-gradient(to right,transparent,rgba(14,16,20,0.95)); display:flex; align-items:center; justify-content:flex-end; padding-right:4px; z-index:20; pointer-events:none; transition:opacity 0.3s; }
+  .tl-scroll-arrow.hidden { opacity:0; }
+  .tl-scroll-arrow-icon { font-size:22px; color:var(--accent); animation:bounce-right 1.2s ease-in-out infinite; }
+  @keyframes bounce-right { 0%,100% { transform:translateX(0); } 50% { transform:translateX(4px); } }
+  .tl-swipe-hint { text-align:center; font-size:12px; color:var(--muted); padding:8px 0 12px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .tl-swipe-hint::before, .tl-swipe-hint::after { content:''; display:block; height:1px; width:40px; background:var(--surface-3); }
+
+  /* MODAL CASEROS / ESCENAS */
+  .caseros-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+  .caseros-modal-overlay.open { opacity:1; pointer-events:all; }
+  .caseros-modal-box { background:var(--surface); border:1px solid var(--line); border-radius:20px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,0.6); transform:translateY(20px); transition:transform 0.25s; overflow:hidden; }
+  .caseros-modal-overlay.open .caseros-modal-box { transform:translateY(0); }
+  .caseros-modal-header { padding:18px 20px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .caseros-modal-header h3 { font-family:var(--serif); font-weight:500; font-size:21px; color:var(--text); }
+  .caseros-modal-header p { font-size:12px; color:var(--muted); margin-top:2px; }
+  .caseros-modal-close { width:44px; height:44px; background:none; border:none; font-size:24px; color:var(--muted); cursor:pointer; line-height:1; border-radius:22px; flex-shrink:0; }
+  .caseros-modal-close:hover { background:var(--surface-2); color:var(--text); }
+  .caseros-modal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; padding:16px; max-height:65vh; overflow-y:auto; }
+  .caseros-modal-card { background:var(--surface-2); border-radius:12px; overflow:hidden; cursor:pointer; transition:transform 0.2s; border:1px solid var(--line); }
+  .caseros-modal-card:hover { transform:translateY(-3px); }
+  .caseros-modal-card .mc-thumb { height:65px; display:flex; align-items:center; justify-content:center; font-size:26px; color:rgba(236,237,239,0.4); }
+  .caseros-modal-card .mc-body { padding:8px 10px 10px; }
+  .caseros-modal-card .mc-cat { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:3px; }
+  .caseros-modal-card .mc-title { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:2px; }
+  .caseros-modal-card .mc-date { font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .caseros-modal-card .mc-btn { padding:6px; background:var(--accent); border-radius:7px; text-align:center; font-size:11px; font-weight:700; color:var(--accent-ink); }
+
+  /* DÉCADAS */
+  .decada-section { margin-bottom:30px; }
+  .decada-title { display:flex; align-items:baseline; justify-content:space-between; font-family:var(--serif); font-size:24px; font-weight:500; color:var(--text); margin:18px 0 12px; }
+  .decada-title small { font-family:var(--sans); font-size:12px; font-weight:500; color:var(--muted); }
+  .decada-row { display:flex; gap:12px; overflow-x:auto; overflow-y:hidden; padding:2px 2px 12px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; cursor:grab; user-select:none; scrollbar-width:thin; scrollbar-color:rgba(232,163,61,0.3) transparent; }
+  .decada-row:active { cursor:grabbing; }
+  .decada-row::-webkit-scrollbar { height:4px; }
+  .decada-row::-webkit-scrollbar-thumb { background:rgba(232,163,61,0.3); border-radius:2px; }
+  body:not(.modo-tv) .decada-row .nf-card { flex:0 0 200px; width:200px; scroll-snap-align:start; }
+  .nf-card { background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; position:relative; transition:transform 0.2s,border-color 0.2s; display:flex; flex-direction:column; }
+  .nf-card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,0.14); }
+  .nf-thumb { width:100%; aspect-ratio:16/10; object-fit:cover; display:block; background:#0A0C10; }
+  .nf-thumb-placeholder { width:100%; aspect-ratio:16/10; display:flex; align-items:center; justify-content:center; font-size:34px; color:rgba(236,237,239,0.38); }
+  .nf-info { padding:10px 12px 12px; display:flex; flex-direction:column; flex:1; }
+  .nf-cat { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:3px; }
+  .nf-titulo { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:2px; }
+  .nf-fecha { font-size:12px; color:var(--muted); margin-bottom:10px; }
+  .nf-btns { display:flex; gap:6px; margin-top:auto; }
+  .nf-btn { flex:1; height:38px; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .nf-btn.primary { background:var(--accent); color:var(--accent-ink); }
+  .nf-btn.primary:hover { background:var(--accent-hover); }
+  .nf-btn.secondary { background:var(--surface-3); color:var(--text); }
+  .nf-btn.secondary:hover { background:#353B48; }
+  .nf-badge { position:absolute; top:8px; right:8px; background:rgba(10,12,16,0.78); color:var(--text); font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; z-index:1; }
+  .nf-proximamente .nf-thumb, .nf-proximamente .nf-thumb-placeholder { opacity:0.5; }
+  .nf-proximamente:hover { transform:none; }
+
+  /* CASEROS CARDS (resultados) */
+  .caseros-empty { color:var(--muted); font-size:14px; padding:20px 0; }
+
+  /* REPRODUCTOR */
+  .player-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+  .player-overlay.open { display:flex; }
+  .player-box { background:var(--bg); border:1px solid var(--line); border-radius:18px; width:100%; max-width:960px; max-height:100%; overflow:hidden auto; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+  .player-header { padding:14px 14px 14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--line); }
+  .player-title { font-family:var(--serif); font-weight:500; font-size:20px; color:var(--text); }
+  .player-fecha { font-size:12px; color:var(--muted); margin-top:2px; }
+  .player-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .player-close { width:44px; height:44px; background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; border-radius:22px; transition:color 0.2s,background 0.2s; display:flex; align-items:center; justify-content:center; }
+  .player-close:hover { color:var(--text); background:var(--surface); }
+  .player-share { height:40px; padding:0 14px; border-radius:20px; border:none; background:#25D366; color:#06210F; font-size:13px; font-weight:700; cursor:pointer; display:none; align-items:center; gap:7px; }
+  .player-share:hover { background:#2fe373; }
+  .player-share span, .player-share svg { vertical-align:middle; }
+  .player-embed { position:relative; padding-bottom:56.25%; height:0; background:#000; }
+  .player-embed iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
+  .player-escenas { display:none; padding:6px 16px 18px; }
+  .player-escenas.visible { display:block; }
+  .pe-head { display:flex; align-items:baseline; justify-content:space-between; padding:14px 4px 10px; }
+  .pe-head h4 { font-size:15px; font-weight:600; }
+  .pe-head span { font-size:12px; color:var(--muted); }
+  .pe-list { background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .pe-item { width:100%; display:flex; align-items:center; gap:14px; padding:11px 14px; min-height:52px; border:none; border-bottom:1px solid rgba(255,255,255,0.05); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+  .pe-item:last-child { border-bottom:none; }
+  .pe-item:hover { background:#1B1F27; }
+  .pe-num { width:28px; height:28px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:#242833; color:var(--muted-2); }
+  .pe-item.actual { background:rgba(232,163,61,0.10); }
+  .pe-item.actual .pe-num { background:var(--accent); color:var(--accent-ink); }
+  .pe-txt { flex:1; min-width:0; }
+  .pe-tit { font-size:14px; font-weight:600; }
+  .pe-sub { font-size:12px; color:var(--muted); margin-top:1px; }
+  .pe-t { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+  /* PANTALLA COMPARTIR */
+  #screen-compartir { display:none; min-height:calc(100vh - 70px); align-items:center; justify-content:center; padding:40px 20px; }
+  #screen-compartir.active { display:flex; }
+  .compartir-card { background:var(--surface); border:1px solid var(--line); border-radius:20px; overflow:hidden; max-width:380px; width:100%; text-align:center; }
+  .compartir-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#0A0C10; }
+  .compartir-thumb-placeholder { width:100%; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; font-size:56px; background:#2B3550; color:rgba(236,237,239,0.35); }
+  .compartir-body { padding:22px 24px 26px; }
+  .compartir-titulo { font-family:var(--serif); font-weight:500; font-size:24px; color:var(--text); margin-bottom:6px; }
+  .compartir-sub { font-size:13px; color:var(--muted); margin-bottom:22px; }
+  .compartir-btn { width:100%; height:50px; background:var(--accent); color:var(--accent-ink); border:none; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .compartir-btn:hover { background:var(--accent-hover); }
+
+  .share-modal { position:fixed; inset:0; overflow-y:auto; background:rgba(10,12,16,0.97); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:20; gap:14px; padding:24px; }
+  .share-modal.open { display:flex; }
+  .share-modal-title { font-family:var(--serif); font-weight:500; font-size:22px; color:var(--text); text-align:center; }
+  .share-modal-sub { font-size:12px; color:var(--muted); text-align:center; }
+  .share-btns { display:flex; flex-direction:column; gap:8px; width:100%; max-width:300px; }
+  .share-btn { height:44px; padding:0 18px; border-radius:12px; border:none; cursor:pointer; font-size:13px; font-weight:700; transition:background 0.2s; }
+  .share-btn.full { background:var(--surface-3); color:var(--text); }
+  .share-btn.full:hover { background:#353B48; }
+  .share-btn.escena { background:#25D366; color:#06210F; }
+  .share-btn.escena:hover { background:#2fe373; }
+  .share-btn.perm { box-shadow:inset 0 0 0 2px rgba(255,255,255,0.35); }
+  .share-btn.cancel { background:transparent; color:var(--muted-2); border:1px solid rgba(255,255,255,0.14); }
+
+  /* BÚSQUEDA */
+  #search-results-screen { display:none; padding:32px; max-width:1100px; margin:0 auto; }
+  #search-results-screen.active { display:block; }
+  .result-count { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  #search-results-list .actuacion-row { background:var(--surface); border:1px solid var(--line); border-radius:14px; margin-bottom:8px; }
+
+  /* CARGA */
+  .player-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; z-index:2; transition:opacity 0.3s; }
+  .player-loading.hidden { opacity:0; pointer-events:none; }
+  .spinner { width:44px; height:44px; border:3px solid rgba(255,255,255,0.12); border-top-color:var(--accent); border-radius:50%; animation:spin 0.9s linear infinite; margin-bottom:14px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .player-loading p { color:var(--muted-2); font-size:13px; }
+  .escena-end-panel { position:absolute; inset:0; background:rgba(10,12,16,0.92); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10; gap:16px; padding:24px; }
+  .escena-end-panel.open { display:flex; }
+  .escena-end-title { font-family:var(--serif); font-weight:500; font-size:22px; color:var(--text); text-align:center; }
+  .escena-end-sub { font-size:12px; color:var(--muted); text-align:center; margin-top:-8px; }
+  .escena-end-btns { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .escena-end-btn { height:44px; padding:0 20px; border-radius:12px; border:none; cursor:pointer; font-size:13px; font-weight:700; transition:background 0.2s; }
+  .escena-end-btn.primary { background:var(--accent); color:var(--accent-ink); }
+  .escena-end-btn.primary:hover { background:var(--accent-hover); }
+  .escena-end-btn.ghost { background:transparent; color:var(--muted-2); border:1px solid rgba(255,255,255,0.16); }
+  .escena-end-btn.ghost:hover { color:var(--text); border-color:rgba(255,255,255,0.3); }
+
+  .loading { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+
+  /* ─── MÓVIL ─── */
+  @media (max-width:760px) {
+    .site-header { padding:10px 12px 10px 18px; flex-wrap:wrap; gap:6px 8px; }
+    .header-right { display:contents; }
+    .logout-btn { margin-left:auto; }
+    .search-wrap { order:10; flex-basis:100%; margin:4px 6px 4px 0; }
+    .search-input { width:100%; height:44px; font-size:16px; }
+    body:not(.modo-tv) .main-nav { position:fixed; left:0; right:0; bottom:0; z-index:200; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; padding:6px 10px calc(8px + env(safe-area-inset-bottom)); background:rgba(14,16,20,0.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--line); }
+    body:not(.modo-tv) .nav-item { flex-direction:column; gap:3px; height:54px; padding:0; font-size:11px; font-weight:500; background:none !important; }
+    body:not(.modo-tv) .nav-item.active { font-weight:600; }
+    body:not(.modo-tv).rol-todo #app.visible { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+    #home-screen { padding:20px 20px 40px; }
+    .home-title { font-size:30px; margin-bottom:20px; }
+    .continue-card { aspect-ratio:16/9.5; margin-bottom:20px; border-radius:18px; }
+    .home-sections { gap:12px; }
+    .section-card { padding:16px; gap:14px; border-radius:16px; }
+    .card-desc { font-size:12px; }
+    .content-screen, #search-results-screen { padding:20px 16px; }
+    .section-title { font-size:30px; }
+    .section-subtitle { margin-bottom:16px; }
+    .subcategory-tabs { display:grid; min-width:0; width:100%; }
+    .year-header { padding:16px 4px 8px; font-size:22px; }
+    .actuacion-row { padding:10px 10px 10px 12px; gap:12px; }
+    .act-name { font-size:14px; }
+    body:not(.modo-tv) .decada-row { gap:10px; margin:0 -16px; padding:2px 16px 12px; scroll-padding-left:16px; }
+    body:not(.modo-tv) .decada-row .nf-card { flex:0 0 158px; width:158px; }
+    .nf-titulo { font-size:13px; }
+    .nf-btn { height:36px; }
+    .decada-title { font-size:22px; }
+    .player-overlay { padding:0; align-items:stretch; }
+    .player-box { border-radius:0; border:none; max-width:none; height:100%; max-height:none; }
+    .player-header { padding:8px 8px 8px 16px; }
+    .player-title { font-size:18px; }
+    .player-share .share-txt { display:none; }
+    .player-share { width:40px; padding:0; justify-content:center; }
+    .caseros-modal-overlay { align-items:flex-end; padding:0; }
+    .caseros-modal-box { border-radius:20px 20px 0 0; max-width:none; }
+    .caseros-modal-grid { max-height:72vh; }
+  }
+
+
+  /* RECUERDO DEL DÍA */
+  .dia-card { display:none; width:100%; max-width:640px; align-items:center; gap:14px; padding:10px 12px 10px 10px; margin:0 0 22px; background:var(--surface); border:1px solid var(--line); border-radius:18px; color:var(--text); text-align:left; cursor:pointer; transition:border-color 0.2s,transform 0.2s; }
+  .dia-card.visible { display:flex; }
+  .dia-card:hover { border-color:rgba(232,163,61,0.45); transform:translateY(-2px); }
+  .dia-thumb { position:relative; width:112px; height:76px; flex-shrink:0; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:28px; color:rgba(236,237,239,0.4); }
+  .dia-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .dia-txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .dia-kicker { font-size:11px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:var(--accent); }
+  .dia-title { font-size:15px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .dia-sub { font-size:12px; color:var(--muted); }
+  .dia-play { width:44px; height:44px; border-radius:22px; flex-shrink:0; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:16px; }
+  body.tema-claro .dia-thumb { color:rgba(20,23,28,0.35); }
+  body.modo-tv .dia-card { display:none !important; }
+  .recent-new { position:absolute; top:6px; left:6px; z-index:1; font-size:9px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; padding:3px 7px; border-radius:8px; background:var(--accent); color:var(--accent-ink); }
+
+  .pe-mini { position:relative; width:76px; height:44px; flex-shrink:0; border-radius:8px; overflow:hidden; background:var(--surface-3); }
+  .pe-mini img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pe-mini .pe-num { position:absolute; left:4px; bottom:4px; width:20px; height:20px; border-radius:10px; font-size:10px; background:rgba(10,12,16,0.8); color:#ECEDEF; }
+  .pe-mini.sin img { display:none; }
+  .pe-mini.sin .pe-num { left:50%; top:50%; transform:translate(-50%,-50%); }
+  .pe-item.actual .pe-mini { box-shadow:0 0 0 2px var(--accent); }
+  .pe-item.actual .pe-mini .pe-num { background:var(--accent); color:var(--accent-ink); }
+  /* ─── TEMA CLARO ─── */
+  :root { --th-boda:#2B3550; --th-comunion:#263F33; --th-cotidiano:#42362A; --th-vacaciones:#1F3D44; --th-navidad:#4A2A2E; --th-otros:#3A2440; --th-multi:#2E2A4A;
+          --tl-tick:#2E3440; --tl-label:#6A717D; --tl-label-bg:rgba(14,16,20,0.85); --row-hover:#1F232C; --row-num:#242833; }
+  .tema-btn .ico-oscuro { display:none; }
+  body.tema-claro .tema-btn .ico-claro { display:none; }
+  body.tema-claro .tema-btn .ico-oscuro { display:inline-block; }
+  body.modo-tv .tema-btn { display:none !important; }
+  body.tema-claro {
+    color-scheme: light;
+    --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#EEF0F3; --surface-3:#E3E6EB; --line:rgba(15,20,30,0.09);
+    --muted:#5F6672; --muted-2:#3A404A; --accent:#A86207; --accent-hover:#8F5205; --accent-ink:#FFFFFF; --accent-soft:rgba(168,98,7,0.12);
+    --dark:#14171C; --text:#14171C; --blue-pale:#CBD0D8; --shadow:rgba(15,20,30,0.12);
+    --th-boda:#DCE4F5; --th-comunion:#DCEFE3; --th-cotidiano:#F1E6D6; --th-vacaciones:#D8EEF1; --th-navidad:#F5DEDF; --th-otros:#EEDFF2; --th-multi:#E3DFF5;
+    --tl-tick:#CBD0D8; --tl-label:#7A808B; --tl-label-bg:rgba(246,247,249,0.92); --row-hover:#F0F2F5; --row-num:#E3E6EB;
+  }
+  body.tema-claro ::selection { background:rgba(168,98,7,0.25); color:#14171C; }
+  body.tema-claro .site-header { background:rgba(255,255,255,0.97); }
+  body.tema-claro .section-card:hover, body.tema-claro .actuacion-row:hover, body.tema-claro .pe-item:hover { background:#F0F2F5; }
+  body.tema-claro .section-card:hover, body.tema-claro .nf-card:hover, body.tema-claro .tl-card:hover { border-color:rgba(15,20,30,0.16); }
+  body.tema-claro .chip { border-color:rgba(15,20,30,0.15); }
+  body.tema-claro .actuacion-row, body.tema-claro .pe-item { border-bottom-color:rgba(15,20,30,0.06); }
+  body.tema-claro .act-link.pending { border-color:rgba(15,20,30,0.2); }
+  body.tema-claro .act-link:hover { background:rgba(168,98,7,0.2); }
+  body.tema-claro .pe-num { background:var(--row-num); }
+  body.tema-claro .pe-item.actual { background:rgba(168,98,7,0.10); }
+  body.tema-claro .nf-btn.secondary:hover, body.tema-claro .share-btn.full:hover { background:#D6DAE0; }
+  body.tema-claro .share-btn.perm { box-shadow:inset 0 0 0 2px rgba(15,20,30,0.3); }
+  body.tema-claro .share-btn.cancel { border-color:rgba(15,20,30,0.18); }
+  body.tema-claro .t-boda, body.tema-claro .tl-thumb.boda { background:var(--th-boda); }
+  body.tema-claro .t-comunion, body.tema-claro .tl-thumb.comunion { background:var(--th-comunion); }
+  body.tema-claro .t-cotidiano, body.tema-claro .tl-thumb.cotidiano { background:var(--th-cotidiano); }
+  body.tema-claro .t-vacaciones, body.tema-claro .tl-thumb.vacaciones { background:var(--th-vacaciones); }
+  body.tema-claro .t-navidad, body.tema-claro .tl-thumb.navidad { background:var(--th-navidad); }
+  body.tema-claro .t-otros, body.tema-claro .tl-thumb.otros { background:var(--th-otros); }
+  body.tema-claro .t-multi, body.tema-claro .tl-thumb.multi { background:var(--th-multi); }
+  body.tema-claro .nf-thumb-placeholder, body.tema-claro .tl-thumb, body.tema-claro .recent-thumb, body.tema-claro .caseros-modal-card .mc-thumb, body.tema-claro .compartir-thumb-placeholder { color:rgba(20,23,28,0.35); }
+  body.tema-claro .compartir-thumb-placeholder { background:var(--th-boda); }
+  body.tema-claro .tl-year-bar { background:var(--surface-3); color:var(--muted-2); }
+  body.tema-claro .tl-scroll-arrow { background:linear-gradient(to right,transparent,rgba(246,247,249,0.95)); }
+  body.tema-claro .card-icon.sev { background:#F1E1F5; color:#7A3D8A; }
+  body.tema-claro .card-icon.cas { background:#DDF0F3; color:#23626E; }
+  body.tema-claro .share-modal, body.tema-claro .escena-end-panel { background:rgba(246,247,249,0.97); }
+  body.tema-claro .player-overlay { background:rgba(15,20,30,0.6); }
+  body.tema-claro .caseros-modal-overlay { background:rgba(15,20,30,0.45); }
+  body.tema-claro .caseros-modal-box, body.tema-claro .player-box { box-shadow:0 20px 60px rgba(15,20,30,0.25); }
+  body.tema-claro .nf-badge { background:rgba(20,23,28,0.75); color:#fff; }
+  body.tema-claro .continue-card { background:var(--th-boda); }
+  body.tema-claro .continue-card .cc-bar { color:#ECEDEF; }
+  body.tema-claro .continue-card .cc-kicker { color:#F2B95E; }
+  body.tema-claro .pe-mini .pe-num { background:rgba(10,12,16,0.78); color:#fff; }
+  body.tema-claro .pe-mini.sin .pe-num { background:var(--row-num); color:var(--muted-2); }
+  body.tema-claro .pe-item.actual .pe-mini .pe-num { background:var(--accent); color:var(--accent-ink); }
+  @media (max-width:760px) { body.tema-claro:not(.modo-tv) .main-nav { background:rgba(255,255,255,0.97); } }
+  body.modo-tv .player-escenas, body.modo-tv .main-nav, body.modo-tv .year-chips, body.modo-tv #home-recientes, body.modo-tv .continue-card { display:none !important; }
+
+</style>
+</head>
+<body>
+
+<script>try{if(localStorage.getItem('af_tema')==='claro'&&new URLSearchParams(location.search).get('tv')!=='1'){document.body.classList.add('tema-claro');document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content='#F6F7F9');}}catch(e){}</script>
+<!-- ICONOS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-sun2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-rings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="14" r="5"/><circle cx="15" cy="14" r="5"/><path d="m10 5 2-2 2 2"/></symbol>
+    <symbol id="i-church" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M10 4h4M6 21V11l6-5 6 5v10M3 21h18M10 21v-4a2 2 0 0 1 4 0v4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 4 6h-2l3 5h-2l3 5H6l3-5H7l3-5H8z"/><path d="M12 18v4"/></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V12a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9M2 21h20M4 15c2 1 3 1 4 0s3-1 4 0 3 1 4 0 3-1 4 0M12 10V7"/><path d="M12 7a1.5 1.5 0 0 0 1-2.5L12 3l-1 1.5A1.5 1.5 0 0 0 12 7Z"/></symbol>
+    <symbol id="i-tape" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/><path d="M10 11h4M6 19l2-4h8l2 4"/></symbol>
+  </defs>
+</svg>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-ornament"><svg class="ico"><use href="#i-film"/></svg></div>
+    <h1 class="login-title">Archivo Familiar</h1>
+    <p class="login-subtitle">Acceso privado</p>
+    <div class="login-divider"></div>
+    <input type="password" id="pwd-input" class="login-input" placeholder="Contraseña" autocomplete="current-password" aria-label="Contraseña">
+    <button class="login-btn" onclick="checkLogin()">Entrar</button>
+    <p class="login-error" id="login-error"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="site-header">
+    <button class="header-title" onclick="irInicio()" aria-label="Inicio"><span class="logo-mark"><svg class="ico"><use href="#i-film"/></svg></span><span>Archivo Familiar</span></button>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <button class="nav-item active" data-nav="home" onclick="goHome()"><svg class="ico"><use href="#i-home"/></svg>Inicio</button>
+      <button class="nav-item" data-nav="sevillanas" onclick="showSection('sevillanas')"><svg class="ico"><use href="#i-music"/></svg>Actuaciones</button>
+      <button class="nav-item" data-nav="caseros" onclick="showSection('caseros')"><svg class="ico"><use href="#i-video"/></svg>Caseros</button>
+    </nav>
+    <div class="header-right">
+      <label class="search-wrap oculto" id="search-wrap">
+        <svg class="ico"><use href="#i-search"/></svg>
+        <input type="search" class="search-input" id="search-box" placeholder="Buscar..." oninput="handleSearch(this.value)" aria-label="Buscar" style="display:none">
+      </label>
+      <button class="logout-btn tema-btn" onclick="cambiarTema()" aria-label="Cambiar a modo claro" title="Modo claro / oscuro"><svg class="ico ico-claro"><use href="#i-sun2"/></svg><svg class="ico ico-oscuro"><use href="#i-moon"/></svg></button>
+      <button class="logout-btn" onclick="logout()" aria-label="Salir" title="Salir"><svg class="ico"><use href="#i-logout"/></svg></button>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <div id="home-screen">
+    <div class="home-hello" id="home-hello">Hola</div>
+    <h1 class="home-title">¿Qué recordamos hoy?</h1>
+
+    <button class="continue-card" id="continue-card" onclick="continuarViendo()">
+      <span class="cc-icon"><svg class="ico"><use href="#i-film"/></svg></span>
+      <span id="cc-img"></span>
+      <span class="cc-bar">
+        <span style="flex:1;min-width:0;display:block">
+          <span class="cc-kicker" style="display:block">Continuar viendo</span>
+          <span class="cc-title" id="cc-title" style="display:block"></span>
+          <span class="cc-sub" id="cc-sub" style="display:block"></span>
+          <span class="cc-progress" style="display:block"><span id="cc-progress" style="display:block;height:3px;border-radius:2px;background:var(--accent);width:0"></span></span>
+        </span>
+        <span class="cc-play"><svg class="ico"><use href="#i-play"/></svg></span>
+      </span>
+    </button>
+
+    <button class="dia-card" id="dia-card" onclick="verRecuerdo()">
+      <span class="dia-thumb" id="dia-thumb"></span>
+      <span class="dia-txt">
+        <span class="dia-kicker" id="dia-kicker">Recuerdo del día</span>
+        <span class="dia-title" id="dia-title"></span>
+        <span class="dia-sub" id="dia-sub"></span>
+      </span>
+      <span class="dia-play"><svg class="ico"><use href="#i-play"/></svg></span>
+    </button>
+
+    <div class="home-sections">
+      <div class="section-card" role="button" tabindex="0" onclick="showSection('sevillanas')" onkeydown="if(event.key==='Enter')this.click()">
+        <span class="card-icon sev"><svg class="ico"><use href="#i-music"/></svg></span>
+        <div>
+          <div class="card-title">Actuaciones</div>
+          <p class="card-desc">Sevillanas y flamenco. Desde 1995 hasta hoy.</p>
+        </div>
+        <span class="card-count" id="count-badge">Cargando...</span>
+      </div>
+      <div class="section-card" role="button" tabindex="0" onclick="showSection('caseros')" onkeydown="if(event.key==='Enter')this.click()">
+        <span class="card-icon cas"><svg class="ico"><use href="#i-video"/></svg></span>
+        <div>
+          <div class="card-title">Vídeos caseros</div>
+          <p class="card-desc">Recuerdos del día a día y momentos especiales.</p>
+        </div>
+        <span class="card-count" id="count-caseros">Cargando...</span>
+      </div>
+    </div>
+
+    <div id="home-recientes">
+      <div class="home-row-head">
+        <h2>Añadidos recientemente</h2>
+        <button class="link-btn" onclick="showSection('caseros')">Ver todo</button>
+      </div>
+      <div class="recent-row" id="recent-row"></div>
+    </div>
+  </div>
+
+  <!-- SEVILLANAS -->
+  <div class="content-screen" id="screen-sevillanas">
+    <button class="back-btn" onclick="goHome()"><svg class="ico"><use href="#i-back"/></svg> Inicio</button>
+    <h2 class="section-title">Actuaciones</h2>
+    <p class="section-subtitle">Sevillanas y flamenco</p>
+    <div class="year-chips" id="year-chips"></div>
+    <div id="sevillanas-list"><div class="loading">Cargando actuaciones...</div></div>
+  </div>
+
+  <!-- CASEROS -->
+  <div class="content-screen" id="screen-caseros">
+    <button class="back-btn" onclick="goHome()"><svg class="ico"><use href="#i-back"/></svg> Inicio</button>
+    <h2 class="section-title">Vídeos caseros</h2>
+    <p class="section-subtitle">Recuerdos familiares</p>
+    <div class="subcategory-tabs">
+      <button class="tab-btn active" onclick="switchTab('decadas',this)">Por décadas</button>
+      <button class="tab-btn" onclick="switchTab('anos',this)">Línea de tiempo</button>
+    </div>
+    <div class="tab-content" id="tab-anos">
+      <div class="tl-swipe-hint">Desliza para navegar por el tiempo</div>
+      <div class="tl-outer-wrapper">
+        <div class="tl-scroll-arrow" id="tl-arrow"><span class="tl-scroll-arrow-icon">›</span></div>
+        <div class="tl-scroll" id="tl-scroll">
+          <div class="tl-body">
+            <div id="tl-cards"></div>
+            <div id="tl-ruler-marks"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content active" id="tab-decadas">
+      <div id="caseros-decadas-list"></div>
+    </div>
+    <div id="caseros-eventos-list" style="display:none"></div>
+  </div>
+
+  <!-- BÚSQUEDA -->
+  <div id="search-results-screen">
+    <button class="back-btn" style="display:inline-flex" onclick="clearSearch()"><svg class="ico"><use href="#i-back"/></svg> Volver</button>
+    <h2 class="section-title">Búsqueda</h2>
+    <p class="result-count" id="result-count"></p>
+    <div id="search-results-list"></div>
+  </div>
+
+  <!-- PANTALLA COMPARTIR -->
+  <div id="screen-compartir">
+    <div class="compartir-card">
+      <div id="compartir-thumb-wrap"></div>
+      <div class="compartir-body">
+        <div class="compartir-titulo" id="compartir-titulo"></div>
+        <div class="compartir-sub" id="compartir-sub"></div>
+        <button class="compartir-btn" onclick="verDeNuevo()"><svg class="ico"><use href="#i-replay"/></svg> Ver de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPRODUCTOR -->
+  <div class="player-overlay" id="player-overlay" onclick="cerrarPlayer(event)">
+    <div class="player-box">
+      <div class="player-header">
+        <div style="min-width:0">
+          <div class="player-title" id="player-titulo"></div>
+          <div class="player-fecha" id="player-fecha"></div>
+        </div>
+        <div class="player-actions">
+          <button class="player-share" id="player-share-btn" onclick="abrirShareModal()" title="Compartir por WhatsApp" aria-label="Compartir por WhatsApp">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span class="share-txt">Compartir</span>
+          </button>
+          <button class="player-close" onclick="cerrarPlayer()" aria-label="Cerrar"><svg class="ico"><use href="#i-down"/></svg></button>
+        </div>
+      </div>
+      <div class="player-embed" id="player-embed">
+        <div class="player-loading hidden" id="player-loading">
+          <div class="spinner"></div>
+          <p>Cargando vídeo...</p>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px">Esto puede tardar unos segundos</p>
+        </div>
+        <div class="escena-end-panel" id="escena-end-panel">
+          <div class="escena-end-title" id="escena-end-title">Fin de escena</div>
+          <div class="escena-end-sub" id="escena-end-sub"></div>
+          <div class="escena-end-btns">
+            <button class="escena-end-btn primary" id="escena-end-next" onclick="siguienteEscena()">Siguiente escena ›</button>
+            <button class="escena-end-btn ghost" onclick="cerrarPlayer()">Cerrar</button>
+          </div>
+        </div>
+        <div class="share-modal" id="share-modal">
+          <div class="share-modal-title">Compartir vídeo</div>
+          <div class="share-modal-sub" id="share-modal-sub"></div>
+          <div class="share-btns" id="share-btns"></div>
+        </div>
+        <iframe id="player-iframe" allowfullscreen allow="autoplay; encrypted-media" style="display:none"></iframe>
+        <video id="player-video" controls controlsList="nodownload" disablePictureInPicture playsinline style="position:absolute;inset:0;width:100%;height:100%;display:none;background:#000"></video>
+      </div>
+      <div class="player-escenas" id="player-escenas"></div>
+    </div>
+  </div>
+
+</div>
+
+
+<script src="hls.min.js"></script>
+<script>
+const API = 'api.php';
+let PASS = '';
+let ROL = '';
+let TOKEN = '';   // sesión firmada que devuelve el servidor al entrar
+var ACTUACIONES = [];
+let currentSection = 'home';
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+async function checkLogin() {
+  const p = document.getElementById('pwd-input').value;
+  const r = await fetch(`${API}?action=login&pass=${encodeURIComponent(p)}`);
+  const d = await r.json();
+  if (d.ok) {
+    PASS = p;
+    ROL = d.data.rol;
+    TOKEN = d.data.token || '';
+    // Admin → redirigir a admin.html
+    if (ROL === 'admin') { window.location.href = 'admin.html?pass=' + encodeURIComponent(p); return; }
+    // Compartir → ir directo al vídeo/escena
+    if (ROL.startsWith('compartir:')) {
+      document.body.classList.add('rol-compartir');
+      const parts = ROL.split(':');
+      const caseroId = parseInt(parts[1]);
+      const escenaIdx = parseInt(parts[2]);
+      const t = parseInt(parts[3]);
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('visible');
+      setTimeout(() => document.getElementById('login-screen').style.display='none', 700);
+      await cargarDatos();
+      const c = CASEROS.find(x => x.id === caseroId);
+      if (c) {
+        // Guardar datos para pantalla de "ver de nuevo"
+        window._compartirData = { caseroId, escenaIdx, t, casero: c };
+        prepararPantallaCompartir(c, escenaIdx);
+        if (escenaIdx >= 0 && c.escenas && c.escenas[escenaIdx]) {
+          _escenaActiva = { caseroId, escenaIdx, inicioT: t, finT: escenaIdx < c.escenas.length-1 ? c.escenas[escenaIdx+1].t : (c.duracion||null), compartido: true };
+          abrirPlayer(c.youtube, c.escenas[escenaIdx].titulo, c.escenas[escenaIdx].fecha, t);
+        } else {
+          abrirPlayer(c.youtube, c.titulo, c.fecha||'', 0);
+        }
+        document.getElementById('home-screen').style.display = 'none';
+      }
+      return;
+    }
+    guardarSesion();
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    setTimeout(() => document.getElementById('login-screen').style.display='none', 700);
+    await cargarDatos();
+    aplicarRol();
+  } else {
+    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
+    document.getElementById('pwd-input').value = '';
+    setTimeout(() => document.getElementById('login-error').textContent='', 2500);
+  }
+}
+
+// ─── SESIÓN RECORDADA ─────────────────────────────────────────────────────────
+// Se guarda solo el token firmado (24 h), nunca la contraseña. "Salir" lo borra.
+// Se guarda en localStorage y además en una cookie: el navegador interno de algunas
+// apps Android trae el almacenamiento local desactivado, pero sí acepta cookies.
+function rutaCookie() { return location.pathname.replace(/[^/]*$/, '') || '/'; }
+function leerCookie(n) {
+  const m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function guardarSesion() {
+  const v = JSON.stringify({ rol: ROL, token: TOKEN, hasta: Date.now() + 23 * 3600 * 1000 });
+  try { localStorage.setItem('af_sesion', v); } catch (e) {}
+  try {
+    document.cookie = 'af_sesion=' + encodeURIComponent(v) + '; max-age=' + (23 * 3600) + '; path=' + rutaCookie() +
+      '; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+  } catch (e) {}
+}
+function borrarSesion() {
+  try { localStorage.removeItem('af_sesion'); } catch (e) {}
+  try { document.cookie = 'af_sesion=; max-age=0; path=' + rutaCookie(); } catch (e) {}
+}
+async function restaurarSesion() {
+  let s = null, raw = null;
+  try { raw = localStorage.getItem('af_sesion'); } catch (e) {}
+  if (!raw) { try { raw = leerCookie('af_sesion'); } catch (e) {} }
+  try { s = JSON.parse(raw || 'null'); } catch (e) {}
+  if (!s || !s.token || !s.rol || !(s.hasta > Date.now())) { if (s) borrarSesion(); return; }
+  try {
+    const r = await fetch(`${API}?action=caseros-listar&token=${encodeURIComponent(s.token)}`);
+    const d = await r.json();
+    if (!d.ok) { borrarSesion(); return; }          // caducada o no válida: pantalla de entrada
+  } catch (e) { return; }                            // sin conexión: pantalla de entrada
+  ROL = s.rol; TOKEN = s.token;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  setTimeout(() => document.getElementById('login-screen').style.display = 'none', 700);
+  await cargarDatos();
+  aplicarRol();
+}
+window.addEventListener('DOMContentLoaded', restaurarSesion);
+
+function aplicarRol() {
+  document.body.classList.remove('rol-todo', 'rol-caseros', 'rol-actuaciones');
+  document.body.classList.add(ROL === 'caseros' ? 'rol-caseros' : ROL === 'actuaciones' ? 'rol-actuaciones' : 'rol-todo');
+  if (ROL !== 'caseros' && ROL !== 'actuaciones') renderInicioExtras();
+  if (ROL === 'caseros') {
+    const dc = document.getElementById('dia-card');
+    const sub = document.querySelector('#screen-caseros .section-subtitle');
+    if (dc && sub) sub.after(dc);
+    renderRecuerdoDia();
+  }
+  const cardSev = document.querySelector('.section-card[onclick*="sevillanas"]');
+  const cardCas = document.querySelector('.section-card[onclick*="caseros"]');
+  if (ROL === 'caseros') {
+    if (cardSev) cardSev.style.display = 'none';
+    showSection('caseros');
+  } else if (ROL === 'actuaciones') {
+    if (cardCas) cardCas.style.display = 'none';
+    showSection('sevillanas');
+  }
+  // 'todo' → acceso normal a todo, pantalla home normal
+}
+document.getElementById('pwd-input').addEventListener('keydown', e => { if(e.key==='Enter') checkLogin(); });
+
+// Bloquear menú contextual en el reproductor de vídeo
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('player-video');
+  if (video) {
+    video.addEventListener('contextmenu', e => e.preventDefault());
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/videos/sw.js')
+      .catch(err => console.log('SW error:', err));
+  });
+}
+function logout() { borrarSesion(); location.reload(); }
+
+
+// ─── NUEVO DISEÑO: navegación, inicio, escenas, continuar viendo ──────────────
+function marcarNav(sec) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === sec));
+  const box = document.getElementById('search-box');
+  const wrap = document.getElementById('search-wrap');
+  if (box && wrap) wrap.classList.toggle('oculto', box.style.display === 'none');
+  window.scrollTo(0, 0);
+}
+function irInicio() {
+  if (document.body.classList.contains('rol-todo')) goHome();
+}
+function saludo() {
+  const h = new Date().getHours();
+  return h < 6 ? 'Buenas noches' : h < 14 ? 'Buenos días' : h < 21 ? 'Buenas tardes' : 'Buenas noches';
+}
+function escAttr(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+const ULT_KEY = 'af_ultimo';
+let _ultimoGuardado = 0;
+function leerUltimo() { try { return JSON.parse(localStorage.getItem(ULT_KEY) || 'null'); } catch (e) { return null; } }
+function registrarUltimo(url, titulo, fecha, min) {
+  if (!url || String(ROL).startsWith('compartir') || document.body.classList.contains('modo-tv')) return;
+  const d = { url, titulo, fecha: fecha || '', t: min || 0, pct: 0, caseroId: null, escenaIdx: null, cuando: Date.now() };
+  if (_escenaActiva && !_escenaActiva.compartido) { d.caseroId = _escenaActiva.caseroId; d.escenaIdx = _escenaActiva.escenaIdx; }
+  else { const c = CASEROS.find(x => x.youtube === url); if (c) d.caseroId = c.id; }
+  try { localStorage.setItem(ULT_KEY, JSON.stringify(d)); } catch (e) {}
+}
+function actualizarUltimo(video) {
+  if (String(ROL).startsWith('compartir') || !video.duration || !isFinite(video.duration)) return;
+  const ahora = Date.now();
+  if (ahora - _ultimoGuardado < 4000) return;
+  _ultimoGuardado = ahora;
+  const d = leerUltimo();
+  if (!d) return;
+  const pct = video.currentTime / video.duration;
+  if (pct > 0.97) { try { localStorage.removeItem(ULT_KEY); } catch (e) {} return; }
+  d.t = Math.floor(video.currentTime); d.pct = pct;
+  try { localStorage.setItem(ULT_KEY, JSON.stringify(d)); } catch (e) {}
+}
+function continuarViendo() {
+  const d = leerUltimo();
+  if (!d) return;
+  const c = d.caseroId != null ? CASEROS.find(x => x.id === d.caseroId) : null;
+  if (c && d.escenaIdx != null && c.escenas && c.escenas[d.escenaIdx]) {
+    const e = c.escenas[d.escenaIdx], nextE = c.escenas[d.escenaIdx + 1] || null;
+    _escenaActiva = { caseroId: c.id, escenaIdx: d.escenaIdx, finT: nextE ? nextE.t : (c.duracion || null) };
+    abrirPlayer(c.youtube, e.titulo, e.fecha, d.t);
+  } else {
+    abrirPlayer(d.url, d.titulo, d.fecha, d.t);
+  }
+}
+
+function miniHtml(c) {
+  const tc = thumbClass(c.tipo, c.categoria);
+  return `<div class="recent-thumb t-${tc}">${thumbIcon(c.tipo, c.categoria)}${c.miniatura ? `<img src="${c.miniatura}" alt="" onerror="this.remove()">` : ''}</div>`;
+}
+function renderInicioExtras() {
+  const hola = document.getElementById('home-hello');
+  if (hola) hola.textContent = saludo();
+  // Continuar viendo
+  const card = document.getElementById('continue-card');
+  const d = leerUltimo();
+  const existe = d && (CASEROS.some(c => c.youtube && d.url && d.url.split('#')[0] === c.youtube.split('#')[0]) ||
+                       ACTUACIONES.some(a => a.youtube && d.url && d.url.split('#')[0].split('?')[0] === a.youtube.split('#')[0].split('?')[0]));
+  if (card) {
+    if (existe) {
+      const c = d.caseroId != null ? CASEROS.find(x => x.id === d.caseroId) : null;
+      document.getElementById('cc-title').textContent = c ? c.titulo : d.titulo;
+      document.getElementById('cc-sub').textContent = (c && d.escenaIdx != null && c.escenas && c.escenas[d.escenaIdx])
+        ? `Escena ${d.escenaIdx + 1} de ${c.escenas.length} · ${c.escenas[d.escenaIdx].titulo}`
+        : (d.fecha || '');
+      document.getElementById('cc-progress').style.width = Math.round((d.pct || 0) * 100) + '%';
+      card.style.background = '';
+      card.className = 'continue-card visible' + (c ? ' t-' + thumbClass(c.tipo, c.categoria) : '');
+      const esc = c && d.escenaIdx != null && c.escenas ? c.escenas[d.escenaIdx] : null;
+      const mini = (esc && esc.miniatura) || (c && c.miniatura);
+      document.getElementById('cc-img').innerHTML = mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : '';
+    } else {
+      card.className = 'continue-card';
+    }
+  }
+  renderRecuerdoDia();
+  // Añadidos recientemente: solo lo subido en los últimos DIAS_RECIENTE días
+  const wrap = document.getElementById('home-recientes');
+  const row = document.getElementById('recent-row');
+  const lista = videosRecientes();
+  if (wrap && row) {
+    wrap.classList.toggle('visible', lista.length > 0);
+    row.innerHTML = lista.map(c => `<button class="recent-card" onclick="abrirPlayer('${escAttr(c.youtube)}','${escAttr(c.titulo)}','${escAttr(c.fecha)}',0)">
+        <div style="position:relative"><span class="recent-new">Nuevo</span>${miniHtml(c)}</div>
+        <div class="recent-title">${c.titulo}</div>
+        <div class="recent-date">${c.fecha || ''}</div>
+      </button>`).join('');
+  }
+}
+
+// ─── RECIENTES ────────────────────────────────────────────────────────────────
+// Si el servidor manda la fecha de subida (campo 'subido', 'creado' o 'fecha_alta'), se usa.
+// Si no, cada dispositivo apunta cuándo vio cada vídeo por primera vez. La primera vez que
+// se abre la app se apuntan todos como "antiguos", así no sale nada hasta que subas algo nuevo.
+const DIAS_RECIENTE = 30;
+function fechaSubida(c) {
+  const v = c.subido || c.creado || c.fecha_alta || c.created_at || null;
+  if (!v) return null;
+  const t = typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : Date.parse(String(v).replace(' ', 'T'));
+  return isNaN(t) ? null : t;
+}
+function videosRecientes() {
+  let vistos = null;
+  try { vistos = JSON.parse(localStorage.getItem('af_vistos') || 'null'); } catch (e) {}
+  const primeraVez = !vistos;
+  if (!vistos) vistos = {};
+  const ahora = Date.now();
+  let cambios = false;
+  CASEROS.forEach(c => {
+    if (c.id == null) return;
+    if (!(c.id in vistos)) { vistos[c.id] = primeraVez ? 0 : ahora; cambios = true; }
+  });
+  if (cambios) { try { localStorage.setItem('af_vistos', JSON.stringify(vistos)); } catch (e) {} }
+  const limite = ahora - DIAS_RECIENTE * 86400000;
+  return CASEROS
+    .filter(c => c.youtube)
+    .map(c => ({ c, t: fechaSubida(c) ?? (vistos[c.id] || 0) }))
+    .filter(x => x.t > limite)
+    .sort((a, b) => b.t - a.t || (b.c.id || 0) - (a.c.id || 0))
+    .slice(0, 10)
+    .map(x => x.c);
+}
+
+// ─── RECUERDO DEL DÍA ─────────────────────────────────────────────────────────
+// 1) un vídeo grabado tal día como hoy en otro año; 2) si no hay, uno del mismo mes;
+// 3) si tampoco, uno al azar. Solo vídeos caseros. Es el mismo para toda la familia durante el día.
+const MESES_ES = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+function fechaDMY(f) {
+  const s = String(f || '').trim().toLowerCase();
+  let m = s.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?/);
+  if (m) return { y: +m[1], m: +m[2], d: m[3] ? +m[3] : 0 };
+  m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+  if (m) return { y: +m[3], m: +m[2], d: +m[1] };
+  const y = s.match(/\d{4}/);
+  for (const [nom, num] of Object.entries(MESES_ES)) {
+    if (s.includes(nom)) { const d = s.match(/^(\d{1,2})\s/); return { y: y ? +y[0] : 0, m: num, d: d ? +d[1] : 0 }; }
+  }
+  return { y: y ? +y[0] : 0, m: 0, d: 0 };
+}
+function semillaDia(extra) {
+  const h = new Date();
+  const txt = `${h.getFullYear()}-${h.getMonth() + 1}-${h.getDate()}${extra || ''}`;
+  let x = 2166136261;
+  for (let i = 0; i < txt.length; i++) { x ^= txt.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; }
+  return x;
+}
+let _recuerdo = null;
+function elegirRecuerdo() {
+  const hoy = new Date(), d = hoy.getDate(), m = hoy.getMonth() + 1, y = hoy.getFullYear();
+  const pool = [];
+  CASEROS.forEach(c => {
+    if (!c.youtube) return;
+    if (c.escenas && c.escenas.length) {
+      c.escenas.forEach((e, idx) => { if (e && e.fecha) pool.push({ tipo: 'escena', c, idx, e, f: fechaDMY(e.fecha) }); });
+    } else {
+      pool.push({ tipo: 'casero', c, f: fechaDMY(c.fecha) });
+    }
+  });
+  if (!pool.length) return null;
+  const elegir = (lista, extra) => lista[semillaDia(extra) % lista.length];
+  const dia = pool.filter(x => x.f.d === d && x.f.m === m && x.f.y && x.f.y < y);
+  if (dia.length) { const x = elegir(dia, 'd'); return { ...x, motivo: 'dia', anios: y - x.f.y }; }
+  const mes = pool.filter(x => x.f.m === m && x.f.y && x.f.y < y);
+  if (mes.length) { const x = elegir(mes, 'm'); return { ...x, motivo: 'mes', anios: y - x.f.y }; }
+  return { ...elegir(pool, 'r'), motivo: 'azar' };
+}
+function renderRecuerdoDia() {
+  const card = document.getElementById('dia-card');
+  if (!card) return;
+  _recuerdo = elegirRecuerdo();
+  if (!_recuerdo) { card.classList.remove('visible'); return; }
+  const r = _recuerdo;
+  const titulo = r.tipo === 'escena' ? r.e.titulo : r.tipo === 'casero' ? r.c.titulo : r.a.act;
+  const fecha = r.tipo === 'escena' ? (r.e.fecha || '') : r.tipo === 'casero' ? (r.c.fecha || '') : formatDate(r.a.fecha);
+  const hace = r.anios ? ` · hace ${r.anios} año${r.anios !== 1 ? 's' : ''}` : '';
+  document.getElementById('dia-kicker').textContent =
+    r.motivo === 'dia' ? 'Tal día como hoy' : r.motivo === 'mes' ? 'Un mes como este' : 'Recuerdo del día';
+  document.getElementById('dia-title').textContent = titulo;
+  document.getElementById('dia-sub').textContent = (r.tipo === 'escena' ? `Escena de «${r.c.titulo}» · ` : '') + fecha + hace;
+  const th = document.getElementById('dia-thumb');
+  if (r.tipo === 'casero' || r.tipo === 'escena') {
+    th.className = 'dia-thumb t-' + thumbClass(r.c.tipo, r.c.categoria);
+    const mini = (r.tipo === 'escena' && r.e.miniatura) || r.c.miniatura;
+    th.innerHTML = thumbIcon(r.c.tipo, r.c.categoria) + (mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : '');
+  } else {
+    th.className = 'dia-thumb t-otros';
+    th.innerHTML = svgIcon('i-music');
+  }
+  card.classList.add('visible');
+}
+function verRecuerdo() {
+  const r = _recuerdo;
+  if (!r) return;
+  if (r.tipo === 'escena') abrirPlayerEscena(r.c.id, r.idx);
+  else if (r.tipo === 'casero') abrirPlayer(r.c.youtube, r.c.titulo, r.c.fecha || '', 0);
+  else abrirPlayer(buildLink(r.a), r.a.act, formatDate(r.a.fecha), r.a.min || 0);
+}
+
+function renderEscenasPlayer(url) {
+  const box = document.getElementById('player-escenas');
+  if (!box) return;
+  const c = _escenaActiva ? CASEROS.find(x => x.id === _escenaActiva.caseroId) : CASEROS.find(x => x.youtube && x.youtube === url);
+  if (!c || !c.escenas || !c.escenas.length || (_escenaActiva && _escenaActiva.compartido) || String(ROL).startsWith('compartir')) {
+    box.classList.remove('visible'); box.innerHTML = ''; box.dataset.id = ''; return;
+  }
+  const act = _escenaActiva ? _escenaActiva.escenaIdx : -1;
+  box.dataset.id = c.id;
+  box.innerHTML = `<div class="pe-head"><h4>Escenas</h4><span>${c.escenas.length} escenas</span></div><div class="pe-list">` +
+    c.escenas.map((e, i) => `<button class="pe-item${i === act ? ' actual' : ''}" data-t="${e.t || 0}" onclick="abrirPlayerEscena(${c.id},${i})">
+      ${e.miniatura ? `<span class="pe-mini"><img src="${e.miniatura}" alt="" loading="lazy" onerror="this.parentNode.classList.add('sin')"><span class="pe-num">${i + 1}</span></span>` : `<span class="pe-num">${i + 1}</span>`}
+      <span class="pe-txt"><span class="pe-tit" style="display:block">${e.titulo}</span><span class="pe-sub" style="display:block">${e.fecha || ''}</span></span>
+      <span class="pe-t">${formatTime(e.t || 0)}</span></button>`).join('') + '</div>';
+  box.classList.add('visible');
+}
+function marcarEscenaActual(video) {
+  const items = document.querySelectorAll('#player-escenas .pe-item');
+  if (!items.length) return;
+  let idx = -1;
+  items.forEach((it, i) => { if (video.currentTime + 0.5 >= parseFloat(it.dataset.t)) idx = i; });
+  items.forEach((it, i) => it.classList.toggle('actual', i === idx));
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const v = document.getElementById('player-video');
+  if (v) v.addEventListener('timeupdate', () => { actualizarUltimo(v); marcarEscenaActual(v); });
+  const hola = document.getElementById('home-hello');
+  if (hola) hola.textContent = saludo();
+});
+
+// ─── DATOS ────────────────────────────────────────────────────────────────────
+async function cargarDatos() {
+  const r = await fetch(`${API}?action=listar&token=${encodeURIComponent(TOKEN)}`);
+  const d = await r.json();
+  if (d.ok) {
+    ACTUACIONES = d.data;
+    document.getElementById('count-badge').textContent = `${ACTUACIONES.length} ${ACTUACIONES.length === 1 ? 'actuación' : 'actuaciones'}`;
+    renderSevillanas();
+  }
+  await cargarCaseros();
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+function showSection(section) {
+  document.getElementById('home-screen').style.display = 'none';
+  document.querySelectorAll('.content-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('search-results-screen').classList.remove('active');
+  document.getElementById('screen-'+section).classList.add('active');
+  currentSection = section;
+  // Si es caseros, asegurar que décadas se renderiza ahora que es visible
+  if (section === 'caseros' && typeof renderDecadas === 'function') {
+    renderDecadas();
+    if (typeof renderCaseros === 'function') renderCaseros();
+  }
+  // Actualizar placeholder según sección
+  const box = document.getElementById('search-box');
+  if (section === 'caseros') {
+    box.placeholder = 'Buscar vídeo...';
+    box.style.display = '';
+  } else if (section === 'sevillanas') {
+    box.placeholder = 'Buscar actuación...';
+    box.style.display = '';
+  } else {
+    box.style.display = 'none';
+  }
+  box.value = '';
+  marcarNav(section);
+}
+
+function goHome() {
+  document.querySelectorAll('.content-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('search-results-screen').classList.remove('active');
+  const box = document.getElementById('search-box');
+  box.value = '';
+  box.style.display = 'none';
+  document.getElementById('home-screen').style.display = '';
+  currentSection = 'home';
+  marcarNav('home');
+  if (document.body.classList.contains('rol-todo')) renderInicioExtras();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (tab === 'decadas') renderDecadas();
+  if (tab === 'anos' && typeof renderCaseros === 'function') renderCaseros();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function getYear(fecha) {
+  if (!fecha) return 'Sin fecha';
+  const m = String(fecha).match(/(\d{4})/);
+  return m ? m[1] : 'Sin fecha';
+}
+
+function formatDate(f) {
+  if (!f) return '—';
+  if (/^\d{4}$/.test(String(f))) return f;
+  const p = String(f).split('-');
+  if (p.length < 3) return f;
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${parseInt(p[2])} ${months[parseInt(p[1])-1]} ${p[0]}`;
+}
+
+function formatTime(s) {
+  if (s == null) return '';
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  if(h>0) return `${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  return `${m}:${String(ss).padStart(2,'0')}`;
+}
+
+function buildLink(a) {
+  if (!a.youtube) return null;
+  const t = a.min > 0 ? `&t=${a.min}s` : '';
+  const base = a.youtube.includes('?') ? a.youtube : a.youtube + '?';
+  return a.min > 0 ? a.youtube + (a.youtube.includes('?') ? '&' : '?') + `t=${a.min}s` : a.youtube;
+}
+
+function partesFecha(f) {
+  const s = String(f || '');
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return { d: parseInt(m[3]), m: months[parseInt(m[2]) - 1] || '', y: m[1] };
+  const y = s.match(/\d{4}/);
+  return { d: '', m: '', y: y ? y[0] : '' };
+}
+
+function renderActRow(a, conAnio) {
+  const link = buildLink(a);
+  const timeStr = a.min > 0 ? formatTime(a.min) : '';
+  const p = partesFecha(a.fecha);
+  const fechaHtml = p.d
+    ? `<span class="act-day">${p.d}</span><span class="act-mon">${p.m}</span>${conAnio ? `<span class="act-year">${p.y}</span>` : ''}`
+    : `<span class="act-mon">${p.y || '—'}</span>`;
+  const meta = [a.kw ? `<span class="act-kw">${a.kw}</span>` : '', timeStr ? `Empieza en ${timeStr}` : ''].filter(Boolean).join(' · ');
+  return `
+    <div class="actuacion-row">
+      <span class="act-date">${fechaHtml}</span>
+      <span class="act-info"><span class="act-name">${a.act}</span>${meta ? `<span class="act-meta">${meta}</span>` : ''}</span>
+      ${link
+        ? `<button class="act-link" aria-label="Ver ${a.act.replace(/"/g, '&quot;')}" onclick="abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})"><svg class="ico"><use href="#i-play"/></svg></button>`
+        : `<span class="act-link pending">Próximamente</span>`}
+    </div>`;
+}
+
+function filtrarAnio(y, btn) {
+  document.querySelectorAll('#year-chips .chip').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('#sevillanas-list .year-group').forEach(g => {
+    const ok = !y || g.dataset.year === y;
+    g.style.display = ok ? '' : 'none';
+    if (ok && y) g.classList.add('open');
+  });
+}
+
+function renderSevillanas() {
+  const grouped = {};
+  ACTUACIONES.forEach(a => {
+    const y = getYear(a.fecha);
+    if (!grouped[y]) grouped[y] = [];
+    grouped[y].push(a);
+  });
+  const years = Object.keys(grouped).sort((a,b) => b - a);
+  const chips = document.getElementById('year-chips');
+  if (chips) chips.innerHTML = years.length > 1
+    ? ['Todas', ...years].map((y, i) => `<button class="chip${i === 0 ? ' active' : ''}" onclick="filtrarAnio('${i === 0 ? '' : y}', this)">${y}</button>`).join('')
+    : '';
+  document.getElementById('sevillanas-list').innerHTML = years.map(year => `
+    <div class="year-group open" data-year="${year}">
+      <div class="year-header" onclick="this.closest('.year-group').classList.toggle('open')">
+        <span>${year}</span>
+        <span style="display:flex;align-items:center;gap:10px">
+          <span class="count-badge">${grouped[year].length} ${grouped[year].length>1?'actuaciones':'actuación'}</span>
+          <span class="chevron">▼</span>
+        </span>
+      </div>
+      <div class="year-body">${grouped[year].map(a => renderActRow(a)).join('')}</div>
+    </div>`).join('');
+}
+
+// ─── CASEROS ──────────────────────────────────────────────────────────────────
+let CASEROS = [];
+
+async function cargarCaseros() {
+  const r = await fetch(`${API}?action=caseros-listar&token=${encodeURIComponent(TOKEN)}`);
+  const d = await r.json();
+  if (d.ok) {
+    CASEROS = d.data;
+    document.getElementById('count-caseros').textContent = 
+      CASEROS.length ? `${CASEROS.length} vídeo${CASEROS.length!==1?'s':''}` : 'Sin vídeos aún';
+    renderCaseros();
+    if (document.body.classList.contains('rol-todo')) renderInicioExtras();
+  }
+}
+
+function extraerAnio(fecha) {
+  if (!fecha) return 'Sin fecha';
+  const f = String(fecha);
+  // Formato AAAA-MM-DD o AAAA
+  let m = f.match(/^(\d{4})/);
+  if (m) return m[1];
+  // Formato DD/MM/AAAA
+  m = f.match(/(\d{4})$/);
+  if (m) return m[1];
+  // Periodo tipo 1993-1995
+  m = f.match(/(\d{4})/);
+  if (m) return m[1];
+  return 'Sin fecha';
+}
+
+function iconoCategoria(cat) {
+  const map = { 'Boda':'💍','Cumpleaños':'🎂','Comunión':'⛪','Vacaciones':'🌍','Navidad':'🎄','Otros':'📽️' };
+  return map[cat] || '🎞️';
+}
+
+function renderCaseroCard(c) {
+  const link = c.youtube
+    ? `<button class="c-link" onclick="abrirPlayer('${c.youtube.replace(/'/g,"\\'")}','${c.titulo.replace(/'/g,"\\'")}','${c.fecha||''}',0)">▶ Ver</button>`
+    : `<span class="c-link pending">Próximamente</span>`;
+  const icon = c.tipo === 'evento' ? iconoCategoria(c.categoria) : '📼';
+  return `
+    <div class="casero-card">
+      <div class="c-icon">${icon}</div>
+      ${c.categoria ? `<span class="c-cat">${c.categoria}</span>` : ''}
+      <div class="c-titulo">${c.titulo}</div>
+      <div class="c-fecha">${c.fecha||''}</div>
+      ${c.notas ? `<div class="c-notas">${c.notas}</div>` : ''}
+      ${link}
+    </div>`;
+}
+
+function thumbClass(tipo, categoria) {
+  if (tipo === 'cotidiano') return 'cotidiano';
+  const map = {'Boda':'boda','Comunión':'comunion','Vacaciones':'vacaciones','Navidad':'navidad'};
+  return map[categoria] || 'otros';
+}
+
+function svgIcon(id) { return `<svg class="ico"><use href="#${id}"/></svg>`; }
+function thumbIcon(tipo, categoria) {
+  if (tipo === 'cotidiano') return svgIcon('i-tape');
+  const map = {'Boda':'i-rings','Comunión':'i-church','Vacaciones':'i-sun','Navidad':'i-tree','Cumpleaños':'i-cake'};
+  return svgIcon(map[categoria] || 'i-video');
+}
+
+function renderCaseros() {
+  const cardsEl = document.getElementById('tl-cards');
+  const rulerEl = document.getElementById('tl-ruler-marks');
+
+  if (!CASEROS.length) {
+    cardsEl.innerHTML = '<p class="caseros-empty" style="padding:20px">Próximamente...</p>';
+    rulerEl.innerHTML = '';
+    document.getElementById('caseros-eventos-list').innerHTML = '<p class="caseros-empty">Próximamente...</p>';
+    return;
+  }
+
+  const PX_PER_YEAR = 80;
+  const MAX_GAP_YEARS = 4;
+  const GAP_PX = 280;      // ancho del gap comprimido
+  const CARD_W = 155;
+  const CARD_H = 215;
+  const CONN_H = 24;
+  const LINE_H = 3;
+  const DOT = 10;
+
+  const years = CASEROS.map(c => parseInt(extraerAnio(c.fecha))||0).filter(y=>y>0);
+  const sortedVideoYears = [...new Set(years)].sort((a,b)=>a-b);
+  const minY = Math.min(...years) - 1;
+  const maxY = Math.max(...years) + 2;
+
+  // Construir posMap: para cada año con vídeo, calcular X acumulando segmentos
+  // Segmentos normales: PX_PER_YEAR por año
+  // Segmentos de gap grande: GAP_PX fijo total independiente de cuántos años
+  const posMap = {};
+  let cursor = CARD_W / 2 + PX_PER_YEAR; // empezar con margen izquierdo
+  posMap[minY] = CARD_W / 2;
+
+  for (let i = 0; i < sortedVideoYears.length; i++) {
+    const y = sortedVideoYears[i];
+    const prevY = i === 0 ? minY : sortedVideoYears[i-1];
+    const gap = y - prevY;
+    if (gap > MAX_GAP_YEARS) {
+      cursor = posMap[prevY] + GAP_PX;
+    } else {
+      cursor = posMap[prevY] + gap * PX_PER_YEAR;
+    }
+    posMap[y] = cursor;
+  }
+  posMap[maxY] = posMap[sortedVideoYears[sortedVideoYears.length-1]] + PX_PER_YEAR * 2;
+
+  // Para años intermedios, interpolar linealmente entre los conocidos
+  const xOf = y => {
+    if (posMap[y] !== undefined) return posMap[y];
+    // Encontrar vecinos conocidos
+    const keys = Object.keys(posMap).map(Number).sort((a,b)=>a-b);
+    const before = keys.filter(k=>k<=y).pop();
+    const after = keys.find(k=>k>=y);
+    if (before === undefined) return posMap[keys[0]];
+    if (after === undefined) return posMap[keys[keys.length-1]];
+    if (before === after) return posMap[before];
+    const t = (y-before)/(after-before);
+    return posMap[before] + t*(posMap[after]-posMap[before]);
+  };
+
+  const totalW = posMap[maxY] + CARD_W;
+  const lineY = CARD_H + CONN_H + DOT/2;
+  const totalH = lineY + DOT/2 + CONN_H + CARD_H + 8;
+
+  const byYear = {};
+  CASEROS.forEach(c => {
+    const y = parseInt(extraerAnio(c.fecha))||0;
+    if (!byYear[y]) byYear[y] = { evento:[], cotidiano:[] };
+    byYear[y][c.tipo === 'cotidiano' ? 'cotidiano' : 'evento'].push(c);
+  });
+
+  let html = `<div style="position:relative;width:${totalW}px;height:${totalH}px;">`;
+
+  // Línea central
+  html += `<div style="position:absolute;left:0;right:0;top:${lineY}px;height:${LINE_H}px;background:linear-gradient(90deg,transparent,var(--blue) 2%,var(--blue) 98%,transparent);border-radius:2px;z-index:1;"></div>`;
+
+  // Años sobre la línea
+  const yearsSet = new Set(years);
+
+  // Calcular rangos de gap (años a ocultar)
+  const gapRanges = [];
+  for (let i = 0; i < sortedVideoYears.length - 1; i++) {
+    const ya = sortedVideoYears[i];
+    const yb = sortedVideoYears[i+1];
+    if (yb - ya > MAX_GAP_YEARS) gapRanges.push([ya+1, yb-1]);
+  }
+  const inGap = y => gapRanges.some(([a,b]) => y >= a && y <= b);
+
+  // Indicadores de gap entre años con vídeo
+  for (let i = 0; i < sortedVideoYears.length - 1; i++) {
+    const ya = sortedVideoYears[i];
+    const yb = sortedVideoYears[i+1];
+    if (yb - ya > MAX_GAP_YEARS) {
+      const gapX = (xOf(ya) + xOf(yb)) / 2;
+      html += `<div style="position:absolute;left:${gapX}px;transform:translateX(-50%);top:${lineY - 14}px;font-size:18px;color:var(--tl-label);letter-spacing:4px;z-index:2;font-weight:300;">···</div>`;
+    }
+  }
+
+  for (let y = minY; y <= maxY; y++) {
+    if (inGap(y)) continue;
+    const isHl = yearsSet.has(y);
+    const xPos = xOf(y);
+    const tickH = isHl ? 14 : 6;
+    const color = isHl ? 'var(--blue)' : 'var(--tl-tick)';
+    const labelColor = isHl ? 'var(--dark)' : 'var(--tl-label)';
+    const fontW = isHl ? 700 : 300;
+    html += `<div style="position:absolute;left:${xPos}px;transform:translateX(-50%);top:${lineY - tickH - 18}px;display:flex;flex-direction:column;align-items:center;z-index:2;">
+      <div style="font-size:${isHl?10:9}px;font-weight:${fontW};color:${labelColor};white-space:nowrap;margin-bottom:2px;">${y}</div>
+      <div style="width:${isHl?2:1}px;height:${tickH}px;background:${color};"></div>
+    </div>`;
+  }
+
+  // Etiqueta EVENTOS: flecha arriba, texto debajo
+  html += `<div style="position:absolute;left:6px;top:${lineY - 38}px;display:flex;flex-direction:column;align-items:center;z-index:3;background:var(--tl-label-bg);padding:2px 6px;border-radius:4px;">
+    <div style="font-size:13px;color:var(--blue);line-height:1;">↑</div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--sepia);text-transform:uppercase;">EVENTOS</div>
+  </div>`;
+
+  // Etiqueta COTIDIANOS: texto arriba, flecha abajo
+  html += `<div style="position:absolute;left:6px;top:${lineY + LINE_H + 4}px;display:flex;flex-direction:column;align-items:center;z-index:3;background:var(--tl-label-bg);padding:2px 6px;border-radius:4px;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--sepia);text-transform:uppercase;">COTIDIANOS</div>
+    <div style="font-size:13px;color:var(--blue);line-height:1;">↓</div>
+  </div>`;
+
+  // Tarjetas — UNA por año+tipo, con modal si hay varios
+  Object.entries(byYear).forEach(([yearStr, grupos]) => {
+    const year = parseInt(yearStr);
+    const cx = xOf(year);
+
+    // EVENTOS
+    if (grupos.evento.length > 0) {
+      const items = grupos.evento;
+      const multi = items.length > 1;
+      const tc = multi ? 'multi' : thumbClass(items[0].tipo, items[0].categoria);
+      const ti = multi ? svgIcon('i-film') : thumbIcon(items[0].tipo, items[0].categoria);
+      const label = multi ? `${items.length} vídeos` : (items[0].categoria || '');
+      const titulo = multi ? `${year} · ${items.length} vídeos` : items[0].titulo;
+      const badge = multi ? `<span style="position:absolute;top:8px;right:8px;background:rgba(10,12,16,0.8);color:#ECEDEF;font-size:9px;font-weight:700;padding:3px 7px;border-radius:10px;pointer-events:none;">${items.length} vídeos</span>` : '';
+      const playBtn = multi
+        ? `<button class="tl-play" onclick="abrirModalCaseros(${year},'evento')">Abrir</button>`
+        : (items[0].escenas && items[0].youtube
+            ? `<div style="display:flex;gap:6px;margin-top:7px;">
+                <button class="tl-play" style="flex:1;" onclick="abrirPlayer('${items[0].youtube.replace(/'/g,"\\'")}','${items[0].titulo.replace(/'/g,"\\'")}','${items[0].fecha||''}',0)" aria-label="Ver">${svgIcon('i-play')}</button>
+                <button class="tl-play" style="flex:1;" onclick="abrirEscenasCasero(${items[0].id})" aria-label="Escenas">${svgIcon('i-list')}</button>
+               </div>`
+            : items[0].youtube
+              ? `<button class="tl-play" onclick="abrirPlayer('${items[0].youtube.replace(/'/g,"\\'")}','${items[0].titulo.replace(/'/g,"\\'")}','${items[0].fecha||''}',0)">${svgIcon('i-play')} Ver</button>`
+              : `<button class="tl-play" style="background:var(--surface-3);color:var(--text-light);cursor:default">Próximamente</button>`);
+      const wrapH = CARD_H + CONN_H + DOT;
+      html += `<div class="tl-item-wrap" style="left:${cx-CARD_W/2}px;top:${lineY-wrapH}px;z-index:6;height:${wrapH}px;justify-content:flex-end;">
+          <div class="tl-card" style="position:relative;">
+            ${badge}
+            <div class="tl-thumb ${multi?'multi':tc}">${multi?'':items[0].miniatura?`<img src="${items[0].miniatura}" alt="" onerror="this.style.display='none'">`:''}${multi?svgIcon('i-film'):ti}</div>
+            <div class="tl-card-body">
+              ${label?`<span class="tl-cat">${label}</span>`:''}
+              <div class="tl-title">${titulo}</div>
+              <div class="tl-date">${items[0].fecha||year}</div>
+              ${playBtn}
+            </div>
+            <div class="tl-year-bar">${year}</div>
+          </div>
+          <div style="width:2px;height:${CONN_H}px;background:linear-gradient(to bottom,#3a3f4b,var(--blue));flex-shrink:0;"></div>
+          <div class="tl-dot" style="flex-shrink:0;"></div>
+        </div>`;
+    }
+
+    // COTIDIANOS
+    if (grupos.cotidiano.length > 0) {
+      const items = grupos.cotidiano;
+      const multi = items.length > 1;
+      const tc = multi ? 'multi' : thumbClass(items[0].tipo, items[0].categoria);
+      const ti = multi ? svgIcon('i-film') : thumbIcon(items[0].tipo, items[0].categoria);
+      const titulo = multi ? `${year} · ${items.length} vídeos` : items[0].titulo;
+      const badge = multi ? `<span style="position:absolute;top:8px;right:8px;background:rgba(10,12,16,0.8);color:#ECEDEF;font-size:9px;font-weight:700;padding:3px 7px;border-radius:10px;pointer-events:none;">${items.length} vídeos</span>` : '';
+      const playBtn = multi
+        ? `<button class="tl-play" onclick="abrirModalCaseros(${year},'cotidiano')">Abrir</button>`
+        : (items[0].escenas && items[0].youtube
+            ? `<div style="display:flex;gap:6px;margin-top:7px;">
+                <button class="tl-play" style="flex:1;" onclick="abrirPlayer('${items[0].youtube.replace(/'/g,"\\'")}','${items[0].titulo.replace(/'/g,"\\'")}','${items[0].fecha||''}',0)" aria-label="Ver">${svgIcon('i-play')}</button>
+                <button class="tl-play" style="flex:1;" onclick="abrirEscenasCasero(${items[0].id})" aria-label="Escenas">${svgIcon('i-list')}</button>
+               </div>`
+            : items[0].youtube
+              ? `<button class="tl-play" onclick="abrirPlayer('${items[0].youtube.replace(/'/g,"\\'")}','${items[0].titulo.replace(/'/g,"\\'")}','${items[0].fecha||''}',0)">${svgIcon('i-play')} Ver</button>`
+              : `<button class="tl-play" style="background:var(--surface-3);color:var(--text-light);cursor:default">Próximamente</button>`);
+      html += `<div class="tl-item-wrap" style="left:${cx-CARD_W/2}px;top:${lineY-DOT/2+LINE_H/2}px;z-index:6;">
+          <div class="tl-dot"></div>
+          <div style="width:2px;height:${CONN_H}px;background:linear-gradient(to bottom,var(--blue),#3a3f4b);"></div>
+          <div class="tl-card" style="position:relative;">
+            ${badge}
+            <div class="tl-thumb ${multi?'multi':tc}">${multi?'':items[0].miniatura?`<img src="${items[0].miniatura}" alt="" onerror="this.style.display='none'">`:''}${multi?svgIcon('i-film'):ti}</div>
+            <div class="tl-card-body">
+              <div class="tl-title">${titulo}</div>
+              <div class="tl-date">${items[0].fecha||year}</div>
+              ${playBtn}
+            </div>
+            <div class="tl-year-bar">${year}</div>
+          </div>
+        </div>`;
+    }
+  });
+
+  html += '</div>';
+  cardsEl.innerHTML = html;
+  rulerEl.innerHTML = '';
+
+  // Drag to scroll
+  const scroll = document.getElementById('tl-scroll');
+  if (scroll && !scroll._dragInit) {
+    scroll._dragInit = true;
+    let isDown=false, startX, scrollLeft;
+    scroll.addEventListener('mousedown', e => { isDown=true; scroll.style.cursor='grabbing'; startX=e.pageX-scroll.offsetLeft; scrollLeft=scroll.scrollLeft; });
+    scroll.addEventListener('mouseleave', ()=>{ isDown=false; scroll.style.cursor='grab'; });
+    scroll.addEventListener('mouseup', ()=>{ isDown=false; scroll.style.cursor='grab'; });
+    scroll.addEventListener('mousemove', e=>{ if(!isDown)return; e.preventDefault(); scroll.scrollLeft=scrollLeft-(e.pageX-scroll.offsetLeft-startX)*1.5; });
+  }
+
+    // Flecha de scroll — se oculta al llegar al final
+    const arrow = document.getElementById('tl-arrow');
+    if (scroll && arrow) {
+      const updateArrow = () => {
+        const atEnd = scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 20;
+        arrow.classList.toggle('hidden', atEnd);
+      };
+      scroll.addEventListener('scroll', updateArrow);
+      updateArrow();
+    }
+  // Render décadas tab
+  renderDecadas();
+}
+
+function renderDecadas() {
+  const el = document.getElementById('caseros-decadas-list');
+  if (!el) return;
+
+  const BG = { boda:'var(--th-boda)', comunion:'var(--th-comunion)', cotidiano:'var(--th-cotidiano)', vacaciones:'var(--th-vacaciones)', navidad:'var(--th-navidad)', otros:'var(--th-otros)', multi:'var(--th-multi)' };
+
+  // Agrupar por década
+  const decadas = {};
+  CASEROS.forEach(c => {
+    const y = parseInt(extraerAnio(c.fecha)) || 0;
+    if (!y) return;
+    const dec = Math.floor(y / 10) * 10;
+    if (!decadas[dec]) decadas[dec] = [];
+    decadas[dec].push(c);
+  });
+
+  // Ordenar por fecha completa (año + mes)
+  function fechaADecimal(fecha) {
+    if (!fecha) return 0;
+    const s = String(fecha);
+    const p = s.split('/');
+    if (p.length === 3) {
+      const anio = parseInt(p[2])||0;
+      const mes = parseInt(p[1])||1;
+      return anio + (mes - 1) / 12;
+    }
+    if (p.length === 2) {
+      const anio = parseInt(p[1])||0;
+      const mes = parseInt(p[0])||1;
+      return anio + (mes - 1) / 12;
+    }
+    const meses = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
+    const lower = s.toLowerCase();
+    for (const [nombre, num] of Object.entries(meses)) {
+      if (lower.includes(nombre)) {
+        const m2 = lower.match(/[0-9]{4}/);
+        const anio = m2 ? parseInt(m2[0]) : 0;
+        return anio + (num - 1) / 12;
+      }
+    }
+    const m3 = s.match(/[0-9]{4}/);
+    return m3 ? parseInt(m3[0]) : 0;
+  }
+
+  Object.keys(decadas).forEach(dec => {
+    decadas[dec].sort((a, b) => fechaADecimal(a.fecha) - fechaADecimal(b.fecha));
+  });
+
+  el.innerHTML = Object.keys(decadas).sort((a,b)=>a-b).map(dec => {
+    const items = decadas[dec];
+    const cards = items.map(c => {
+      const tc = thumbClass(c.tipo, c.categoria);
+      const ti = thumbIcon(c.tipo, c.categoria);
+      const bg = BG[tc] || BG.otros;
+      const hasVideo = !!c.youtube;
+      const multi = c.escenas && c.escenas.length > 0;
+      const badge = multi ? `<div class="nf-badge">${c.escenas.length} escenas</div>` : '';
+
+      const thumb = c.miniatura
+        ? `<img class="nf-thumb" src="${c.miniatura}" alt="${c.titulo}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+        + `<div class="nf-thumb-placeholder" style="display:none;background:${bg}">${ti}</div>`
+        : `<div class="nf-thumb-placeholder" style="background:${bg}">${ti}</div>`;
+
+      let btns = '';
+      if (!hasVideo) {
+        btns = `<button class="nf-btn primary" disabled style="opacity:0.4;cursor:default;flex:1">Próximamente</button>`;
+      } else if (multi) {
+        btns = `<button class="nf-btn primary" onclick="abrirPlayer('${c.youtube.replace(/'/g,"\\'")}','${c.titulo.replace(/'/g,"\\'")}','${c.fecha||''}',0)" aria-label="Ver">${svgIcon('i-play')}</button>`
+             + `<button class="nf-btn secondary" onclick="abrirEscenasCasero(${c.id})" aria-label="Escenas">${svgIcon('i-list')} Escenas</button>`;
+      } else {
+        btns = `<button class="nf-btn primary" onclick="abrirPlayer('${c.youtube.replace(/'/g,"\\'")}','${c.titulo.replace(/'/g,"\\'")}','${c.fecha||''}',0)" style="flex:1">${svgIcon('i-play')} Ver</button>`;
+      }
+
+      return `<div class="nf-card ${hasVideo?'':'nf-proximamente'}">
+        ${badge}
+        ${thumb}
+        <div class="nf-info">
+          ${c.categoria?`<div class="nf-cat">${c.categoria}</div>`:''}
+          <div class="nf-titulo">${c.titulo}</div>
+          <div class="nf-fecha">${c.fecha||''}</div>
+          <div class="nf-btns">${btns}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="decada-section">
+      <div class="decada-title">Años ${dec < 2000 ? String(dec).slice(2) : dec}<small>${items.length} vídeo${items.length !== 1 ? 's' : ''}</small></div>
+      <div class="decada-row" id="decada-row-${dec}">${cards}</div>
+    </div>`;
+  }).join('');
+
+  // Drag to scroll each row
+  el.querySelectorAll('.decada-row').forEach(row => {
+    let isDown=false, startX, scrollLeft;
+    row.addEventListener('mousedown', e=>{isDown=true;row.style.cursor='grabbing';startX=e.pageX-row.offsetLeft;scrollLeft=row.scrollLeft;});
+    row.addEventListener('mouseleave',()=>{isDown=false;row.style.cursor='grab';});
+    row.addEventListener('mouseup',()=>{isDown=false;row.style.cursor='grab';});
+    row.addEventListener('mousemove',e=>{if(!isDown)return;e.preventDefault();row.scrollLeft=scrollLeft-(e.pageX-row.offsetLeft-startX)*1.5;});
+  });
+}
+
+// ─── PLAYER ───────────────────────────────────────────────────────────────────
+function buildEmbedUrl(url, min) {
+  if (!url) return null;
+  let videoId = '', listId = '';
+  const listMatch = url.match(/[?&]list=([^&]+)/);
+  if (listMatch) listId = listMatch[1];
+  const vMatch = url.match(/(?:v=|youtu\.be\/)([^&?]+)/);
+  if (vMatch) videoId = vMatch[1];
+  let embedUrl = '';
+  if (listId && videoId) {
+    embedUrl = `https://www.youtube.com/embed/${videoId}?list=${listId}&rel=0&modestbranding=1&autoplay=1&enablejsapi=1`;
+  } else if (listId) {
+    embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}&rel=0&modestbranding=1&autoplay=1&enablejsapi=1`;
+  } else if (videoId) {
+    embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&enablejsapi=1`;
+    if (min) embedUrl += `&start=${min}`;
+  } else return null;
+  return embedUrl;
+}
+
+// Modo escena
+let _escenaActiva = null;
+
+function abrirPlayerEscena(caseroId, escenaIdx) {
+  const c = CASEROS.find(x => x.id === caseroId);
+  if (!c || !c.escenas) return;
+  const e = c.escenas[escenaIdx];
+  const nextE = c.escenas[escenaIdx + 1] || null;
+  _escenaActiva = { caseroId, escenaIdx, finT: nextE ? nextE.t : (c.duracion || null) };
+  abrirPlayer(c.youtube, e.titulo, e.fecha, e.t);
+}
+
+function siguienteEscena() {
+  if (!_escenaActiva) return;
+  const nextIdx = _escenaActiva.escenaIdx + 1;
+  ocultarPanelEscena();
+  abrirPlayerEscena(_escenaActiva.caseroId, nextIdx);
+}
+
+function ocultarPanelEscena() {
+  const p = document.getElementById('escena-end-panel');
+  if (p) p.classList.remove('open');
+}
+
+// ─── VÍDEO PROTEGIDO (HLS) ────────────────────────────────────────────────────
+// El servidor da direcciones firmadas (stream.php). Los archivos no son públicos.
+let _hlsInst = null;      // instancia de hls.js activa
+let _urlActual = '';      // URL original del vídeo en reproducción (para compartir)
+let _playToken = 0;       // evita que una carga lenta pise a una reproducción más nueva
+
+function detenerHls() {
+  if (_hlsInst) { try { _hlsInst.destroy(); } catch (e) {} _hlsInst = null; }
+}
+
+async function pedirUrlsVideo(url) {
+  try {
+    const r = await fetch(`${API}?action=video&token=${encodeURIComponent(TOKEN)}&url=${encodeURIComponent(url)}`);
+    const d = await r.json();
+    return d.ok ? d.data : { error: d.msg || 'Error' };
+  } catch (e) {
+    return { error: 'Sin conexión' };
+  }
+}
+
+// "…/video.mp4#t=1755" (o #t=1:02:03) -> segundo de inicio. Con HLS el navegador ya no lo aplica solo.
+function tiempoDeUrl(url) {
+  const m = String(url || '').match(/#(?:.*&)?t=(?:npt:)?([\d:.]+)/);
+  if (!m) return 0;
+  const p = m[1].split(':').map(Number);
+  if (p.some(isNaN)) return 0;
+  return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : p[0];
+}
+
+function errorVideo(msg) {
+  const txt = /caducada/i.test(msg || '') ? 'Tu sesión ha caducado. Vuelve a entrar.' : 'No se pudo cargar el vídeo (' + (msg || 'error') + ').';
+  cerrarPlayer();
+  alert(txt);
+}
+
+// Arranca el vídeo (HLS si existe, MP4 si no). 'min' = segundo de inicio.
+async function reproducirVideo(video, url, min, token) {
+  detenerHls();
+  const info = await pedirUrlsVideo(url);
+  if (token !== _playToken) return;   // se cerró o se abrió otro mientras esperábamos
+  if (info.error) { errorVideo(info.error); return; }
+  min = min || tiempoDeUrl(url);       // escena (min) manda; si no, el #t= de la URL
+
+  const usarMp4 = (src) => {
+    video.src = src;
+    if (min) video.currentTime = min;
+    video.play().catch(() => {});
+  };
+  if (info.directo) { usarMp4(url); return; }          // vídeo ajeno a este servidor
+  if (!info.hls) { usarMp4(info.mp4); return; }        // aún sin convertir a HLS
+
+  if (window.Hls && Hls.isSupported()) {
+    // Chrome, Firefox, Android, Safari de escritorio...: hls.js
+    const hls = new Hls({ startPosition: min || -1, maxBufferLength: 40 });
+    _hlsInst = hls;
+    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+    hls.on(Hls.Events.ERROR, (ev, data) => {
+      if (data.fatal && _hlsInst === hls) {
+        detenerHls();
+        if (token !== _playToken) return;
+        if (info.mp4) usarMp4(info.mp4);                // si HLS falla, volvemos al MP4
+        else errorVideo('Fallo de reproducción');
+      }
+    });
+    hls.loadSource(info.hls);
+    hls.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // iPhone/iPad antiguos: HLS nativo
+    video.src = info.hls;
+    if (min) video.addEventListener('loadedmetadata', () => { video.currentTime = min; }, { once: true });
+    video.play().catch(() => {});
+  } else if (info.mp4) {
+    usarMp4(info.mp4);                                  // navegador sin HLS (p. ej. TV antigua)
+  } else {
+    errorVideo('Navegador no compatible');
+  }
+}
+
+function abrirPlayer(url, titulo, fecha, min) {
+  const iframe = document.getElementById('player-iframe');
+  const video = document.getElementById('player-video');
+  const loading = document.getElementById('player-loading');
+  document.getElementById('player-titulo').textContent = titulo;
+  _urlActual = url || '';
+  const token = ++_playToken;
+  // Mostrar botón compartir solo para roles con acceso a caseros y solo MP4
+  const shareBtn = document.getElementById('player-share-btn');
+  const isMp4 = url && !url.includes('youtube.com') && !url.includes('youtu.be');
+  shareBtn.style.setProperty('display', (isMp4 && (ROL === 'caseros' || ROL === 'todo')) ? 'inline-flex' : 'none', 'important');
+  document.getElementById('player-fecha').textContent = fecha || '';
+  document.getElementById('player-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loading.classList.remove('hidden');
+
+  ocultarPanelEscena();
+  renderEscenasPlayer(url);
+  registrarUltimo(url, titulo, fecha, min);
+  const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+  if (isYoutube) {
+    loading.classList.add('hidden');
+    iframe.style.display = 'block';
+    video.style.display = 'none';
+    detenerHls();
+    video.src = '';
+    iframe.src = buildEmbedUrl(url, min) || '';
+  } else {
+    loading.classList.remove('hidden');
+    video.style.display = 'block';
+    iframe.style.display = 'none';
+    iframe.src = '';
+    video.oncanplay = () => loading.classList.add('hidden');
+    reproducirVideo(video, url, min, token);
+    video.ontimeupdate = function() {
+      if (!_escenaActiva) return;
+      // Restringir seek fuera del rango si es escena compartida
+      if (_escenaActiva.compartido) {
+        if (video.currentTime < _escenaActiva.inicioT - 0.5) {
+          video.currentTime = _escenaActiva.inicioT;
+          return;
+        }
+      }
+      if (!_escenaActiva.finT) return;
+      if (video.currentTime >= _escenaActiva.finT - 0.5) {
+        video.pause();
+        video.ontimeupdate = null;
+        const c = CASEROS.find(x => x.id === _escenaActiva.caseroId);
+        const isLast = _escenaActiva.escenaIdx >= c.escenas.length - 1;
+        const isCompartido = !!_escenaActiva.compartido;
+        const nextE = (isLast || isCompartido) ? null : c.escenas[_escenaActiva.escenaIdx + 1];
+        document.getElementById('escena-end-title').textContent = 'Fin de escena';
+        document.getElementById('escena-end-sub').textContent = nextE ? ('Siguiente: ' + nextE.titulo + ' · ' + nextE.fecha) : '';
+        const btnNext = document.getElementById('escena-end-next');
+        btnNext.style.display = (isLast || isCompartido) ? 'none' : '';
+        // Salir de pantalla completa antes de mostrar el panel
+        const showPanel = () => document.getElementById('escena-end-panel').classList.add('open');
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
+          exitFs.call(document).then(showPanel).catch(showPanel);
+        } else {
+          showPanel();
+        }
+      }
+    };
+  }
+}
+
+function abrirEscenasCasero(id) {
+  const c = CASEROS.find(c => c.id === id);
+  if (!c || !c.escenas) return;
+  function fmt(s) {
+    const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+    if(h>0) return `${h}h ${String(m).padStart(2,'0')}m`;
+    return `${m}m ${String(sec).padStart(2,'0')}s`;
+  }
+  const year = parseInt(extraerAnio(c.fecha))||0;
+  const tipo = c.tipo === 'cotidiano' ? 'cotidiano' : 'evento';
+  document.getElementById('caseros-modal-title').textContent = c.titulo;
+  document.getElementById('caseros-modal-sub').textContent = `${c.escenas.length} escenas · Pulsa una para ir a ese momento`;
+  document.getElementById('caseros-modal-grid').style.display = '';
+  document.getElementById('caseros-modal-grid').style.padding = '12px 16px';
+  document.getElementById('caseros-modal-grid').style.display = 'block';
+  document.getElementById('caseros-modal-grid').innerHTML =
+    `<div style="padding:4px 0 8px;"><button onclick="abrirModalCaseros(${year},'${tipo}')" style="background:none;border:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:4px;">← Volver</button></div>` +
+    `<div style="display:flex;flex-direction:column;gap:0;width:100%;">` +
+    c.escenas.map((e, i) => {
+      const nextT = i < c.escenas.length - 1 ? c.escenas[i+1].t : null;
+      const durStr = nextT !== null ? fmt(nextT - e.t) : (c.duracion ? fmt(c.duracion - e.t) : 'hasta el final');
+      return `
+      <div onclick="cerrarModalCaseros();abrirPlayerEscena(${c.id},${i})"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--line);width:100%;min-height:52px;"
+        onmouseover="this.style.background='var(--row-hover)'" onmouseout="this.style.background=''">
+        ${e.miniatura
+          ? `<div class="pe-mini"><img src="${e.miniatura}" alt="" loading="lazy" onerror="this.parentNode.classList.add('sin')"><span class="pe-num">${i+1}</span></div>`
+          : `<div style="width:26px;height:26px;border-radius:50%;background:var(--row-num);color:var(--sepia);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${i+1}</div>`}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:2px;line-height:1.3;">${e.titulo}</div>
+          <div style="font-size:11px;color:var(--text-light);">${e.fecha} · ${durStr}</div>
+        </div>
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${svgIcon('i-play')}</div>
+      </div>`;
+    }).join('') + '</div>';
+  document.getElementById('caseros-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function abrirModalCaseros(year, tipo) {
+  const items = CASEROS.filter(c => {
+    const y = parseInt(extraerAnio(c.fecha))||0;
+    const t = c.tipo === 'cotidiano' ? 'cotidiano' : 'evento';
+    return y === year && t === tipo;
+  });
+  document.getElementById('caseros-modal-title').textContent = `${year} · ${tipo==='cotidiano'?'Vídeos cotidianos':'Eventos'}`;
+  document.getElementById('caseros-modal-sub').textContent = `${items.length} vídeos disponibles`;
+  document.getElementById('caseros-modal-grid').style.display = '';
+  document.getElementById('caseros-modal-grid').style.padding = '';
+  const BG = { boda:'var(--th-boda)', comunion:'var(--th-comunion)', cotidiano:'var(--th-cotidiano)', vacaciones:'var(--th-vacaciones)', navidad:'var(--th-navidad)', otros:'var(--th-otros)' };
+  document.getElementById('caseros-modal-grid').innerHTML = items.map(c => {
+    const tc = thumbClass(c.tipo, c.categoria);
+    const ti = thumbIcon(c.tipo, c.categoria);
+    const bg = BG[tc] || BG.otros;
+    const btn = c.escenas
+      ? `<div style="display:flex;gap:6px;margin-top:6px;">
+          <div class="mc-btn" style="flex:1;" onclick="cerrarModalCaseros();abrirPlayer('${c.youtube.replace(/'/g,"\\'")}','${c.titulo.replace(/'/g,"\\'")}','${c.fecha||''}',0)">${svgIcon('i-play')}</div>
+          <div class="mc-btn" style="flex:1;" onclick="abrirEscenasCasero(${c.id})">${svgIcon('i-list')}</div>
+         </div>`
+      : c.youtube
+        ? `<div class="mc-btn" onclick="cerrarModalCaseros();abrirPlayer('${c.youtube.replace(/'/g,"\\'")}','${c.titulo.replace(/'/g,"\\'")}','${c.fecha||''}',0)">${svgIcon('i-play')} Ver</div>`
+        : `<div class="mc-btn" style="background:var(--surface-3);color:var(--text-light);">Próximamente</div>`;
+    return `<div class="caseros-modal-card">
+      <div class="mc-thumb" style="background:${bg};position:relative;overflow:hidden;">
+        ${c.miniatura?`<img src="${c.miniatura}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:''}
+        ${c.miniatura?'':'<span>'+ti+'</span>'}
+      </div>
+      <div class="mc-body">
+        ${c.categoria?`<div class="mc-cat">${c.categoria}</div>`:''}
+        <div class="mc-title">${c.titulo}</div>
+        <div class="mc-date">${c.fecha||''}</div>
+        ${btn}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('caseros-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalCaseros(e) {
+  if (e && e.target !== document.getElementById('caseros-modal')) return;
+  document.getElementById('caseros-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function prepararPantallaCompartir(c, escenaIdx) {
+  const thumbWrap = document.getElementById('compartir-thumb-wrap');
+  const escena = escenaIdx >= 0 && c.escenas ? c.escenas[escenaIdx] : null;
+  document.getElementById('compartir-titulo').textContent = c.titulo;
+  document.getElementById('compartir-sub').textContent = escena
+    ? `Escena: ${escena.titulo} · ${escena.fecha}`
+    : (c.fecha || '');
+  if (c.miniatura) {
+    thumbWrap.innerHTML = `<img class="compartir-thumb" src="${c.miniatura}" alt="${c.titulo}">`;
+  } else {
+    thumbWrap.innerHTML = `<div class="compartir-thumb-placeholder">${svgIcon('i-film')}</div>`;
+  }
+}
+
+function mostrarPantallaCompartir() {
+  document.getElementById('screen-compartir').classList.add('active');
+}
+
+function verDeNuevo() {
+  const d = window._compartirData;
+  if (!d) return;
+  document.getElementById('screen-compartir').classList.remove('active');
+  if (d.escenaIdx >= 0 && d.casero.escenas && d.casero.escenas[d.escenaIdx]) {
+    _escenaActiva = { caseroId: d.caseroId, escenaIdx: d.escenaIdx, inicioT: d.t,
+      finT: d.escenaIdx < d.casero.escenas.length-1 ? d.casero.escenas[d.escenaIdx+1].t : (d.casero.duracion||null), compartido: true };
+    abrirPlayer(d.casero.youtube, d.casero.escenas[d.escenaIdx].titulo, d.casero.escenas[d.escenaIdx].fecha, d.t);
+  } else {
+    abrirPlayer(d.casero.youtube, d.casero.titulo, d.casero.fecha||'', 0);
+  }
+}
+
+function abrirShareModal() {
+  // Pausar vídeo
+  const video = document.getElementById('player-video');
+  if (video) video.pause();
+  const modal = document.getElementById('share-modal');
+  const btns = document.getElementById('share-btns');
+  const sub = document.getElementById('share-modal-sub');
+  // Determinar si hay escena activa
+  const c = _escenaActiva ? CASEROS.find(x => x.id === _escenaActiva.caseroId) : null;
+  const escena = c && _escenaActiva ? c.escenas[_escenaActiva.escenaIdx] : null;
+  if (escena) {
+    sub.textContent = `"${c.titulo}" · Escena: ${escena.titulo}`;
+    btns.innerHTML = `
+      <button class="share-btn escena" onclick="generarYCompartir(${c.id},${_escenaActiva.escenaIdx},${escena.t},false)">Esta escena · 24 h</button>
+      <button class="share-btn escena perm" onclick="generarYCompartir(${c.id},${_escenaActiva.escenaIdx},${escena.t},true)">Esta escena · Permanente</button>
+      <button class="share-btn full" onclick="generarYCompartir(${c.id},-1,0,false)">Vídeo completo · 24 h</button>
+      <button class="share-btn full perm" onclick="generarYCompartir(${c.id},-1,0,true)">Vídeo completo · Permanente</button>
+      <button class="share-btn cancel" onclick="cerrarShareModal()">Cancelar</button>`;
+  } else {
+    // Buscar casero por URL actual
+    const videoEl = document.getElementById('player-video');
+    const url = _urlActual || (videoEl ? videoEl.src : '');
+    const casero = CASEROS.find(c => c.youtube && url.includes(c.youtube.split('#')[0].split('/').pop()));
+    if (casero) {
+      sub.textContent = `"${casero.titulo}"`;
+      btns.innerHTML = `
+        <button class="share-btn full" onclick="generarYCompartir(${casero.id},-1,0,false)">Vídeo completo · 24 h</button>
+        <button class="share-btn full perm" onclick="generarYCompartir(${casero.id},-1,0,true)">Vídeo completo · Permanente</button>
+        <button class="share-btn cancel" onclick="cerrarShareModal()">Cancelar</button>`;
+    }
+  }
+  modal.classList.add('open');
+}
+
+function cerrarShareModal() {
+  document.getElementById('share-modal').classList.remove('open');
+  const video = document.getElementById('player-video');
+  if (video && video.src) video.play();
+}
+
+async function generarYCompartir(caseroId, escenaIdx, t, permanente = false) {
+  cerrarShareModal();
+  const r = await fetch(`${API}?action=compartir-generar`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ pass: PASS, token: TOKEN, caseroId, escenaIdx, t, permanente })
+  });
+  const d = await r.json();
+  if (!d.ok) { alert('Error al generar el código'); return; }
+  const pin = d.data.pin;
+  const c = CASEROS.find(x => x.id === caseroId);
+  const escena = escenaIdx >= 0 && c && c.escenas ? c.escenas[escenaIdx] : null;
+  const detalle = escena ? `la escena "${escena.titulo}" de "${c.titulo}"` : `"${c ? c.titulo : 'un vídeo'}"`;
+  const caducidad = permanente ? 'Sin fecha de caducidad' : 'Válido durante 24 horas';
+  const msg = `Hola! Te comparto ${detalle} del Archivo Familiar.\n\n🔑 Código de acceso: *${pin}*\n⏱ ${caducidad}\n\n🔗 tinyurl.com/archivo-familiar`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function cerrarPlayer(e) {
+  if (e && e.target !== document.getElementById('player-overlay')) return;
+  document.getElementById('player-overlay').classList.remove('open');
+  document.getElementById('player-iframe').src = '';
+  const vid = document.getElementById('player-video');
+  _playToken++;
+  detenerHls();
+  vid.pause();
+  vid.ontimeupdate = null;
+  vid.src = '';
+  _urlActual = '';
+  document.getElementById('player-loading').classList.add('hidden');
+  ocultarPanelEscena();
+  _escenaActiva = null;
+  document.body.style.overflow = '';
+  // Si es modo compartir, mostrar pantalla de "ver de nuevo"
+  if (window._compartirData) mostrarPantallaCompartir();
+}
+
+let searchTimeout;
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  if (!val.trim()) { clearSearch(); return; }
+  searchTimeout = setTimeout(() => doSearch(val.trim()), 250);
+}
+
+function normStr(s) {
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+function doSearch(q) {
+  const lower = normStr(q);
+  let results, renderFn, emptyMsg;
+  if (currentSection === 'caseros') {
+    results = CASEROS.filter(c =>
+      normStr(c.titulo).includes(lower) ||
+      normStr(c.fecha).includes(lower) ||
+      normStr(c.notas).includes(lower) ||
+      (c.escenas && c.escenas.some(e => normStr(e.titulo).includes(lower)))
+    );
+    renderFn = c => `<div class="act-row" onclick="abrirPlayer('${(c.youtube||'').replace(/'/g,"\'")}','${c.titulo.replace(/'/g,"\'")}','${c.fecha||''}',0)" style="cursor:${c.youtube?'pointer':'default'};opacity:${c.youtube?1:0.5}">
+      <div class="act-info"><span class="act-name">${c.titulo}</span><span class="act-fecha">${c.fecha||''}</span></div>
+      ${c.youtube?'<button class="act-link" aria-label="Ver"><svg class="ico"><use href="#i-play"/></svg></button>':'<span style="font-size:11px;color:var(--text-light)">Próximamente</span>'}
+    </div>`;
+    emptyMsg = 'No se encontró ningún vídeo.';
+  } else {
+    results = ACTUACIONES.filter(a =>
+      normStr(a.act).includes(lower) ||
+      (a.kw && normStr(a.kw).includes(lower)) ||
+      (a.fecha && normStr(a.fecha).includes(lower))
+    );
+    renderFn = a => renderActRow(a, true);
+    emptyMsg = 'No se encontró ninguna actuación.';
+  }
+  document.getElementById('home-screen').style.display = 'none';
+  document.querySelectorAll('.content-screen').forEach(s => s.classList.remove('active'));
+  const sr = document.getElementById('search-results-screen');
+  sr.classList.add('active');
+  document.getElementById('result-count').textContent = `${results.length} resultado${results.length!==1?'s':''} para "${q}"`;
+  document.getElementById('search-results-list').innerHTML = results.length
+    ? results.map(renderFn).join('')
+    : `<p style="color:var(--text-light);font-size:14px">${emptyMsg}</p>`;
+}
+
+function clearSearch() {
+  document.getElementById('search-box').value = '';
+  document.getElementById('search-results-screen').classList.remove('active');
+  if (currentSection === 'home') document.getElementById('home-screen').style.display = '';
+  else document.getElementById('screen-'+currentSection).classList.add('active');
+}
+
+// ─── TEMA CLARO / OSCURO ──────────────────────────────────────────────────────
+function cambiarTema() {
+  const claro = document.body.classList.toggle('tema-claro');
+  try { localStorage.setItem('af_tema', claro ? 'claro' : 'oscuro'); } catch (e) {}
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => m.content = claro ? '#F6F7F9' : '#0E1014');
+  document.querySelectorAll('.tema-btn').forEach(b => b.setAttribute('aria-label', claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'));
+}
+
+// ─── BOTÓN ATRÁS DEL MÓVIL ────────────────────────────────────────────────────
+// Cada cosa que se abre (sección, búsqueda, vídeo, escenas, compartir) deja un paso
+// en el historial, así "Atrás" cierra lo último abierto en vez de salir de la app.
+(function () {
+  if (new URLSearchParams(location.search).get('tv') === '1') return;   // la TV tiene su propio manejo
+  let desdeAtras = false, ignorar = 0, atrasPendiente = null;
+  const estado = () => (history.state && history.state.af) || null;
+  function apilar(tag) {
+    if (atrasPendiente) { clearTimeout(atrasPendiente); atrasPendiente = null; history.replaceState({ af: tag }, ''); return; }
+    history.pushState({ af: tag }, '');
+  }
+  function sustituirOApilar(tag, sustituibles) {
+    if (sustituibles.includes(estado()) && !atrasPendiente) history.replaceState({ af: tag }, '');
+    else apilar(tag);
+  }
+  function consumir() {
+    if (desdeAtras || !estado()) return;
+    clearTimeout(atrasPendiente);
+    atrasPendiente = setTimeout(() => { atrasPendiente = null; ignorar++; history.back(); }, 0);
+  }
+  const abierto = id => { const el = document.getElementById(id); return !!el && el.classList.contains('open'); };
+
+  const o = {};
+  ['abrirPlayer', 'cerrarPlayer', 'abrirEscenasCasero', 'abrirModalCaseros', 'cerrarModalCaseros',
+   'abrirShareModal', 'cerrarShareModal', 'showSection', 'goHome', 'doSearch', 'clearSearch'].forEach(n => o[n] = window[n]);
+
+  window.abrirPlayer = function () { const ya = abierto('player-overlay'); const r = o.abrirPlayer.apply(this, arguments); if (!ya) apilar('player'); return r; };
+  window.cerrarPlayer = function () { const ya = abierto('player-overlay'); const r = o.cerrarPlayer.apply(this, arguments); if (ya && !abierto('player-overlay')) consumir(); return r; };
+  window.abrirEscenasCasero = function () { const ya = abierto('caseros-modal'); const r = o.abrirEscenasCasero.apply(this, arguments); if (!ya && abierto('caseros-modal')) apilar('modal'); return r; };
+  window.abrirModalCaseros = function () { const ya = abierto('caseros-modal'); const r = o.abrirModalCaseros.apply(this, arguments); if (!ya && abierto('caseros-modal')) apilar('modal'); return r; };
+  window.cerrarModalCaseros = function () { const ya = abierto('caseros-modal'); const r = o.cerrarModalCaseros.apply(this, arguments); if (ya && !abierto('caseros-modal')) consumir(); return r; };
+  window.abrirShareModal = function () { const r = o.abrirShareModal.apply(this, arguments); if (estado() !== 'share') apilar('share'); return r; };
+  window.cerrarShareModal = function () { const ya = abierto('share-modal'); const r = o.cerrarShareModal.apply(this, arguments); if (ya) consumir(); return r; };
+  window.showSection = function (sec) {
+    const r = o.showSection.apply(this, arguments);
+    if (document.body.classList.contains('rol-todo')) sustituirOApilar('sec', ['sec', 'search']);
+    return r;
+  };
+  window.goHome = function () { const st = estado(); const r = o.goHome.apply(this, arguments); if (st === 'sec' || st === 'search') consumir(); return r; };
+  window.doSearch = function () { const r = o.doSearch.apply(this, arguments); if (estado() !== 'search') apilar('search'); return r; };
+  window.clearSearch = function () { const st = estado(); const r = o.clearSearch.apply(this, arguments); if (st === 'search') consumir(); return r; };
+
+  window.addEventListener('popstate', () => {
+    if (ignorar) { ignorar--; return; }
+    desdeAtras = true;
+    try {
+      if (abierto('share-modal')) o.cerrarShareModal();
+      else if (abierto('player-overlay')) o.cerrarPlayer();
+      else if (abierto('caseros-modal')) o.cerrarModalCaseros();
+      else if (document.getElementById('search-results-screen').classList.contains('active')) o.clearSearch();
+      else if (document.body.classList.contains('rol-todo') && currentSection !== 'home') o.goHome();
+    } finally { desdeAtras = false; }
+  });
+})();
+</script>
+<!-- MODAL CASEROS -->
+<div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
+  <div class="caseros-modal-box">
+    <div class="caseros-modal-header">
+      <div>
+        <h3 id="caseros-modal-title"></h3>
+        <p id="caseros-modal-sub"></p>
+      </div>
+      <button class="caseros-modal-close" onclick="cerrarModalCaseros()">×</button>
+    </div>
+    <div class="caseros-modal-grid" id="caseros-modal-grid"></div>
+  </div>
+</div>
+<!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
+<style>
+body.modo-tv { background: #0E1014 !important; }
+body.modo-tv .search-wrap { display: none !important; }
+
+body.modo-tv .site-header { padding: 16px 48px; }
+body.modo-tv .search-input,
+body.modo-tv .logout-btn { display: none !important; }
+
+body.modo-tv #home-screen { gap: 60px; padding: 80px 60px; }
+body.modo-tv .section-card { width: 320px; padding: 70px 60px; }
+body.modo-tv .card-title { font-size: 26px; }
+body.modo-tv .card-desc  { font-size: 15px; }
+
+/* Ocultar tab Timeline */
+body.modo-tv .subcategory-tabs { display: none !important; }
+body.modo-tv #tab-anos         { display: none !important; }
+body.modo-tv #tab-decadas      { display: block !important; }
+
+body.modo-tv #screen-caseros {
+  padding: 0; max-width: 100%; background: #0E1014; min-height: 100vh;
+}
+body.modo-tv #screen-caseros .back-btn { margin: 24px 48px 0; color: #ECEDEF; font-size: 15px; }
+body.modo-tv #screen-caseros .section-title { margin: 8px 48px 4px; color: #ECEDEF; font-size: 28px; }
+body.modo-tv #screen-caseros .section-subtitle { margin: 0 48px 24px; }
+
+body.modo-tv .decada-section { margin-bottom: 48px; padding: 0 48px; }
+body.modo-tv .decada-title {
+  font-size: 22px; color: #ECEDEF;
+  border-bottom: 2px solid rgba(236,237,239,0.15);
+  margin-bottom: 20px; padding-bottom: 10px;
+}
+
+body.modo-tv .decada-row {
+  gap: 20px; padding: 8px 0 20px;
+  scrollbar-width: none; overflow-x: auto; overflow-y: visible;
+}
+body.modo-tv .decada-row::-webkit-scrollbar { display: none; }
+
+body.modo-tv .nf-card {
+  width: 220px; flex-shrink: 0; background: #171A21;
+  border-radius: 12px; border: 3px solid transparent;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+body.modo-tv .nf-thumb { aspect-ratio: 16/9; }
+body.modo-tv .nf-thumb-placeholder { aspect-ratio: 16/9; font-size: 40px; }
+body.modo-tv .nf-info { padding: 12px 14px 14px; }
+body.modo-tv .nf-cat    { font-size: 10px; color: #E8A33D; margin-bottom: 4px; }
+body.modo-tv .nf-titulo { font-size: 14px; font-weight: 700; color: #ECEDEF; margin-bottom: 3px; }
+body.modo-tv .nf-fecha  { font-size: 12px; color: rgba(236,237,239,0.6); margin-bottom: 10px; }
+body.modo-tv .nf-btns { gap: 8px; }
+body.modo-tv .nf-btn  { padding: 10px 8px; font-size: 13px; border-radius: 8px; }
+body.modo-tv .nf-btn.primary   { background: #2A2F3A; }
+body.modo-tv .nf-btn.secondary { background: rgba(232,163,61,0.2); color: #ECEDEF; border: 1px solid rgba(232,163,61,0.3); }
+
+/* FOCO VISUAL */
+body.modo-tv .tv-focused {
+  outline: none !important;
+  border-color: #E8A33D !important;
+  box-shadow: 0 0 0 3px rgba(232,163,61,0.5), 0 8px 32px rgba(232,163,61,0.3) !important;
+  transform: translateY(-6px) scale(1.04) !important;
+}
+body.modo-tv .section-card.tv-focused { transform: translateY(-12px) scale(1.05) !important; }
+
+/* Modal de escenas */
+body.modo-tv .caseros-modal-box {
+  max-width: 700px; background: #171A21;
+  border-radius: 20px; border: 1px solid rgba(236,237,239,0.2);
+}
+body.modo-tv .caseros-modal-header {
+  background: #0E1014; border-bottom: 1px solid rgba(236,237,239,0.1); padding: 24px 28px;
+}
+body.modo-tv .caseros-modal-header h3 { color: #ECEDEF; font-size: 22px; }
+body.modo-tv .caseros-modal-header p  { color: rgba(236,237,239,0.5); font-size: 13px; }
+body.modo-tv .caseros-modal-close { color: rgba(236,237,239,0.5); font-size: 28px; }
+body.modo-tv .caseros-modal-grid { background: #171A21; max-height: 70vh; }
+body.modo-tv .caseros-modal-grid [onclick*="abrirPlayerEscena"] {
+  border-radius: 12px !important;
+  border-bottom: 1px solid rgba(236,237,239,0.08) !important;
+  padding: 16px 18px !important;
+}
+body.modo-tv .caseros-modal-grid [onclick*="abrirPlayerEscena"].tv-focused {
+  background: rgba(232,163,61,0.2) !important;
+  outline: 2px solid #E8A33D !important;
+}
+
+/* FIX 3: Player pantalla completa */
+body.modo-tv .player-overlay {
+  background: #000 !important;
+}
+body.modo-tv .player-box {
+  width: 100% !important; height: 100% !important;
+  max-width: 100% !important; border-radius: 0 !important;
+  background: #000 !important;
+  display: flex !important; flex-direction: column !important;
+  position: relative !important;
+}
+body.modo-tv .player-header {
+  position: absolute !important;
+  top: 0; left: 0; right: 0; z-index: 10;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%) !important;
+  padding: 20px 32px !important;
+  flex-shrink: 0;
+}
+body.modo-tv .player-embed {
+  position: absolute !important;
+  inset: 0 !important;
+  flex: 1 !important;
+}
+body.modo-tv .player-header { display: none !important; }
+body.modo-tv #player-video,
+body.modo-tv #player-iframe {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Indicador mando */
+#tv-remote-indicator {
+  display: none;
+  position: fixed; bottom: 28px; right: 28px;
+  background: rgba(14,16,20,0.9); border: 1px solid rgba(236,237,239,0.2);
+  border-radius: 10px; padding: 12px 16px;
+  z-index: 9999; color: rgba(255,255,255,0.6); font-size: 12px; line-height: 2;
+  backdrop-filter: blur(8px); pointer-events: none;
+}
+body.modo-tv #tv-remote-indicator { display: block; }
+</style>
+
+<div id="tv-remote-indicator">
+  <div>▲▼◀▶ &nbsp;Navegar</div>
+  <div>OK &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Seleccionar / Play·Pausa</div>
+  <div>◀▶ &nbsp;&nbsp;&nbsp;&nbsp;en vídeo: ±10 segundos</div>
+  <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
+</div>
+
+<script>
+(function() {
+  const IS_TV = new URLSearchParams(window.location.search).get('tv') === '1';
+  if (!IS_TV) return;
+
+  document.body.classList.add('modo-tv');
+
+  let focusedEl      = null;
+  let currentRowIdx  = 0;
+  let currentCardIdx = 0;
+
+  function isVisible(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  function getDecadaRows() {
+    return Array.from(document.querySelectorAll('.decada-row'));
+  }
+
+  function getRowCards(row) {
+    if (!row) return [];
+    return Array.from(row.querySelectorAll('.nf-card:not(.nf-proximamente)'));
+  }
+
+  function tvFocus(el) {
+    if (focusedEl) focusedEl.classList.remove('tv-focused');
+    focusedEl = el;
+    if (!el) return;
+    el.classList.add('tv-focused');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
+
+  // FIX 1: scroll vertical — mueve la sección de década completa a la vista
+  function scrollRowIntoView(rowIdx) {
+    const rows = getDecadaRows();
+    const row  = rows[rowIdx];
+    if (!row) return;
+    const section = row.closest('.decada-section') || row;
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function tvSetInitialFocus() {
+    currentRowIdx  = 0;
+    currentCardIdx = 0;
+    const rows = getDecadaRows();
+    if (rows.length) {
+      const cards = getRowCards(rows[0]);
+      if (cards.length) { tvFocus(cards[0]); return; }
+    }
+    const el = document.querySelector('.section-card, .login-input');
+    if (el) tvFocus(el);
+  }
+
+  // FIX 2: en TV, abrirModalCaseros (modal de "varios del mismo año") se ignora.
+  // Las cards ya están todas expandidas en la fila de décadas.
+  window.abrirModalCaseros = function(year, tipo) {
+    // No hacer nada — en TV no existe este modal
+    // Si se llega aquí desde el botón "← Volver" dentro de abrirEscenasCasero,
+    // simplemente cerramos el modal de escenas.
+    const modal = document.getElementById('caseros-modal');
+    if (modal && modal.classList.contains('open')) {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        const rows = getDecadaRows();
+        const cards = getRowCards(rows[currentRowIdx] || rows[0]);
+        tvFocus(cards[currentCardIdx] || cards[0] || null);
+      }, 150);
+    }
+  };
+
+  // FIX 3: pantalla completa automática al abrir player
+  const origAbrirPlayer = window.abrirPlayer;
+  window.abrirPlayer = function(url, titulo, fecha, min) {
+    origAbrirPlayer && origAbrirPlayer(url, titulo, fecha, min);
+    setTimeout(() => {
+      const overlay = document.getElementById('player-overlay');
+      if (!overlay) return;
+      const requestFS = overlay.requestFullscreen
+        || overlay.webkitRequestFullscreen
+        || overlay.mozRequestFullScreen;
+      if (requestFS) requestFS.call(overlay).catch(() => {});
+    }, 250);
+  };
+
+  // ── Teclado ──
+  document.addEventListener('keydown', function(e) {
+    const key  = e.key;
+    const code = e.keyCode;
+
+    // LOGIN
+    const loginScreen = document.getElementById('login-screen');
+    if (loginScreen && !loginScreen.classList.contains('hidden')) {
+      if (key === 'ArrowDown' || key === 'ArrowUp') {
+        e.preventDefault();
+        const els = Array.from(loginScreen.querySelectorAll('input, button')).filter(isVisible);
+        let idx = els.indexOf(focusedEl);
+        if (idx === -1) idx = 0;
+        idx = key === 'ArrowDown' ? Math.min(idx + 1, els.length - 1) : Math.max(idx - 1, 0);
+        tvFocus(els[idx]);
+        if (els[idx].tagName === 'INPUT') els[idx].focus();
+      }
+     if (key === 'Enter' || code === 13) {
+  e.preventDefault();
+  if (focusedEl && focusedEl.tagName === 'INPUT') {
+    focusedEl.focus();
+    focusedEl.click();
+  } else if (focusedEl) {
+    focusedEl.click();
+  }
+}
+      return;
+    }
+
+    // PLAYER ABIERTO — controles con mando
+    const playerOverlay = document.getElementById('player-overlay');
+    if (playerOverlay && playerOverlay.classList.contains('open')) {
+      const video = document.getElementById('player-video');
+      const isVideo = video && video.style.display !== 'none' && video.src;
+
+      if (isVideo) {
+        if (key === 'ArrowLeft')  { e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); return; }
+        if (key === 'ArrowRight') { e.preventDefault(); video.currentTime = Math.min(video.duration || 9e9, video.currentTime + 10); return; }
+        if (key === 'ArrowUp')    { e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); return; }
+        if (key === 'ArrowDown')  { e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); return; }
+        if (key === 'Enter' || code === 13) { e.preventDefault(); video.paused ? video.play() : video.pause(); return; }
+      }
+
+      if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+        e.preventDefault();
+        if (document.fullscreenElement) {
+          document.exitFullscreen().then(() => cerrarPlayer()).catch(() => cerrarPlayer());
+        } else {
+          cerrarPlayer();
+        }
+      }
+      return;
+    }
+
+    // MODAL DE ESCENAS
+    const modal = document.getElementById('caseros-modal');
+    if (modal && modal.classList.contains('open')) {
+      e.preventDefault();
+      const els = Array.from(modal.querySelectorAll(
+        '[onclick*="abrirPlayerEscena"], .caseros-modal-close'
+      )).filter(isVisible);
+      if (!els.length) return;
+      let idx = els.indexOf(focusedEl);
+      if (idx === -1) idx = 0;
+
+      if (key === 'ArrowDown') idx = Math.min(idx + 1, els.length - 1);
+      else if (key === 'ArrowUp') idx = Math.max(idx - 1, 0);
+      else if (key === 'Enter' || code === 13) { els[idx].click(); return; }
+      else if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+        cerrarModalCaseros(); return;
+      }
+      tvFocus(els[idx]);
+      els[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+
+    // HOME
+    const homeScreen = document.getElementById('home-screen');
+    if (homeScreen && homeScreen.style.display !== 'none') {
+      e.preventDefault();
+      const cards = Array.from(document.querySelectorAll('.section-card')).filter(isVisible);
+      if (!cards.length) return;
+      let idx = cards.indexOf(focusedEl);
+      if (idx === -1) { tvFocus(cards[0]); return; }
+      if (key === 'ArrowRight') idx = Math.min(idx + 1, cards.length - 1);
+      else if (key === 'ArrowLeft') idx = Math.max(idx - 1, 0);
+      else if (key === 'Enter' || code === 13) { cards[idx].click(); return; }
+      tvFocus(cards[idx]);
+      return;
+    }
+
+    // PANTALLA CASEROS
+    const screenCaseros = document.getElementById('screen-caseros');
+    if (screenCaseros && screenCaseros.classList.contains('active')) {
+      e.preventDefault();
+      const rows = getDecadaRows();
+      if (!rows.length) return;
+
+      if (key === 'ArrowUp') {
+        if (currentRowIdx > 0) {
+          currentRowIdx--;
+          const cards = getRowCards(rows[currentRowIdx]);
+          currentCardIdx = Math.min(currentCardIdx, Math.max(0, cards.length - 1));
+          tvFocus(cards[currentCardIdx] || null);
+          scrollRowIntoView(currentRowIdx); // FIX 1
+        } else {
+          const backBtn = screenCaseros.querySelector('.back-btn');
+          if (backBtn) tvFocus(backBtn);
+        }
+      }
+      else if (key === 'ArrowDown') {
+        if (focusedEl && focusedEl.classList.contains('back-btn')) {
+          currentRowIdx = 0; currentCardIdx = 0;
+          const cards = getRowCards(rows[0]);
+          if (cards.length) tvFocus(cards[0]);
+          return;
+        }
+        if (currentRowIdx < rows.length - 1) {
+          currentRowIdx++;
+          const cards = getRowCards(rows[currentRowIdx]);
+          currentCardIdx = Math.min(currentCardIdx, Math.max(0, cards.length - 1));
+          tvFocus(cards[currentCardIdx] || null);
+          scrollRowIntoView(currentRowIdx); // FIX 1
+        }
+      }
+      else if (key === 'ArrowRight') {
+        if (focusedEl && focusedEl.classList.contains('back-btn')) return;
+        const cards = getRowCards(rows[currentRowIdx]);
+        if (currentCardIdx < cards.length - 1) {
+          currentCardIdx++;
+          tvFocus(cards[currentCardIdx]);
+          rows[currentRowIdx].scrollBy({ left: 240, behavior: 'smooth' });
+        }
+      }
+      else if (key === 'ArrowLeft') {
+        if (focusedEl && focusedEl.classList.contains('back-btn')) return;
+        if (currentCardIdx > 0) {
+          currentCardIdx--;
+          const cards = getRowCards(rows[currentRowIdx]);
+          tvFocus(cards[currentCardIdx]);
+          rows[currentRowIdx].scrollBy({ left: -240, behavior: 'smooth' });
+        }
+      }
+      else if (key === 'Enter' || code === 13) {
+        if (!focusedEl) return;
+        if (focusedEl.classList.contains('back-btn')) { focusedEl.click(); return; }
+        const card = focusedEl.classList.contains('nf-card')
+          ? focusedEl : focusedEl.closest('.nf-card');
+        if (card) {
+          const btnEscenas = card.querySelector('.nf-btn.secondary');
+          const btnPlay    = card.querySelector('.nf-btn.primary');
+          if (btnEscenas) btnEscenas.click();
+          else if (btnPlay) btnPlay.click();
+        } else {
+          focusedEl.click();
+        }
+      }
+      else if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+        const backBtn = screenCaseros.querySelector('.back-btn');
+        if (focusedEl && focusedEl.classList.contains('back-btn')) {
+          goHome();
+        } else if (backBtn) {
+          tvFocus(backBtn);
+        }
+      }
+    }
+
+  }, true);
+
+  // Restaurar foco tras cerrar modal
+  const origCerrarModalCaseros = window.cerrarModalCaseros;
+  window.cerrarModalCaseros = function(e) {
+    origCerrarModalCaseros && origCerrarModalCaseros(e);
+    setTimeout(() => {
+      const rows  = getDecadaRows();
+      const cards = getRowCards(rows[currentRowIdx] || rows[0]);
+      tvFocus(cards[currentCardIdx] || cards[0] || null);
+    }, 150);
+  };
+
+  // Restaurar foco tras cerrar player
+  const origCerrarPlayer = window.cerrarPlayer;
+  window.cerrarPlayer = function(e) {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    origCerrarPlayer && origCerrarPlayer(e);
+    setTimeout(() => {
+      const rows  = getDecadaRows();
+      const cards = getRowCards(rows[currentRowIdx] || rows[0]);
+      tvFocus(cards[currentCardIdx] || cards[0] || null);
+    }, 300);
+  };
+
+  // Tab décadas al entrar en caseros
+  const origShowSection = window.showSection;
+  window.showSection = function(section) {
+    origShowSection && origShowSection(section);
+    if (section === 'caseros') {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      const td = document.getElementById('tab-decadas');
+      if (td) td.classList.add('active');
+      setTimeout(() => {
+        if (typeof renderDecadas === 'function') renderDecadas();
+        setTimeout(tvSetInitialFocus, 150);
+      }, 50);
+    } else {
+      setTimeout(tvSetInitialFocus, 150);
+    }
+  };
+
+  // Foco inicial tras login
+  const loginObs = new MutationObserver(() => {
+    const ls = document.getElementById('login-screen');
+    if (ls && ls.classList.contains('hidden')) setTimeout(tvSetInitialFocus, 600);
+  });
+  const ls = document.getElementById('login-screen');
+  if (ls) loginObs.observe(ls, { attributes: true, attributeFilter: ['class'] });
+
+  setTimeout(() => {
+    const input = document.querySelector('.login-input');
+    if (input) { tvFocus(input); input.focus(); }
+  }, 300);
+
+  console.log('[TV] Modo TV v1.1 activado');
+})();
+
+</script>
+
+<!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
+
+<!-- ESTILOS ACTUACIONES TV -->
+<style>
+/* Ocultar vista original de sevillanas en TV */
+body.modo-tv #sevillanas-list { display: none !important; }
+
+/* Contenedor de décadas de actuaciones */
+body.modo-tv #tv-sev-decadas {
+  display: block;
+  padding: 0 0 40px;
+}
+
+/* Reutiliza los mismos estilos de decada-section y decada-row de caseros */
+body.modo-tv .sev-decada-section {
+  margin-bottom: 48px;
+  padding: 0 48px;
+}
+body.modo-tv .sev-decada-title {
+  font-size: 22px; color: #ECEDEF;
+  border-bottom: 2px solid rgba(236,237,239,0.15);
+  margin-bottom: 20px; padding-bottom: 10px;
+  font-family: 'Fraunces', Georgia, serif;
+}
+body.modo-tv .sev-decada-row {
+  display: flex; gap: 20px; padding: 20px 12px 20px;
+  overflow-x: auto; overflow-y: visible;
+  scrollbar-width: none;
+}
+body.modo-tv .sev-decada-row::-webkit-scrollbar { display: none; }
+
+/* Tarjeta de año */
+body.modo-tv .sev-year-card {
+  width: 200px; flex-shrink: 0;
+  background: #171A21; border-radius: 12px;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+body.modo-tv .sev-year-card.tv-focused {
+  border-color: #E8A33D !important;
+  box-shadow: 0 0 0 3px rgba(232,163,61,0.5), 0 8px 32px rgba(232,163,61,0.3) !important;
+  transform: translateY(-6px) scale(1.04) !important;
+}
+body.modo-tv .sev-card-header {
+  background: linear-gradient(135deg, #2A2F3A, #2A2F3A);
+  padding: 20px 16px 14px;
+  text-align: center;
+}
+body.modo-tv .sev-card-year {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 32px; font-weight: 700; color: #ECEDEF;
+  line-height: 1;
+}
+body.modo-tv .sev-card-count {
+  font-size: 11px; color: rgba(236,237,239,0.6);
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-top: 4px;
+}
+body.modo-tv .sev-card-preview {
+  padding: 12px 14px;
+}
+body.modo-tv .sev-preview-item {
+  font-size: 12px; color: rgba(236,237,239,0.7);
+  padding: 3px 0; border-bottom: 1px solid rgba(236,237,239,0.06);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.modo-tv .sev-preview-item:last-child { border-bottom: none; }
+
+/* Modal de actuaciones del año */
+body.modo-tv #tv-sev-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 600; display: none;
+  align-items: center; justify-content: center;
+  padding: 40px;
+}
+body.modo-tv #tv-sev-modal.open { display: flex; }
+body.modo-tv .tv-sev-modal-box {
+  background: #171A21; border-radius: 20px;
+  border: 1px solid rgba(236,237,239,0.2);
+  width: 100%; max-width: 760px;
+  max-height: 80vh; display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+body.modo-tv .tv-sev-modal-header {
+  background: #0E1014; border-radius: 20px 20px 0 0;
+  padding: 24px 32px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(236,237,239,0.1);
+}
+body.modo-tv .tv-sev-modal-year {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 28px; color: #ECEDEF;
+}
+body.modo-tv .tv-sev-modal-sub {
+  font-size: 13px; color: rgba(236,237,239,0.4);
+  margin-top: 4px; letter-spacing: 1px;
+}
+body.modo-tv .tv-sev-modal-list {
+  overflow-y: auto; flex: 1;
+  padding: 12px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232,163,61,0.3) transparent;
+}
+body.modo-tv .tv-sev-act-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px; border-radius: 10px;
+  border-bottom: 1px solid rgba(236,237,239,0.06);
+  cursor: pointer; transition: background 0.15s;
+}
+body.modo-tv .tv-sev-act-row:last-child { border-bottom: none; }
+body.modo-tv .tv-sev-act-row.tv-focused {
+  background: rgba(232,163,61,0.2) !important;
+  outline: 2px solid #E8A33D;
+  border-radius: 10px;
+}
+body.modo-tv .tv-sev-act-row.no-video {
+  opacity: 0.4; cursor: default;
+}
+body.modo-tv .tv-sev-fecha {
+  font-size: 12px; color: rgba(236,237,239,0.5);
+  min-width: 90px; font-weight: 300;
+}
+body.modo-tv .tv-sev-nombre {
+  flex: 1; font-size: 15px; font-weight: 600; color: #ECEDEF;
+}
+body.modo-tv .tv-sev-kw {
+  font-size: 11px; color: #E8A33D; font-style: italic;
+}
+body.modo-tv .tv-sev-play {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #E8A33D; color: #1A1206;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+body.modo-tv .tv-sev-act-row.no-video .tv-sev-play {
+  background: rgba(236,237,239,0.1); color: rgba(236,237,239,0.3);
+}
+body.modo-tv #screen-sevillanas {
+  padding: 0;
+  max-width: 100%;
+  background: #0E1014;
+  min-height: 100vh;
+}
+body.modo-tv #screen-sevillanas .back-btn { margin: 24px 48px 0; color: #ECEDEF; font-size: 15px; }
+body.modo-tv #screen-sevillanas .section-title { margin: 8px 48px 4px; color: #ECEDEF; font-size: 28px; }
+body.modo-tv #screen-sevillanas .section-subtitle { margin: 0 48px 24px; }
+</style>
+
+<!-- Modal de actuaciones de un año -->
+<div id="tv-sev-modal">
+  <div class="tv-sev-modal-box">
+    <div class="tv-sev-modal-header">
+      <div class="tv-sev-modal-year" id="tv-sev-modal-year"></div>
+      <div class="tv-sev-modal-sub" id="tv-sev-modal-sub"></div>
+    </div>
+    <div class="tv-sev-modal-list" id="tv-sev-modal-list"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const IS_TV = new URLSearchParams(window.location.search).get('tv') === '1';
+  if (!IS_TV) return;
+
+  // ── Estado navegación actuaciones ──
+  let sevRowIdx  = 0;
+  let sevCardIdx = 0;
+  let sevModalOpen = false;
+  let sevModalIdx  = 0;
+  let sevModalItems = []; // actuaciones del año abierto
+
+  // ── Inyectar contenedor de décadas en la pantalla de sevillanas ──
+  function inyectarContenedorSev() {
+    const screen = document.getElementById('screen-sevillanas');
+    if (!screen || document.getElementById('tv-sev-decadas')) return;
+    const div = document.createElement('div');
+    div.id = 'tv-sev-decadas';
+    screen.appendChild(div);
+  }
+
+  // ── Renderizar vista por décadas de actuaciones ──
+  function renderSevDecadas() {
+    inyectarContenedorSev();
+    const el = document.getElementById('tv-sev-decadas');
+    if (!el) return;
+    if (!window.ACTUACIONES || !ACTUACIONES.length) {
+    el.innerHTML = '<p style="color:#ECEDEF;padding:40px 48px">Cargando actuaciones...</p>';
+     return;
+    }
+
+    // Agrupar por año y luego por década
+    const porAnio = {};
+    ACTUACIONES.forEach(a => {
+      const y = parseInt(String(a.fecha || '').match(/\d{4}/)?.[0]) || 0;
+      if (!y) return;
+      if (!porAnio[y]) porAnio[y] = [];
+      porAnio[y].push(a);
+    });
+
+    const porDecada = {};
+    Object.keys(porAnio).forEach(y => {
+      const dec = Math.floor(y / 10) * 10;
+      if (!porDecada[dec]) porDecada[dec] = [];
+      porDecada[dec].push(parseInt(y));
+    });
+
+    el.innerHTML = Object.keys(porDecada).sort((a,b) => b-a).map(dec => {
+      const años = porDecada[dec].sort((a,b) => b-a);
+      const cards = años.map(y => {
+        const acts = porAnio[y];
+        const preview = acts.slice(0, 3).map(a =>
+          `<div class="sev-preview-item">· ${a.act}</div>`
+        ).join('');
+        const total = acts.length;
+        return `<div class="sev-year-card" onclick="tvAbrirSevModal(${y})" data-sev-year="${y}">
+          <div class="sev-card-header">
+            <div class="sev-card-year">${y}</div>
+            <div class="sev-card-count">${total} actuación${total !== 1 ? 'es' : ''}</div>
+          </div>
+          <div class="sev-card-preview">${preview}</div>
+        </div>`;
+      }).join('');
+
+      return `<div class="sev-decada-section">
+        <div class="sev-decada-title">💃 Años ${dec}</div>
+        <div class="sev-decada-row" id="sev-decada-row-${dec}">${cards}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Abrir modal de un año ──
+  window.tvAbrirSevModal = function(year) {
+    const acts = (ACTUACIONES || []).filter(a => {
+      const y = parseInt(String(a.fecha || '').match(/\d{4}/)?.[0]) || 0;
+      return y === year;
+    });
+    sevModalItems = acts;
+    sevModalIdx   = 0;
+    sevModalOpen  = true;
+
+    document.getElementById('tv-sev-modal-year').textContent = year;
+    document.getElementById('tv-sev-modal-sub').textContent =
+      `${acts.length} actuación${acts.length !== 1 ? 'es' : ''}`;
+
+    document.getElementById('tv-sev-modal-list').innerHTML = acts.map((a, i) => {
+      const hasVideo = !!a.youtube;
+      const fecha = (() => {
+        if (!a.fecha) return '—';
+        const p = String(a.fecha).split('-');
+        if (p.length < 3) return a.fecha;
+        const m = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        return `${parseInt(p[2])} ${m[parseInt(p[1])-1]}`;
+      })();
+      return `<div class="tv-sev-act-row${hasVideo ? '' : ' no-video'}"
+        data-sev-idx="${i}"
+        onclick="${hasVideo ? `tvReproducirSev(${i})` : ''}">
+        <div class="tv-sev-fecha">${fecha}</div>
+        <div class="tv-sev-nombre">${a.act}</div>
+        ${a.kw ? `<div class="tv-sev-kw">✦ ${a.kw}</div>` : ''}
+        <div class="tv-sev-play">${hasVideo ? '▶' : '—'}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('tv-sev-modal').classList.add('open');
+
+    // Foco en primera actuación con vídeo
+    setTimeout(() => {
+      const rows = getSevModalRows();
+      const firstVideo = rows.find(r => !r.classList.contains('no-video'));
+      if (firstVideo) {
+        sevModalIdx = parseInt(firstVideo.dataset.sevIdx);
+        tvFocusSev(firstVideo);
+      } else if (rows.length) {
+        tvFocusSev(rows[0]);
+      }
+    }, 80);
+  };
+
+  function tvReproducirSev(idx) {
+    const a = sevModalItems[idx];
+    if (!a || !a.youtube) return;
+    // Cerrar modal antes de abrir player
+    document.getElementById('tv-sev-modal').classList.remove('open');
+    sevModalOpen = false;
+    const link = a.youtube + (a.min > 0 ? (a.youtube.includes('?') ? '&' : '?') + `t=${a.min}s` : '');
+    abrirPlayer(link, a.act, a.fecha || '', a.min || 0);
+  }
+
+  function getSevModalRows() {
+    return Array.from(document.querySelectorAll('#tv-sev-modal-list .tv-sev-act-row'));
+  }
+
+  function getSevRows() {
+    return Array.from(document.querySelectorAll('.sev-decada-row'));
+  }
+
+  function getSevCards(row) {
+    return Array.from(row.querySelectorAll('.sev-year-card'));
+  }
+
+  // Foco en elementos de actuaciones (reutiliza el sistema global de foco)
+  // Necesitamos acceder a tvFocus — lo buscamos en el scope global
+  function tvFocusSev(el) {
+    // Quitar foco de cualquier elemento previo
+    document.querySelectorAll('.tv-focused').forEach(e => e.classList.remove('tv-focused'));
+    if (!el) return;
+    el.classList.add('tv-focused');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
+
+  function cerrarSevModal() {
+    document.getElementById('tv-sev-modal').classList.remove('open');
+    sevModalOpen = false;
+    // Restaurar foco en la card del año
+    setTimeout(() => {
+      const rows  = getSevRows();
+      const row   = rows[sevRowIdx] || rows[0];
+      const cards = row ? getSevCards(row) : [];
+      const card  = cards[sevCardIdx] || cards[0];
+      if (card) tvFocusSev(card);
+    }, 150);
+  }
+
+// Observar cuando screen-sevillanas se hace active
+const sevScreen = document.getElementById('screen-sevillanas');
+if (sevScreen) {
+  const sevObs = new MutationObserver(() => {
+    if (sevScreen.classList.contains('active')) {
+      function intentar(veces) {
+        if (window.ACTUACIONES && ACTUACIONES.length) {
+          renderSevDecadas();
+          setTimeout(() => {
+            sevRowIdx = 0; sevCardIdx = 0;
+            const rows = getSevRows();
+            if (rows.length) {
+              const cards = getSevCards(rows[0]);
+              if (cards.length) tvFocusSev(cards[0]);
+            }
+          }, 150);
+        } else if (veces > 0) {
+          setTimeout(() => intentar(veces - 1), 300);
+        }
+      }
+      intentar(20);
+    }
+  });
+  sevObs.observe(sevScreen, { attributes: true, attributeFilter: ['class'] });
+}
+
+  // ── Teclado para actuaciones ──
+  document.addEventListener('keydown', function(e) {
+    const IS_SEV = document.getElementById('screen-sevillanas')?.classList.contains('active');
+    if (!IS_SEV) return;
+
+    const key  = e.key;
+    const code = e.keyCode;
+
+   // Player abierto
+    const playerOverlay = document.getElementById('player-overlay');
+    if (playerOverlay && playerOverlay.classList.contains('open')) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+        // Detener vídeo YouTube via postMessage antes de cerrar
+        const iframe = document.getElementById('player-iframe');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        }
+        cerrarPlayer();
+        return;
+      }
+      // Controlar YouTube via postMessage (no necesita foco en iframe)
+      const iframe = document.getElementById('player-iframe');
+      if (iframe && iframe.contentWindow) {
+        if (key === 'Enter' || code === 13) {
+          // Toggle play/pause
+          iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        }
+      }
+      return;
+    }
+
+    // ── Modal año abierto ──
+    if (sevModalOpen) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rows = getSevModalRows();
+      let idx = rows.findIndex(r => r.classList.contains('tv-focused'));
+      if (idx === -1) idx = 0;
+
+      if (key === 'ArrowDown') {
+        idx = Math.min(idx + 1, rows.length - 1);
+        sevModalIdx = parseInt(rows[idx]?.dataset.sevIdx ?? idx);
+        tvFocusSev(rows[idx]);
+        rows[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      else if (key === 'ArrowUp') {
+        idx = Math.max(idx - 1, 0);
+        sevModalIdx = parseInt(rows[idx]?.dataset.sevIdx ?? idx);
+        tvFocusSev(rows[idx]);
+        rows[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      else if (key === 'Enter' || code === 13) {
+        const row = rows[idx];
+        if (row && !row.classList.contains('no-video')) {
+          tvReproducirSev(parseInt(row.dataset.sevIdx));
+        }
+      }
+      else if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+        cerrarSevModal();
+      }
+      return;
+    }
+
+    // ── Navegación por filas de décadas ──
+    e.preventDefault();
+    const rows = getSevRows();
+    if (!rows.length) return;
+
+    if (key === 'ArrowUp') {
+      if (sevRowIdx > 0) {
+        sevRowIdx--;
+        const cards = getSevCards(rows[sevRowIdx]);
+        sevCardIdx = Math.min(sevCardIdx, Math.max(0, cards.length - 1));
+        tvFocusSev(cards[sevCardIdx] || null);
+        const section = rows[sevRowIdx].closest('.sev-decada-section') || rows[sevRowIdx];
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        const backBtn = document.getElementById('screen-sevillanas')?.querySelector('.back-btn');
+        if (backBtn) tvFocusSev(backBtn);
+      }
+    }
+    else if (key === 'ArrowDown') {
+      const focused = document.querySelector('.tv-focused');
+      if (focused && focused.classList.contains('back-btn')) {
+        sevRowIdx = 0; sevCardIdx = 0;
+        const cards = getSevCards(rows[0]);
+        if (cards.length) tvFocusSev(cards[0]);
+        return;
+      }
+      if (sevRowIdx < rows.length - 1) {
+        sevRowIdx++;
+        const cards = getSevCards(rows[sevRowIdx]);
+        sevCardIdx = Math.min(sevCardIdx, Math.max(0, cards.length - 1));
+        tvFocusSev(cards[sevCardIdx] || null);
+        const section = rows[sevRowIdx].closest('.sev-decada-section') || rows[sevRowIdx];
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+    else if (key === 'ArrowRight') {
+      const focused = document.querySelector('.tv-focused');
+      if (focused && focused.classList.contains('back-btn')) return;
+      const cards = getSevCards(rows[sevRowIdx]);
+      if (sevCardIdx < cards.length - 1) {
+        sevCardIdx++;
+        tvFocusSev(cards[sevCardIdx]);
+        rows[sevRowIdx].scrollBy({ left: 220, behavior: 'smooth' });
+      }
+    }
+    else if (key === 'ArrowLeft') {
+      const focused = document.querySelector('.tv-focused');
+      if (focused && focused.classList.contains('back-btn')) return;
+      if (sevCardIdx > 0) {
+        sevCardIdx--;
+        const cards = getSevCards(rows[sevRowIdx]);
+        tvFocusSev(cards[sevCardIdx]);
+        rows[sevRowIdx].scrollBy({ left: -220, behavior: 'smooth' });
+      }
+    }
+    else if (key === 'Enter' || code === 13) {
+      const focused = document.querySelector('.tv-focused');
+      if (!focused) return;
+      if (focused.classList.contains('back-btn')) { focused.click(); return; }
+      if (focused.classList.contains('sev-year-card')) { focused.click(); return; }
+    }
+    else if (key === 'Escape' || key === 'GoBack' || code === 461 || code === 8) {
+      const screen = document.getElementById('screen-sevillanas');
+      const backBtn = screen?.querySelector('.back-btn');
+      const focused = document.querySelector('.tv-focused');
+      if (focused && focused.classList.contains('back-btn')) {
+        goHome();
+      } else if (backBtn) {
+        tvFocusSev(backBtn);
+      }
+    }
+
+  }, true);
+
+})();
+</script>
+
+</body>
+</body>
+</html>
