@@ -93,6 +93,14 @@ body.tema-claro .site-header { background:color-mix(in srgb, var(--bg) 94%, tran
   .header-title { font-size:21px; }
 }
 
+/* ─── DESPLAZAMIENTO HORIZONTAL ───
+   El "imán" de las tarjetas (scroll-snap) hacía que el desplazamiento táctil se parase en
+   seco al llegar al borde de una tarjeta. Sin él, el dedo lanza la fila y sigue con inercia.
+   (El ratón tiene su propia inercia, ver arrastrarConInercia() en js/caseros.js.) */
+body:not(.modo-tv) .decada-row { scroll-snap-type:none; overscroll-behavior-x:contain; scroll-behavior:auto; }
+body:not(.modo-tv) .decada-row .nf-card { scroll-snap-align:none; }
+body:not(.modo-tv) :is(.decada-row, .recent-row, .tl-scroll) { -webkit-overflow-scrolling:touch; }
+
 /* ─── INICIO: PORTADA CON EL RECUERDO DEL DÍA ─── */
 #home-screen { padding-top:0; }
 .home-hello { font-size:14px; color:var(--muted); font-weight:400; padding-top:32px; }
