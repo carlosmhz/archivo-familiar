@@ -26,7 +26,7 @@
 
 **Despliegue:** con la herramienta **GIT de hPanel** (hPanel → Avanzado → GIT), conectada a `main` y a la carpeta `public_html/videos`. Según Carlos (1 nov 2026), GitHub está sincronizado con Hostinger y el despliegue es **automático** al fusionar en `main`. Si tras una fusión la web no cambia en unos minutos, hay que pulsar **Implementar** en hPanel; el agente se lo recuerda en ese caso. **Sin paso de compilación:** HTML, CSS y JavaScript nativo en módulos ES, más PHP. Lo que está en la rama es lo que se sirve.
 
-**Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101g`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
+**Caché (importante en cada despliegue):** `index.html` carga el CSS y el JS con `?v=AAAAMMDDx` (por ejemplo `css/sala.css?v=20261101i`). **Cada cambio en `css/` o `js/` debe cambiar ese valor en todas las etiquetas de `index.html`**; si no, el navegador puede mezclar archivos viejos y nuevos (pasó el 1 nov 2026: la página tenía el CSS nuevo con el `player.js` viejo). Además, `sw.js` (v6) pide los archivos propios con `cache: 'no-cache'`, que pregunta al servidor si hay versión nueva antes de usar la guardada.
 
 **Nunca entra en el repositorio** (regla fijada en `.gitignore`):
 - `claves.php` y `secret.key`;
@@ -51,7 +51,7 @@
 ```
 index.html, admin.html          solo maquetación
 css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), tv.css, tv-actuaciones.css, admin.css
-js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, ui.js   (orden de carga en index.html)
+js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, transiciones.js (0.4), ui.js   (orden de carga en index.html)
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
@@ -83,6 +83,16 @@ Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (
 - Ritmo del efecto de vuelta: el reproductor desaparece en 0,16 s; la tarjeta se queda un instante ampliada (escala 1,14) con el velo y el ▶, y en algo más de un segundo vuelve a su tamaño.
 - **Desplazamiento horizontal con inercia** (1 nov 2026): se quitó el `scroll-snap` de las filas de décadas (`sala.css`), que frenaba en seco el desplazamiento táctil; en el móvil manda la inercia nativa. Con ratón, `arrastrarConInercia()` (`caseros.js`) arrastra y, al soltar, sigue con la velocidad que llevaba (`FRICCION = 0.94`; más cerca de 1, más inercia), y el clic que sigue a un arrastre no abre el vídeo. Se usa en las filas de décadas y en la línea de tiempo.
 - Colores de la barra del sistema: `#12110E` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
+
+## 0.4 Transiciones (en `main` desde el 1 nov 2026; Carlos eligió las ideas 1 + 2 + 3 con la 5 de acabado)
+
+Todo vive en `js/transiciones.js` (cargado justo antes de `ui.js`) y al final de `css/sala.css`. Es decoración sobre la navegación de siempre: envuelve `showSection()` y `goHome()`, y si el sistema pide reducir animaciones, o en la tele (`?tv=1`), navega sin animar.
+- **1. Deslizamiento lateral (móvil):** la pantalla nueva entra desde la derecha y la anterior se retira un 24 % hacia la izquierda, oscureciéndose. Con Atrás, al revés. La dirección sale del orden del menú (Inicio → Actuaciones → Caseros). En pantallas anchas es un fundido con un pequeño ascenso. La pantalla que se va se anima como una **copia** (`.fantasma-pantalla`, fija y sin eventos) hecha antes de cambiar; la copia de una sección deja de ser `.content-screen` (clase `.fantasma-contenido`), porque `navegacion.js` quita `active` a todas las `.content-screen`.
+- **Vuelve donde estaba:** se guarda el scroll de cada pantalla al irse y se restaura al volver. Para que el navegador no lo pise al cerrar entradas del historial, `history.scrollRestoration = 'manual'`.
+- **2. La tarjeta se convierte en la pantalla:** cada sección tiene ahora una cabecera con foto (`.seccion-cab`, `#cab-caseros` y `#cab-sev`, con el mismo mosaico que su tarjeta: `renderMosaicos()` pinta ambos). Al pulsar una colección del inicio, una copia de la tarjeta vuela y se transforma en esa cabecera; al volver al inicio (por Atrás o por el menú), la cabecera se encoge hasta su tarjeta. En la tele la cabecera no existe (`display:contents`).
+- **3. Hojas desde abajo (móvil):** el reproductor y la ventana de escenas suben desde el borde inferior, con esquinas redondeadas arriba y un asa, y se cierran arrastrando la cabecera hacia abajo (`hojaArrastrable()`): más de 110 px o un gesto rápido cierra; menos, vuelve a su sitio. Solo con el dedo, nunca desde los botones de la cabecera. En escritorio el reproductor sigue acercándose con zoom.
+- **5. Cascada:** al abrir una pantalla, sus tarjetas y filas entran una a una (`.sala-casc`, retraso en `--d`). También la primera vez que aparece el inicio.
+- Para grabar demostraciones a cámara lenta: `window.__transK = 3` en la consola multiplica las duraciones de `transiciones.js`.
 
 ## 0.3 Comentarios y "me gusta" (en `main` desde el 1 nov 2026, autor de commits: "Agente comentarios")
 
