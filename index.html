@@ -12,9 +12,9 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261101g">
-<link rel="stylesheet" href="css/sala.css?v=20261101g">
-<link rel="stylesheet" href="css/comentarios.css?v=20261101g">
+<link rel="stylesheet" href="css/app.css?v=20261101i">
+<link rel="stylesheet" href="css/sala.css?v=20261101i">
+<link rel="stylesheet" href="css/comentarios.css?v=20261101i">
 </head>
 <body>
 
@@ -140,8 +140,10 @@
   <!-- SEVILLANAS -->
   <div class="content-screen" id="screen-sevillanas">
     <button class="back-btn" onclick="goHome()"><svg class="ico"><use href="#i-back"/></svg> Inicio</button>
-    <h2 class="section-title">Actuaciones</h2>
-    <p class="section-subtitle">Sevillanas y flamenco</p>
+    <div class="seccion-cab" id="cab-sev">
+      <span class="card-mos" id="cabmos-sev" aria-hidden="true"></span>
+      <div class="cab-txt"><h2 class="section-title">Actuaciones</h2><p class="section-subtitle">Sevillanas y flamenco</p></div>
+    </div>
     <div class="year-chips" id="year-chips"></div>
     <div id="sevillanas-list"><div class="loading">Cargando actuaciones...</div></div>
   </div>
@@ -149,8 +151,10 @@
   <!-- CASEROS -->
   <div class="content-screen" id="screen-caseros">
     <button class="back-btn" onclick="goHome()"><svg class="ico"><use href="#i-back"/></svg> Inicio</button>
-    <h2 class="section-title">Vídeos caseros</h2>
-    <p class="section-subtitle">Recuerdos familiares</p>
+    <div class="seccion-cab" id="cab-caseros">
+      <span class="card-mos" id="cabmos-caseros" aria-hidden="true"></span>
+      <div class="cab-txt"><h2 class="section-title">Vídeos caseros</h2><p class="section-subtitle">Recuerdos familiares</p></div>
+    </div>
     <div class="subcategory-tabs">
       <button class="tab-btn active" onclick="switchTab('decadas',this)">Por décadas</button>
       <button class="tab-btn" onclick="switchTab('anos',this)">Línea de tiempo</button>
@@ -197,6 +201,7 @@
   <div class="player-overlay" id="player-overlay" onclick="cerrarPlayer(event)">
     <div class="player-box">
       <div class="player-header">
+        <span class="player-grip" aria-hidden="true"></span>
         <div style="min-width:0">
           <div class="player-title" id="player-titulo"></div>
           <div class="player-fecha" id="player-fecha"></div>
@@ -242,14 +247,15 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/estado.js?v=20261101g"></script>
-<script src="js/auth.js?v=20261101g"></script>
-<script src="js/inicio.js?v=20261101g"></script>
-<script src="js/navegacion.js?v=20261101g"></script>
-<script src="js/caseros.js?v=20261101g"></script>
-<script src="js/player.js?v=20261101g"></script>
-<script src="js/comentarios.js?v=20261101g"></script>
-<script src="js/ui.js?v=20261101g"></script>
+<script src="js/estado.js?v=20261101i"></script>
+<script src="js/auth.js?v=20261101i"></script>
+<script src="js/inicio.js?v=20261101i"></script>
+<script src="js/navegacion.js?v=20261101i"></script>
+<script src="js/caseros.js?v=20261101i"></script>
+<script src="js/player.js?v=20261101i"></script>
+<script src="js/comentarios.js?v=20261101i"></script>
+<script src="js/transiciones.js?v=20261101i"></script>
+<script src="js/ui.js?v=20261101i"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -264,7 +270,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css?v=20261101g">
+<link rel="stylesheet" href="css/tv.css?v=20261101i">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -273,12 +279,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js?v=20261101g"></script>
+<script src="js/tv.js?v=20261101i"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101g">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261101i">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -291,7 +297,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js?v=20261101g"></script>
+<script src="js/tv-actuaciones.js?v=20261101i"></script>
 
 </body>
 </html>

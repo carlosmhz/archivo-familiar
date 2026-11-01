@@ -79,8 +79,9 @@ function pintarMosaico(id, urls) {
 function renderMosaicos() {
   const cas = CASEROS.map(c => c.miniatura).filter(Boolean);
   const act = ACTUACIONES.map(a => idYoutube(a.youtube)).filter(Boolean).map(id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
-  pintarMosaico('mos-caseros', escogerDelDia(cas, 5, 'mc'));
-  pintarMosaico('mos-sev', escogerDelDia(act, 3, 'ma'));
+  const fc = escogerDelDia(cas, 5, 'mc'), fa = escogerDelDia(act, 3, 'ma');
+  pintarMosaico('mos-caseros', fc);   pintarMosaico('cabmos-caseros', fc);   // misma foto en la tarjeta y en la cabecera
+  pintarMosaico('mos-sev', fa);       pintarMosaico('cabmos-sev', fa);
 }
 
 function renderInicioExtras() {

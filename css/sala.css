@@ -463,3 +463,66 @@ body:not(.modo-tv) .sala-vuelta .nf-btn.primary:not([disabled])::after { animati
 
 /* ─── MODO TV: hereda colores y fuentes; su maquetación sigue en tv.css ─── */
 body.modo-tv .home-hero { display:contents; }
+
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TRANSICIONES (js/transiciones.js)
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* Cabecera con foto de cada sección: la misma foto que su tarjeta del inicio, para que la tarjeta
+   pueda "convertirse" en ella. */
+body:not(.modo-tv) .seccion-cab {
+  --col:#D4652F;
+  position:relative; isolation:isolate; overflow:hidden; display:flex; align-items:flex-end;
+  min-height:170px; padding:20px 22px; margin-bottom:22px; color:#F4EFE6;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E);
+  border:1px solid color-mix(in srgb, var(--col) 55%, transparent);
+}
+body:not(.modo-tv) #cab-caseros { --col:#9DB5A4; }
+body:not(.modo-tv) .seccion-cab::before {
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:linear-gradient(to top, rgba(18,17,14,.98) 10%, rgba(18,17,14,.84) 58%, rgba(18,17,14,.62) 100%);
+}
+body:not(.modo-tv) .cab-txt .section-title { margin:0; font-size:40px; color:#F4EFE6; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+body:not(.modo-tv) .cab-txt .section-subtitle { margin:6px 0 0; color:#D3C9BB; text-shadow:0 1px 8px rgba(0,0,0,.7); }
+/* En la tele la cabecera no existe: sus textos quedan como siempre */
+body.modo-tv .seccion-cab, body.modo-tv .cab-txt { display:contents; }
+body.modo-tv .seccion-cab::before { content:none; }
+@media (max-width:760px) {
+  body:not(.modo-tv) .seccion-cab { min-height:150px; padding:18px 20px; margin-bottom:18px; }
+  body:not(.modo-tv) .cab-txt .section-title { font-size:34px; }
+}
+
+/* La pantalla ya no se anima sola con el fundido antiguo: lo hace transiciones.js */
+body:not(.modo-tv) .content-screen.active { animation:none; }
+.fantasma-pantalla { will-change:transform, opacity; }
+.fantasma-contenido { display:block; padding:32px; }
+@media (max-width:760px) { .fantasma-contenido { padding:20px 16px; } }
+
+/* Cascada: las tarjetas y filas de una pantalla recién abierta entran una a una */
+@keyframes sala-casc { from { opacity:0; transform:translateY(18px); } }
+.sala-casc { animation:sala-casc 0.55s var(--ease-sala) backwards; animation-delay:var(--d, 0ms); }
+
+/* Hojas desde abajo (móvil): el reproductor y la ventana de escenas suben desde el borde
+   inferior y se cierran arrastrando la cabecera hacia abajo. */
+.player-grip { display:none; }
+@media (max-width:760px) {
+  body:not(.modo-tv) .player-overlay { padding-top:26px; transition:opacity 0.32s ease 0.06s, visibility 0s linear 0.5s; }
+  body:not(.modo-tv) .player-overlay.open { transition:opacity 0.3s ease, visibility 0s; }
+  body:not(.modo-tv) .player-box {
+    border-radius:18px 18px 0 0; box-shadow:0 -12px 40px rgba(0,0,0,.55);
+    transform:translateY(100%); opacity:1; transition:transform 0.42s var(--ease-sala);
+  }
+  body:not(.modo-tv) .player-overlay.open .player-box { transform:none; transition:transform 0.5s var(--ease-sala); }
+  body:not(.modo-tv) .player-header { position:relative; padding-top:18px; touch-action:none; }
+  body:not(.modo-tv) .player-grip { display:block; position:absolute; top:7px; left:50%; width:38px; height:4px; margin-left:-19px; border-radius:2px; background:var(--surface-3); }
+  /* Ventana de escenas */
+  body:not(.modo-tv) .caseros-modal-box { border-radius:18px 18px 0 0; transform:translateY(100%); transition:transform 0.42s var(--ease-sala); box-shadow:0 -12px 40px rgba(0,0,0,.55); }
+  body:not(.modo-tv) .caseros-modal-overlay.open .caseros-modal-box { transform:none; transition:transform 0.5s var(--ease-sala); }
+  body:not(.modo-tv) .caseros-modal-header { position:relative; padding-top:22px; touch-action:none; }
+  body:not(.modo-tv) .caseros-modal-header::before { content:''; position:absolute; top:7px; left:50%; width:38px; height:4px; margin-left:-19px; border-radius:2px; background:var(--surface-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sala-casc { animation:none; }
+  body:not(.modo-tv) .player-box, body:not(.modo-tv) .caseros-modal-box { transition:none !important; }
+}
