@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `develop`, apartado 0.3).
+> Última actualización: 1 de noviembre de 2026 (fases 1 y 2 desplegadas; datos migrados a `archivo-datos/`; APK y Android Auto descartados; interfaz "sala" en `main`; comentarios y "me gusta" en `main`, apartado 0.3).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -84,7 +84,7 @@ Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (
 - **Desplazamiento horizontal con inercia** (1 nov 2026): se quitó el `scroll-snap` de las filas de décadas (`sala.css`), que frenaba en seco el desplazamiento táctil; en el móvil manda la inercia nativa. Con ratón, `arrastrarConInercia()` (`caseros.js`) arrastra y, al soltar, sigue con la velocidad que llevaba (`FRICCION = 0.94`; más cerca de 1, más inercia), y el clic que sigue a un arrastre no abre el vídeo. Se usa en las filas de décadas y en la línea de tiempo.
 - Colores de la barra del sistema: `#12110E` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
 
-## 0.3 Comentarios y "me gusta" (rama `feature/comentarios`, 1 nov 2026, autor de commits: "Agente comentarios")
+## 0.3 Comentarios y "me gusta" (en `main` desde el 1 nov 2026, autor de commits: "Agente comentarios")
 
 Quien ve un vídeo casero puede comentarlo y darle "me gusta": la familia (`todo`, `caseros`, `admin`) y los invitados con PIN (`compartir`, solo en su vídeo). Decisiones de Carlos (1 nov 2026): todos los que acceden a un vídeo ven todos sus comentarios (aunque vengan de enlaces distintos); la familia también comenta; los comentarios salen al momento, sin aprobación; el comentario es del vídeo entero, con una marca si se escribió viendo una escena.
 - **Datos:** SQLite en `<datos>/datos/comentarios.sqlite` (en producción `archivo-datos/datos/`, fuera de la web y del repositorio; `*.sqlite` está en `.gitignore`). Se crea sola con su esquema la primera vez. Necesita `pdo_sqlite` en el PHP del servidor. Tablas: `dispositivos (id, nombre, creado, visto)`, `comentarios (id, casero_id, dispositivo, texto, escena_idx, escena_titulo, escena_t, rol, ip, creado)` y `megusta (casero_id, dispositivo, creado)` con clave única por vídeo y dispositivo. `ip` es una huella HMAC, no la IP.
@@ -400,7 +400,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - **Tarea programada de HLS:** sin prisa; no hay vídeos nuevos ni previsión de ellos.
 
 **Pendiente:**
-0a. **Comentarios (apartado 0.3):** en `develop`, pendiente de que Carlos confirme `pdo_sqlite` en el servidor (`php -m | grep -i sqlite`) y dé el visto bueno para pasarlo a `main`. Tras desplegar: comprobar que se crea `archivo-datos/datos/comentarios.sqlite` al abrir un vídeo y que `videos/lib/comentarios.php` da 403.
+0a. **Comentarios (apartado 0.3):** pasado a `main` el 1 nov 2026 (Carlos confirmó que Hostinger tiene SQLite). Pendiente de que Carlos compruebe que se crea `archivo-datos/datos/comentarios.sqlite` al abrir un vídeo y que `videos/lib/comentarios.php` da 403.
 0b. **Script HLS** (baja prioridad, con ordenador; no hay vídeos nuevos): cambiar o borrar la tarea programada de hPanel que apunta a `~/hls_convert.sh` (ver apartado 8) y comparar ese original con `scripts/hls_convert.sh` del repositorio, que es una reconstrucción. Solo importa si algún día se añaden vídeos.
 0c. Opcional: borrar `datos/.htaccess`, `hls/.htaccess` y `caseros/.htaccess` del repositorio (protegían la disposición antigua; ya no hay datos junto al código). `lib/config.php` sigue admitiendo la disposición antigua, sin coste.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
