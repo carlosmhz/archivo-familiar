@@ -51,12 +51,21 @@ css/   app.css, tv.css, tv-actuaciones.css, admin.css
 js/    estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, ui.js   (orden de carga en index.html)
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js
 vendor/hls.min.js               hls.js 1.5.17
-api.php, auth.php, stream.php, sw.js (cache v4), manifest.json, icon-*.png, scripts/hls_convert.sh
+api.php, stream.php (entradas finas), lib/ (config, auth, datos, sesion, acciones/), sw.js (cache v4), manifest.json, icon-*.png, apple-touch-icon.png, scripts/, docs/
 ```
 
 El script inline que aplica el tema claro antes de pintar se queda en `index.html` a propósito (evita el parpadeo).
 
-**Fases siguientes (propuesta, por validar):** pasar los scripts a módulos ES y quitar los `onclick`, mover el PHP a `api/` y `lib/`, y separar código y datos. Objetivo final:
+**Fase 2 — PHP y datos (hecha, fusionada el 1 nov 2026; falta desplegar):** el PHP se parte en `lib/` y los datos se separan del código.
+- `api.php` y `stream.php` siguen en la raíz como punto de entrada (**las URL no cambian**) y solo hacen `require` de `lib/api.php` y `lib/stream.php`.
+- `lib/config.php`: rutas. Los datos (`datos/`, `hls/`, `caseros/`, `miniaturas/`) se buscan en `privado/config.php` (`'datos'`), si no en `../archivo-datos/` y, si no, junto al código (disposición antigua). Así el código funciona antes y después de migrar los datos.
+- `lib/auth.php` (tokens, claves, freno), `lib/datos.php` (JSON, ids, miniaturas), `lib/sesion.php` (claves, roles, sesión) y `lib/acciones/*.php` (una por grupo: login, actuaciones, caseros, miniaturas, otp, compartir, video).
+- Las miniaturas ya no se piden por URL directa: la API devuelve `stream.php?img=<ruta>` (solo `miniaturas/` y `caseros/miniaturas/`, sin `..`). Si la miniatura de un vídeo en `caseros.json` es una ruta relativa de esas carpetas, la API la convierte; las URL absolutas no se tocan.
+- `.htaccess` en la raíz (bloquea `docs/`, `scripts/`, `lib/`, `.git` y `*.md`/`*.sh`) y `Require all denied` en `lib/` y `scripts/`. `CLAUDE.md` contiene datos del servidor: no debe poder leerse por web.
+- `scripts/hls_convert.sh` busca la carpeta de datos (`ARCHIVO_DATOS`, `../archivo-datos`, o la carpeta antigua).
+- Despliegue paso a paso: `docs/DESPLIEGUE.md`.
+
+**Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
 Hoy todo el CSS y el JavaScript de la app van dentro de `index.html`, que tiene unas 2 300 líneas y unos 118 KB, y `admin.html` está igual. El objetivo es separarlos por responsabilidades sin añadir compilación.
 
@@ -69,15 +78,14 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 ├── css/        app.css, tv.css, tv-actuaciones.css, admin.css  [hecho]
 ├── js/         de momento scripts clásicos por secciones [hecho]; pasar a módulos ES en la fase 2
 ├── vendor/     hls.min.js (versión fija 1.5.17)  [hecho]
-├── api/        index.php (rutas) o un archivo por grupo de acciones
-├── stream.php
-├── lib/        auth.php, datos.php, config.php (rutas, sin secretos)
+├── api.php, stream.php           entradas públicas finas (las URL no cambian)  [hecho]
+├── lib/        config.php, auth.php, datos.php, sesion.php, api.php, stream.php, acciones/*.php  [hecho]
 ├── sw.js, manifest.json, icons/   (hoy icon-192.png e icon-512.png en la raíz)
 ├── scripts/    hls_convert.sh y otras utilidades de servidor  
 └── docs/       documentación adicional
 ```
 
-**Separar el código de los datos** es imprescindible para desplegar con GIT. El despliegue no debe tocar los 25 GB de HLS ni los JSON vivos. La propuesta es esta:
+**Separar el código de los datos** es imprescindible para desplegar con GIT (código hecho; falta mover los datos en el servidor, ver `docs/DESPLIEGUE.md`). El despliegue no debe tocar los 25 GB de HLS ni los JSON vivos. La propuesta es esta:
 
 ```
 ~/domains/app.mpi-sala.es/
@@ -86,7 +94,7 @@ archivo-familiar/                 ← raíz del repositorio = carpeta que despli
 └── public_html/videos/   ← solo el código desplegado desde main
 ```
 
-Rutas en `lib/config.php`, calculadas de forma relativa. Las miniaturas, que hoy se piden por URL pública, tendrían que servirse también por PHP o desde una ruta pública separada.
+Rutas en `lib/config.php`, calculadas de forma relativa. Las miniaturas se sirven por `stream.php?img=` (hecho).
 
 **Sin entorno de pruebas:** Carlos lo descartó. Se prueba en local con datos de prueba.
 
@@ -150,7 +158,7 @@ Clientes:
     ├── index.html                ← web principal (login, catálogo, reproductor)
     ├── admin.html                ← panel de administración
     ├── api.php                   ← API JSON (sin contraseñas dentro)
-    ├── auth.php                  ← tokens firmados, claves, nombres válidos, freno anti fuerza bruta
+    ├── auth.php                  ← tokens firmados, claves, nombres válidos, freno anti fuerza bruta (en el repositorio vive en lib/auth.php)
     ├── stream.php                ← sirve HLS/MP4 solo con token firmado
     ├── sw.js                     ← service worker (cache archivo-familiar-v4 desde la fase 1)
     ├── hls.min.js                ← hls.js 1.5.17 alojado localmente (413 952 bytes)
@@ -247,6 +255,8 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 - `seg_NNNN.ts`: un fragmento.
 - `mp4`: el original, con soporte de rangos HTTP.
 
+`stream.php?img=<ruta>`: miniaturas públicas (sin token), solo de `miniaturas/` y `caseros/miniaturas/`.
+
 Valida el nombre con la expresión `^[\p{L}\p{N}._ \-]+$`, sin `..` y sin punto inicial. Sin token válido responde con un 403. Lee los archivos desde disco, así que los `.htaccess` no le afectan.
 
 ---
@@ -335,8 +345,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 **Primero, el repositorio:**
 1. Carlos sube a `main` el código actual de producción (solo código).
 2. El agente crea `develop`, añade `CLAUDE.md`, `.gitignore` y `README.md`, y prepara la propuesta de reestructuración en ramas `feature/*`.
-3. Configurar hPanel → GIT para `main` (no habrá entorno de pruebas).
-4. Hay que migrar los datos a `archivo-datos/` fuera de `public_html`.
+3. Configurar hPanel → GIT para `main` y migrar los datos a `archivo-datos/` (ver `docs/DESPLIEGUE.md`).
 
 **Desplegado y confirmado:**
 - HLS con hls.js en local.
@@ -350,6 +359,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Problema que esto resuelve: Carlos informó el 31 de octubre de 2026 de que "cada vez que se actualiza la página se cierra la sesión". Causa probable: el WebView de la app sin almacenamiento local. Otra posibilidad: que entre con la contraseña de admin, cuyo panel no recuerda la sesión.
 
 **Pendiente:**
+0. **Desplegar la fase 2** siguiendo `docs/DESPLIEGUE.md` (conectar hPanel → GIT y migrar los datos a `archivo-datos/`). Hasta entonces el servidor sigue con el código antiguo.
 1. `grep ERROR ~/hls.log` debe salir vacío, y debe haber 17 carpetas en `hls/` sin ninguna `.tmp`.
 2. **Borrar la tarea programada** de hPanel cuando la conversión esté confirmada.
 3. Probar varios vídeos desde la app, entre ellos `comunion-javier-carlos` con `#t=1755`.
