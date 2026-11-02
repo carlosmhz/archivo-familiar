@@ -9,7 +9,7 @@ if ($method === 'GET' && $action === 'video') {
     if ($s['r'] === 'compartir') {
         $ok = false;
         foreach (leerJSON(FILE_CASEROS) as $c) {
-            if (($c['id'] ?? 0) === ($s['c'] ?? -1) && nombreVideo($c['youtube'] ?? '') === $nombre) $ok = true;
+            if (puedeVerCasero($s, $c['id'] ?? 0) && nombreVideo($c['youtube'] ?? '') === $nombre) $ok = true;
         }
         if (!$ok) responder(false, null, 'Sin acceso');
     }

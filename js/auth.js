@@ -9,6 +9,16 @@ async function checkLogin() {
     TOKEN = d.data.token || '';
     // Admin → redirigir a admin.html
     if (ROL === 'admin') { window.location.href = 'admin.html?pass=' + encodeURIComponent(p); return; }
+    // Selección compartida → pantalla con sus fragmentos
+    if (ROL === 'compartir-lista') {
+      document.body.classList.add('rol-compartir');
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('visible');
+      setTimeout(() => document.getElementById('login-screen').style.display='none', 700);
+      await cargarDatos();
+      iniciarListaCompartida(d.data.lista || { items: [] });
+      return;
+    }
     // Compartir → ir directo al vídeo/escena
     if (ROL.startsWith('compartir:')) {
       document.body.classList.add('rol-compartir');
@@ -100,6 +110,7 @@ function aplicarRol() {
   if (cardSev) cardSev.style.display = ROL === 'caseros' ? 'none' : '';
   if (cardCas) cardCas.style.display = ROL === 'actuaciones' ? 'none' : '';
   const solo = ROL === 'caseros' ? 'caseros' : ROL === 'actuaciones' ? 'sevillanas' : null;
+  if (typeof selPintarBarra === 'function') selPintarBarra();   // barra de la selección (js/seleccion.js)
   if (solo && document.body.classList.contains('modo-tv')) { showSection(solo); return; }
   goHome();
 }

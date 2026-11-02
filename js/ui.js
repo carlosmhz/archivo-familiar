@@ -30,7 +30,7 @@ function cambiarTema() {
 
   const o = {};
   ['abrirPlayer', 'cerrarPlayer', 'abrirEscenasCasero', 'abrirModalCaseros', 'cerrarModalCaseros',
-   'abrirShareModal', 'cerrarShareModal', 'showSection', 'goHome', 'doSearch', 'clearSearch'].forEach(n => o[n] = window[n]);
+   'abrirShareModal', 'cerrarShareModal', 'abrirSeleccion', 'cerrarSeleccion', 'showSection', 'goHome', 'doSearch', 'clearSearch'].forEach(n => o[n] = window[n]);
 
   window.abrirPlayer = function () { const ya = abierto('player-overlay'); const r = o.abrirPlayer.apply(this, arguments); if (!ya) apilar('player'); return r; };
   window.cerrarPlayer = function () { const ya = abierto('player-overlay'); const r = o.cerrarPlayer.apply(this, arguments); if (ya && !abierto('player-overlay')) consumir(); return r; };
@@ -39,6 +39,8 @@ function cambiarTema() {
   window.cerrarModalCaseros = function () { const ya = abierto('caseros-modal'); const r = o.cerrarModalCaseros.apply(this, arguments); if (ya && !abierto('caseros-modal')) consumir(); return r; };
   window.abrirShareModal = function () { const r = o.abrirShareModal.apply(this, arguments); if (estado() !== 'share') apilar('share'); return r; };
   window.cerrarShareModal = function () { const ya = abierto('share-modal'); const r = o.cerrarShareModal.apply(this, arguments); if (ya) consumir(); return r; };
+  window.abrirSeleccion = function () { const ya = abierto('sel-modal'); const r = o.abrirSeleccion.apply(this, arguments); if (!ya && abierto('sel-modal')) apilar('sel'); return r; };
+  window.cerrarSeleccion = function () { const ya = abierto('sel-modal'); const r = o.cerrarSeleccion.apply(this, arguments); if (ya && !abierto('sel-modal')) consumir(); return r; };
   window.showSection = function (sec) {
     const r = o.showSection.apply(this, arguments);
     if (tieneInicio()) sustituirOApilar('sec', ['sec', 'search']);
@@ -53,6 +55,7 @@ function cambiarTema() {
     desdeAtras = true;
     try {
       if (abierto('share-modal')) o.cerrarShareModal();
+      else if (abierto('sel-modal')) o.cerrarSeleccion();
       else if (abierto('player-overlay')) o.cerrarPlayer();
       else if (abierto('caseros-modal')) o.cerrarModalCaseros();
       else if (document.getElementById('search-results-screen').classList.contains('active')) o.clearSearch();

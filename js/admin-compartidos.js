@@ -22,6 +22,7 @@ async function cargarCompartidosAdmin() {
       <th style="${th}">PIN</th><th style="${th}">Vídeo</th><th style="${th}">Qué comparte</th><th style="${th}">Caduca</th><th></th>
     </tr></thead>
     <tbody>${d.data.map(c => {
+      if (c.seleccion) return filaSeleccionAdmin(c);
       const video = c.video === null ? `<span style="color:#c0392b;">Vídeo borrado (id ${escAdm(c.caseroId)})</span>` : escAdm(c.video);
       const que = c.escenaIdx < 0
         ? 'Vídeo completo'
@@ -38,6 +39,28 @@ async function cargarCompartidosAdmin() {
         <td style="padding:8px 4px;"><button onclick="eliminarCompartido('${escAdm(c.pin)}')" class="btn btn-danger" title="Borrar">✕</button></td>
       </tr>`;
     }).join('')}</tbody></table></div>`;
+}
+
+function cadCompartido(c) {
+  return c.permanente ? 'Permanente'
+    : c.caducado ? '<span style="color:#c0392b;">Caducado</span>'
+    : new Date(c.expira * 1000).toLocaleString('es-ES');
+}
+// Selección: un PIN con varios fragmentos (escenas o vídeos completos, de uno o varios vídeos)
+function filaSeleccionAdmin(c) {
+  const frag = c.items.map((it, i) => {
+    const v = it.video === null ? `<span style="color:#c0392b;">vídeo borrado (id ${escAdm(it.caseroId)})</span>` : '«' + escAdm(it.video) + '»';
+    const que = it.escenaIdx < 0 ? 'completo'
+      : `escena ${it.escenaIdx + 1}${it.escena ? ' «' + escAdm(it.escena) + '»' : ' (ya no existe)'} · ${compFmtT(it.t)}`;
+    return `<div style="font-size:12px;">${i + 1}. ${v} — ${que}</div>`;
+  }).join('');
+  return `<tr style="border-bottom:1px solid #eef2f8;vertical-align:top;">
+    <td style="padding:8px 4px;font-family:monospace;font-size:16px;font-weight:700;letter-spacing:2px;white-space:nowrap;">${escAdm(c.pin)}</td>
+    <td style="padding:8px 4px;color:#1a2a4a;"><b>Selección</b>${c.titulo ? ' «' + escAdm(c.titulo) + '»' : ''}<div style="font-size:11px;color:#5a7299;">${c.items.length} fragmentos</div></td>
+    <td style="padding:8px 4px;color:#1a2a4a;">${frag}</td>
+    <td style="padding:8px 4px;color:#5a7299;font-size:11px;">${cadCompartido(c)}</td>
+    <td style="padding:8px 4px;"><button onclick="eliminarCompartido('${escAdm(c.pin)}')" class="btn btn-danger" title="Borrar">✕</button></td>
+  </tr>`;
 }
 
 async function eliminarCompartido(pin) {

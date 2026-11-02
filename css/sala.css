@@ -419,11 +419,11 @@ body:not(.modo-tv) .player-overlay.open .player-box {
 body:not(.modo-tv) .player-overlay:not(.open) #player-video::-webkit-media-controls { display:none !important; }
 body:not(.modo-tv) .player-overlay:not(.open) .player-loading { display:none; }
 /* La página de detrás retrocede (la cabecera no, porque contiene la barra fija del móvil) */
-body:not(.modo-tv) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
+body:not(.modo-tv) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir, #screen-seleccion) {
   transform-origin:50% var(--sala-origen-y, 40vh);
   transition:transform 0.3s var(--ease-sala), filter 0.3s ease;
 }
-body:not(.modo-tv):has(.player-overlay.open) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir) {
+body:not(.modo-tv):has(.player-overlay.open) #app > :is(#home-screen, .content-screen, #search-results-screen, #screen-compartir, #screen-seleccion) {
   transform:scale(0.94); filter:brightness(0.55) saturate(0.8);
 }
 

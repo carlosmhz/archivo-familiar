@@ -3,8 +3,9 @@
 if ($method === 'GET' && $action === 'caseros-listar') {
     $s = exigirSesion();
     if (in_array($s['r'], ['admin', 'todo', 'caseros'], true)) responder(true, anotarMinis(leerJSON(FILE_CASEROS)));
-    if ($s['r'] === 'compartir') {   // quien recibe un PIN solo ve el vídeo compartido
-        responder(true, anotarMinis(array_values(array_filter(leerJSON(FILE_CASEROS), fn($c) => ($c['id'] ?? 0) === ($s['c'] ?? -1)))));
+    if ($s['r'] === 'compartir') {   // quien recibe un PIN solo ve los vídeos compartidos (uno, o los de su selección)
+        $ids = idsCompartidos($s);
+        responder(true, anotarMinis(array_values(array_filter(leerJSON(FILE_CASEROS), fn($c) => in_array(intval($c['id'] ?? 0), $ids, true)))));
     }
     responder(true, []);
 }

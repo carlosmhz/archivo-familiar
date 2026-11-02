@@ -31,6 +31,7 @@ function abrirPlayerEscena(caseroId, escenaIdx) {
 }
 
 function siguienteEscena() {
+  if (listaActiva()) { listaAvanzar(); return; }   // selección compartida: siguiente fragmento
   if (!_escenaActiva) return;
   const nextIdx = _escenaActiva.escenaIdx + 1;
   ocultarPanelEscena();
@@ -38,6 +39,7 @@ function siguienteEscena() {
 }
 
 function ocultarPanelEscena() {
+  listaCuentaParar();
   const p = document.getElementById('escena-end-panel');
   if (p) p.classList.remove('open');
 }
@@ -70,16 +72,29 @@ function vigilarEscena(video) {
 }
 function mostrarFinEscena() {
   const e = _escenaActiva;
-  const c = CASEROS.find(x => x.id === e.caseroId);
-  const isLast = !c || !c.escenas || e.escenaIdx >= c.escenas.length - 1;
-  const nextE = (isLast || e.compartido) ? null : c.escenas[e.escenaIdx + 1];
-  document.getElementById('escena-end-title').textContent = 'Fin de escena';
-  document.getElementById('escena-end-sub').textContent = nextE ? ('Siguiente: ' + nextE.titulo + ' · ' + nextE.fecha) : '';
-  document.getElementById('escena-end-next').style.display = nextE ? '' : 'none';
+  let nextE = null, subTxt = '';
+  const L = listaActiva();
+  if (L) {                                           // selección compartida: el siguiente es el próximo fragmento
+    const inf = listaSiguienteInfo();
+    if (inf) { nextE = inf; subTxt = 'Siguiente: ' + inf.titulo + (inf.esc ? ' · ' + inf.c.titulo : ''); }
+  } else if (e) {
+    const c = CASEROS.find(x => x.id === e.caseroId);
+    const isLast = !c || !c.escenas || e.escenaIdx >= c.escenas.length - 1;
+    nextE = (isLast || e.compartido) ? null : c.escenas[e.escenaIdx + 1];
+    if (nextE) subTxt = 'Siguiente: ' + nextE.titulo + ' · ' + nextE.fecha;
+  }
+  document.getElementById('escena-end-title').textContent = e ? 'Fin de escena' : 'Fin del vídeo';
+  document.getElementById('escena-end-sub').textContent = subTxt;
+  const btnNext = document.getElementById('escena-end-next');
+  btnNext.style.display = nextE ? '' : 'none';
+  btnNext.textContent = L ? 'Siguiente ›' : 'Siguiente escena ›';
   // Si no hay siguiente escena, "Ver de nuevo" pasa a ser el botón principal
   document.getElementById('escena-end-replay').className = 'escena-end-btn ' + (nextE ? 'ghost' : 'primary');
   // Salir de pantalla completa antes de mostrar el panel
-  const showPanel = () => document.getElementById('escena-end-panel').classList.add('open');
+  const showPanel = () => {
+    document.getElementById('escena-end-panel').classList.add('open');
+    if (L && nextE) listaCuentaAtras(btnNext);     // "Ver todo": pasa solo al siguiente
+  };
   // iPhone: la pantalla completa es la del propio <video> (reproductor nativo de iOS), no la del documento,
   // y tapa el panel. Se sale con video.webkitExitFullscreen() y el panel se muestra al volver.
   const v = document.getElementById('player-video');
@@ -101,9 +116,9 @@ function mostrarFinEscena() {
 function repetirEscena() {
   const e = _escenaActiva;
   const v = document.getElementById('player-video');
-  if (!e || !v) return;
+  if (!v || (!e && !listaActiva())) return;
   ocultarPanelEscena();
-  v.currentTime = inicioEscena(e);
+  v.currentTime = e ? inicioEscena(e) : 0;
   v.play().catch(() => {});
 }
 
@@ -188,7 +203,7 @@ async function reproducirVideo(video, url, min, token) {
 // ─── Tarjeta desde la que se abre el vídeo ───────────────────────────────────
 // Al cerrar el reproductor, su foto "se aleja" a su tamaño normal (css/sala.css).
 // Se apunta la última tarjeta pulsada; cualquier otro clic fuera de las ventanas la olvida.
-const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card';
+const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card, .lista-item';
 let _tarjetaPulsada = null, _tarjetaVuelta = null;
 document.addEventListener('click', e => {
   const t = e.target.closest && e.target.closest(SEL_TARJETA);
@@ -224,7 +239,7 @@ function abrirPlayer(url, titulo, fecha, min) {
     _tarjetaVuelta = _tarjetaPulsada;
     _tarjetaPulsada = null;
     // La página de detrás "retrocede" hacia el centro de lo que se está viendo (ver css/sala.css)
-    const vis = document.querySelector('#app > .content-screen.active, #search-results-screen.active, #screen-compartir.active') || document.getElementById('home-screen');
+    const vis = document.querySelector('#app > .content-screen.active, #search-results-screen.active, #screen-compartir.active, #screen-seleccion.active') || document.getElementById('home-screen');
     if (vis) document.documentElement.style.setProperty('--sala-origen-y', Math.round(innerHeight / 2 - vis.getBoundingClientRect().top) + 'px');
   }
   overlay.classList.add('open');
@@ -253,6 +268,8 @@ function abrirPlayer(url, titulo, fecha, min) {
     video.ontimeupdate = () => vigilarEscena(video);
     video.onseeking = () => vigilarEscena(video);
     video.onplay = () => vigilarEscena(video);
+    // Selección compartida con un vídeo completo: al terminar, panel con el siguiente fragmento
+    video.onended = () => { if (listaActiva() && !_escenaActiva) mostrarFinEscena(); };
   }
 }
 
@@ -389,6 +406,7 @@ function abrirShareModal() {
       <button class="share-btn escena perm" onclick="generarYCompartir(${c.id},${_escenaActiva.escenaIdx},${escena.t},true)">Esta escena · Permanente</button>
       <button class="share-btn full" onclick="generarYCompartir(${c.id},-1,0,false)">Vídeo completo · 24 h</button>
       <button class="share-btn full perm" onclick="generarYCompartir(${c.id},-1,0,true)">Vídeo completo · Permanente</button>
+      ${selBotonesShare(c.id, _escenaActiva.escenaIdx)}
       <button class="share-btn cancel" onclick="cerrarShareModal()">Cancelar</button>`;
   } else {
     // Buscar casero por URL actual
@@ -400,6 +418,7 @@ function abrirShareModal() {
       btns.innerHTML = `
         <button class="share-btn full" onclick="generarYCompartir(${casero.id},-1,0,false)">Vídeo completo · 24 h</button>
         <button class="share-btn full perm" onclick="generarYCompartir(${casero.id},-1,0,true)">Vídeo completo · Permanente</button>
+        ${selBotonesShare(casero.id, -1)}
         <button class="share-btn cancel" onclick="cerrarShareModal()">Cancelar</button>`;
     }
   }
@@ -455,6 +474,7 @@ function cerrarPlayer(e) {
   vid.ontimeupdate = null;
   vid.onseeking = null;
   vid.onplay = null;
+  vid.onended = null;
   vid.src = '';
   _urlActual = '';
   document.getElementById('player-loading').classList.add('hidden');
@@ -463,8 +483,9 @@ function cerrarPlayer(e) {
   comentariosCerrar();
   document.body.style.overflow = '';
   animarVuelta();
-  // Si es modo compartir, mostrar pantalla de "ver de nuevo"
-  if (window._compartirData) mostrarPantallaCompartir();
+  // Si es modo compartir, mostrar pantalla de "ver de nuevo" (o la de la selección)
+  if (listaActiva()) document.getElementById('screen-seleccion').classList.add('active');
+  else if (window._compartirData) mostrarPantallaCompartir();
 }
 
 let searchTimeout;

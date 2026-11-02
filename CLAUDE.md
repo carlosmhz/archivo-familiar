@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros; selecciones compartidas: varias escenas o vídeos con un solo PIN).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -41,8 +41,8 @@
 
 ```
 index.html, admin.html          solo maquetación
-css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), dialogo.css (0.5), tv.css, tv-actuaciones.css, admin.css
-js/    dialogo.js (0.5), estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, transiciones.js (0.4), ui.js   (orden de carga en index.html)
+css/   app.css, sala.css (capa visual "sala", ver 0.2), comentarios.css (0.3), dialogo.css (0.5), seleccion.css (0.6), tv.css, tv-actuaciones.css, admin.css
+js/    dialogo.js (0.5), estado.js, auth.js, inicio.js, navegacion.js, caseros.js, player.js, comentarios.js, seleccion.js (0.6), transiciones.js (0.4), ui.js   (orden de carga en index.html)
        tv.js, tv-actuaciones.js (solo con ?tv=1), admin.js, admin-comentarios.js, admin-compartidos.js
 vendor/hls.min.js               hls.js 1.5.17
 vendor/fonts/                   Newsreader y Outfit (woff2, licencia OFL), sin Google Fonts
@@ -115,6 +115,15 @@ No se usan `alert()`, `confirm()` ni `prompt()` del navegador: todo pasa por `js
 - `peligro: true` pinta el botón en rojo y deja el foco en "Cancelar" (un Intro no borra por accidente).
 - Aspecto: en `index.html` toma la paleta "sala"; en `admin.html` usa los valores de reserva (azul del panel). En el móvil sube desde abajo como una hoja; en la tele, letra grande.
 - **Regla:** cualquier mensaje nuevo usa `avisar()`/`confirmar()`; nunca los del navegador.
+
+## 0.6 Selección compartida (2 nov 2026, idea aprobada por Carlos)
+
+Varias escenas o vídeos completos, de uno o de varios vídeos, con **un único PIN**. Código: `js/seleccion.js`, `css/seleccion.css`, y en el servidor `itemsSeleccion()`, `idsCompartidos()` y `puedeVerCasero()` en `lib/sesion.php`.
+- **Familia** (roles `todo` y `caseros`, también OTP): en la ventana «Compartir» del reproductor hay un bloque «Selección» con «＋ Añadir esta escena» (si hay escena activa), «＋ Añadir el vídeo completo» y «Ver la selección ›». La selección vive en el dispositivo (`localStorage['af_seleccion']` = `{titulo, items:[{caseroId, escenaIdx}]}`, máximo 30, sin repetidos). Una barra fija abajo (`#sel-barra`, oculta con el reproductor abierto y en la tele) abre la ventana `#sel-modal`: título opcional (80), subir/bajar, quitar, «Compartir · 24 h / Permanente» (WhatsApp, mismo formato de mensaje) y «Vaciar». Al compartir se vacía. Atrás cierra la ventana (`ui.js`).
+- **Invitado:** `login` con un PIN de selección devuelve `rol: 'compartir-lista'` y `lista: {titulo, items}`; el front pone `body.rol-compartir` y muestra `#screen-seleccion` (título, «N momentos · duración», «Ver todo» y una tarjeta por fragmento). Tocar una tarjeta reproduce solo ese fragmento; «Ver todo» los encadena: al acabar (fin de escena, o `ended` si es un vídeo completo) el panel de fin muestra «Siguiente en 5 s ›» y pasa solo (`SEL_ESPERA`); «Ver de nuevo» o «Cerrar» lo paran. El título del reproductor lleva «2 de 5». Al cerrar vuelve a la lista, con ✓ en los vistos. Las escenas siguen encerradas como en un PIN normal (`compartido: true`) y se puede comentar en cada vídeo de la lista.
+- **Servidor:** el token de sesión del invitado lleva `l: [ids]` (vídeos permitidos) y `c: null`. `caseros-listar`, `video` y los comentarios comprueban con `puedeVerCasero()`. Los fragmentos se validan al generar y al entrar: vídeo inexistente → se quita; escena inexistente → pasa a vídeo completo; el `t` lo pone el servidor.
+- Los PIN de un solo vídeo funcionan igual que antes. Como en ellos, la restricción a la escena es solo de pantalla.
+- Probado en local (Chromium, móvil y PC, tema claro): añadir, repetido, barra, ordenar, Atrás, compartir, entrada del invitado, «Ver todo» con escena → vídeo completo → escena, tocar uno suelto (no encadena), comentarios, PIN antiguo, roles `caseros` y `actuaciones`, admin. **Sin probar:** Safari/iOS y LiteSpeed.
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -252,6 +261,7 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 **otp.json**: `[{ pass, rol, expira }]`. Contraseñas de 4 dígitos, de un solo uso, que caducan a las 24 horas.
 
 **compartir.json**: `[{ pin, caseroId, escenaIdx, t, expira, permanente }]`. El `pin` es de **6 cifras** desde el 2 nov 2026 (antes 4; los de 4 ya repartidos siguen valiendo) y nunca coincide con una contraseña fija, una OTP ni otro PIN vigente. Con `escenaIdx = -1` se comparte el vídeo completo. Si es permanente, `expira` vale `PHP_INT_MAX`.
+Selección (apartado 0.6): `{ pin, titulo, items: [{ caseroId, escenaIdx, t }], expira, permanente }`, sin `caseroId` en la raíz.
 
 ---
 
@@ -264,7 +274,7 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 | `caseros` | contraseña fija | solo caseros (con inicio adaptado desde el 1 nov 2026) |
 | `actuaciones` | contraseña fija | solo actuaciones (con inicio adaptado desde el 1 nov 2026) |
 | OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP (con rol `todo` o `caseros` también puede compartir) |
-| `compartir` | PIN de 6 cifras de un enlace compartido (los antiguos, de 4) | **solo ese vídeo**; la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
+| `compartir` | PIN de 6 cifras de un enlace compartido (los antiguos, de 4), o de una selección (0.6) | **solo ese vídeo** (o los de su selección); la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
 
 **Pantalla de acceso** (cambio de Carlos, 1–2 nov 2026): el campo dice "PIN" y abre el teclado numérico, **sin límite de longitud** (hay contraseñas fijas de más de 4 cifras).
 
@@ -274,7 +284,7 @@ Copia de seguridad de antes de la protección: `~/backup_videos/`, con `index.ht
 - Si falta el archivo, la API responde con un error 500 claro.
 
 **Tokens (en `auth.php`):** HMAC-SHA256 sobre el payload en base64url, con el formato `payload.firma`.
-- **Token de sesión** (lo devuelve `login`): `{ r: rol, c: idCasero|null, f: entróConContraseñaFija, e: caducidad }`. Dura **24 h**.
+- **Token de sesión** (lo devuelve `login`): `{ r: rol, c: idCasero|null, f: entróConContraseñaFija, e: caducidad }`; con un PIN de selección, `{ r: 'compartir', c: null, l: [ids] }`. Dura **24 h**.
 - **Token de vídeo** (lo devuelve `video`): `{ v: nombre, e }`. Dura **12 h** y sirve solo para ese vídeo.
 
 **Freno anti fuerza bruta:** 8 fallos en 15 minutos desde la misma IP bloquean esa IP durante 15 minutos. Afecta a toda la API y a `stream.php`, y responde con un 429. Cuentan como fallo los mensajes `No autorizado` y `Contrasena incorrecta`. `Sesion caducada` no cuenta.
@@ -294,7 +304,7 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 
 | Acción | Método | Autenticación | Notas |
 |---|---|---|---|
-| `login` | GET `?pass=` | — | Devuelve `{ rol, token }`. El rol `compartir:ID:escena:t` se usa con PIN |
+| `login` | GET `?pass=` | — | Devuelve `{ rol, token }`. El rol `compartir:ID:escena:t` se usa con PIN; con PIN de selección, `rol: 'compartir-lista'` y además `lista: {titulo, items}` |
 | `listar` | GET | `token` o `pass` | Actuaciones. A los roles sin acceso les devuelve `[]` |
 | `caseros-listar` | GET | `token` o `pass` | Al rol `compartir` solo le devuelve su vídeo. A `actuaciones` le devuelve `[]` |
 | `video` | GET `?url=&token=` | token de sesión | Devuelve `{ hls, mp4 }` con URLs firmadas de `stream.php`, o `{ directo: true }` si no es un MP4 de este servidor |
@@ -302,8 +312,8 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `caseros-anadir` / `caseros-editar` / `caseros-eliminar` | POST JSON | `pass` de admin | Vídeos caseros |
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
 | `otp-listar` | GET `?pass=` | admin | |
-| `compartir-generar` | POST JSON `{caseroId, escenaIdx, t, permanente}` + `&token=` | sesión con rol `todo` o `caseros` (`exigirSesion()`), también OTP y sesión restaurada | Devuelve `{ pin }` de 6 cifras. Arreglado el 2 nov 2026: antes exigía la contraseña en el cuerpo y fallaba al restaurar la sesión |
-| `compartir-listar` | GET `?pass=` | admin | Todos los PIN de compartir con `video` y `escena` (títulos; `video: null` si el vídeo ya no existe), `permanente`, `expira`, `caducado`. No borra nada |
+| `compartir-generar` | POST JSON `{caseroId, escenaIdx, t, permanente}` o, para una selección, `{items:[{caseroId, escenaIdx}], titulo, permanente}` + `&token=` | sesión con rol `todo` o `caseros` (`exigirSesion()`), también OTP y sesión restaurada | Devuelve `{ pin }` de 6 cifras. Arreglado el 2 nov 2026: antes exigía la contraseña en el cuerpo y fallaba al restaurar la sesión |
+| `compartir-listar` | GET `?pass=` | admin | Las selecciones salen con `seleccion: true`, `titulo` e `items[]` (cada uno con `video` y `escena`). Todos los PIN de compartir con `video` y `escena` (títulos; `video: null` si el vídeo ya no existe), `permanente`, `expira`, `caducado`. No borra nada |
 | `compartir-eliminar` | POST JSON `{pin}` + `pass` | admin | Borra un PIN: deja de funcionar al instante |
 | `comentarios-listar` | GET `?token=&caseroId=&dispositivo=` | sesión con acceso al vídeo | `{ comentarios[], megusta: { total, mio, nombres[≤5] }, nombre }` |
 | `comentarios-nombre` | POST JSON `{dispositivo, nombre}` + `&token=` | cualquier sesión | Crea o cambia el nombre del dispositivo |
@@ -421,6 +431,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
 - Fin de escena en iPhone con pantalla completa (apartado 7, 2 nov 2026, `?v=20261102c`): sin probar en iOS real.
+- **Selección compartida** (apartado 0.6, 2 nov 2026, `?v=20261102i`): varias escenas o vídeos con un PIN. Probada en local; pendiente de que Carlos la pruebe en producción (y en Safari/iOS).
 - Pestaña **"🔗 Compartidos"** del admin (2 nov 2026, `js/admin-compartidos.js`, `?v=20261102c`): lista los PIN con vídeo, escena, inicio y caducidad (marca los de 4 cifras y los de vídeos borrados) y permite borrarlos. Probada en local; pendiente de que Carlos la use en producción.
 - Avisos y confirmaciones en ventanas propias (apartado 0.5, 2 nov 2026, `?v=20261102b`). Probado en local (móvil, PC y admin); pendiente de verlo en la tele.
 - Compartir por WhatsApp arreglado (2 nov 2026, `?v=20261102a`): funciona tras restaurar la sesión y con OTP; PIN de 6 cifras. Probado en local; pendiente de que Carlos lo confirme en producción.

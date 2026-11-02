@@ -84,11 +84,7 @@ function huellaIp() {
 // El vídeo casero si la sesión puede verlo; si no, responde con error.
 function caseroAccesible(array $s, $caseroId) {
     $caseroId = intval($caseroId);
-    if ($s['r'] === 'compartir') {
-        if (intval($s['c'] ?? -1) !== $caseroId) responder(false, null, 'Sin acceso a este video');
-    } elseif (!in_array($s['r'], ['admin', 'todo', 'caseros'], true)) {
-        responder(false, null, 'Sin acceso a este video');
-    }
+    if (!puedeVerCasero($s, $caseroId)) responder(false, null, 'Sin acceso a este video');
     foreach (leerJSON(FILE_CASEROS) as $c) {
         if (intval($c['id'] ?? 0) === $caseroId) return $c;
     }
