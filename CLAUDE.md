@@ -305,7 +305,7 @@ Selección (apartado 0.6): `{ pin, titulo, items: [{ caseroId, escenaIdx, t }], 
 - Se guarda en `localStorage['af_sesion']` y además en la cookie `af_sesion` (23 h, `path=/videos/`, `SameSite=Lax`, `Secure`). La cookie existe porque el WebView de la app Android puede tener el almacenamiento local desactivado.
 - Al cargar la página, `restaurarSesion()` valida el token llamando a `caseros-listar`.
 - El botón "Salir" (`logout()`) borra las dos copias.
-- Los enlaces con PIN **no** se recuerdan.
+- Los invitados con PIN **también** se recuerdan desde el 2 nov 2026 (petición de Carlos: al recargar se cerraba): mismo token de 24 h; en una selección se guarda además `lista` (solo llega en el login). `entrarCompartido()` (`js/auth.js`) es la entrada del invitado para el login y para `restaurarSesion()`. Al recargar, un PIN de vídeo vuelve a abrir el reproductor en su escena y una selección vuelve a su lista (los ✓ de vistos no se conservan). Pasadas 24 h hay que volver a meter el PIN, aunque sea permanente. El botón "Salir" del invitado borra la sesión.
 - `admin.html` **no** recuerda la sesión.
 
 ---
@@ -456,6 +456,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Carrusel de recuerdos en la portada (apartado 0.5, 2 nov 2026, `?v=20261102g`; compactado y "Ver ahora" en `?v=20261102h`). Probado en local; pendiente de que Carlos lo vea en su móvil (y en Safari/iOS).
 - Décadas en recuadros y menos espacio entre filas (apartado 0.2, 2 nov 2026, `?v=20261102f`). Probado en local (móvil y PC); pendiente de que Carlos lo vea en su móvil.
 
+- Sesión recordada también para invitados con PIN (apartado 5, 2 nov 2026, `?v=20261102n`). Probada en local (PIN de escena, selección, Salir, familia); pendiente de que Carlos la confirme en producción.
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
 **Decisiones de Carlos (1 nov 2026):**
