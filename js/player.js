@@ -132,9 +132,10 @@ function detenerHls() {
   if (_hlsInst) { try { _hlsInst.destroy(); } catch (e) {} _hlsInst = null; }
 }
 
-async function pedirUrlsVideo(url) {
+async function pedirUrlsVideo(url, desde) {
   try {
-    const r = await fetch(`${API}?action=video&token=${encodeURIComponent(TOKEN)}&url=${encodeURIComponent(url)}`);
+    // 'desde' = segundo de inicio: con un PIN de escena el servidor da permiso solo para ese tramo
+    const r = await fetch(`${API}?action=video&token=${encodeURIComponent(TOKEN)}&url=${encodeURIComponent(url)}&t=${Math.floor(desde || 0)}`);
     const d = await r.json();
     return d.ok ? d.data : { error: d.msg || 'Error' };
   } catch (e) {
@@ -160,10 +161,10 @@ function errorVideo(msg) {
 // Arranca el vídeo (HLS si existe, MP4 si no). 'min' = segundo de inicio.
 async function reproducirVideo(video, url, min, token) {
   detenerHls();
-  const info = await pedirUrlsVideo(url);
+  min = min || tiempoDeUrl(url);       // escena (min) manda; si no, el #t= de la URL
+  const info = await pedirUrlsVideo(url, min);
   if (token !== _playToken) return;   // se cerró o se abrió otro mientras esperábamos
   if (info.error) { errorVideo(info.error); return; }
-  min = min || tiempoDeUrl(url);       // escena (min) manda; si no, el #t= de la URL
 
   const usarMp4 = (src) => {
     video.src = src;

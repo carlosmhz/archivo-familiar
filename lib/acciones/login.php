@@ -14,14 +14,20 @@ if ($method === 'GET' && $action === 'login') {
                 responder(true, [
                     'rol'   => 'compartir-lista',
                     'lista' => ['titulo' => (string)($e['titulo'] ?? ''), 'items' => $items],
-                    'token' => firmarToken(['r' => 'compartir', 'c' => null, 'l' => $ids], 86400),
+                    'token' => firmarToken(['r' => 'compartir', 'c' => null, 'l' => $ids, 'w' => ventanasDeItems($items)], 86400),
                 ]);
             }
             responder(false, null, 'Contrasena incorrecta');
         }
         $r = $rol; $c = null;
-        if (strpos($rol, 'compartir:') === 0) { $r = 'compartir'; $c = intval(explode(':', $rol)[1]); }
-        responder(true, ['rol' => $rol, 'token' => firmarToken(['r' => $r, 'c' => $c], 86400)]);
+        $extra = [];
+        if (strpos($rol, 'compartir:') === 0) {
+            $partes = explode(':', $rol);
+            $r = 'compartir'; $c = intval($partes[1]);
+            $items = itemsSeleccion([['caseroId' => $c, 'escenaIdx' => intval($partes[2] ?? -1)]]);
+            if ($items) $extra['w'] = ventanasDeItems($items);
+        }
+        responder(true, ['rol' => $rol, 'token' => firmarToken(['r' => $r, 'c' => $c] + $extra, 86400)]);
     }
     responder(false, null, 'Contrasena incorrecta');
 }

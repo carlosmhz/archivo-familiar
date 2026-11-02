@@ -61,13 +61,35 @@ if (isset($_GET['img'])) {
 $p = leerToken($t);
 if (!$p || ($p['v'] ?? null) !== $v || !nombreValido($v)) fin(403, 'Acceso denegado');
 
+// Permiso con tramo (PIN de escena): solo los trozos que se solapan con [a, b] (b null = hasta el final).
+$tramo = array_key_exists('a', $p) ? [(float)$p['a'], isset($p['b']) ? (float)$p['b'] : null] : null;
+function trozoPermitido($ini, $dur, $tramo) {
+    if (!$tramo) return true;
+    return $ini + $dur > $tramo[0] && ($tramo[1] === null || $ini < $tramo[1] + 1);
+}
+// Inicio y duración de cada trozo según la lista: ['seg_0000.ts' => [ini, dur], …]
+function trozosHls($ruta) {
+    $r = []; $t = 0.0; $dur = 0.0;
+    foreach (preg_split('/\r?\n/', (string)file_get_contents($ruta)) as $l) {
+        $l = trim($l);
+        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) $dur = (float)$m[1];
+        elseif ($l !== '' && $l[0] !== '#') { $r[$l] = [$t, $dur]; $t += $dur; $dur = 0.0; }
+    }
+    return $r;
+}
+
 if ($f === 'index.m3u8') {
     $ruta = DIR_HLS . '/' . $v . '/index.m3u8';
     if (!is_file($ruta)) fin(404, 'No existe');
-    $out = [];
+    $out = []; $tt = 0.0; $dur = 0.0;
     foreach (preg_split('/\r?\n/', (string)file_get_contents($ruta)) as $l) {
         $l = trim($l);
+        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) $dur = (float)$m[1];
         if ($l !== '' && $l[0] !== '#' && preg_match('/^seg_\d{4}\.ts$/', $l)) {
+            // Fuera del tramo: se marca como hueco (#EXT-X-GAP) y el reproductor no lo pide.
+            // Así la línea de tiempo del vídeo no cambia (los segundos siguen siendo los del original).
+            if (!trozoPermitido($tt, $dur, $tramo)) $out[] = '#EXT-X-GAP';
+            $tt += $dur; $dur = 0.0;
             $l = 'stream.php?v=' . rawurlencode($v) . '&f=' . $l . '&t=' . $t;
         }
         $out[] = $l;
@@ -81,10 +103,15 @@ if ($f === 'index.m3u8') {
 if (preg_match('/^seg_\d{4}\.ts$/', $f)) {
     $ruta = DIR_HLS . '/' . $v . '/' . $f;
     if (!is_file($ruta)) fin(404, 'No existe');
+    if ($tramo) {
+        $tr = trozosHls(DIR_HLS . '/' . $v . '/index.m3u8')[$f] ?? null;
+        if (!$tr || !trozoPermitido($tr[0], $tr[1], $tramo)) fin(403, 'Fuera de la escena compartida');
+    }
     enviarArchivo($ruta, 'video/mp2t', 'private, max-age=43200');
 }
 
 if ($f === 'mp4') {
+    if ($tramo) fin(403, 'Acceso denegado');
     $ruta = DIR_CASEROS . '/' . $v . '.mp4';
     if (!is_file($ruta)) fin(404, 'No existe');
     enviarArchivo($ruta, 'video/mp4', 'private, max-age=3600');

@@ -45,11 +45,13 @@ function getRol($pass) {
 // 'l' solo existe en las selecciones compartidas: los vídeos que puede ver quien recibió el PIN.
 function sesion() {
     $p = leerToken($_GET['token'] ?? '');
-    if ($p && empty($p['v'])) return ['r' => $p['r'] ?? '', 'c' => $p['c'] ?? null, 'l' => (isset($p['l']) && is_array($p['l'])) ? $p['l'] : null];
+    if ($p && empty($p['v'])) return ['r' => $p['r'] ?? '', 'c' => $p['c'] ?? null,
+        'l' => (isset($p['l']) && is_array($p['l'])) ? $p['l'] : null,
+        'w' => (isset($p['w']) && is_array($p['w'])) ? $p['w'] : null];
     $pass = (string)($_GET['pass'] ?? '');
     if ($pass !== '') {
         foreach ([[PASS_ADMIN, 'admin'], [PASS_TODO, 'todo'], [PASS_CASEROS, 'caseros'], [PASS_ACTUACIONES, 'actuaciones']] as [$k, $r]) {
-            if (hash_equals((string)$k, $pass)) return ['r' => $r, 'c' => null, 'l' => null];
+            if (hash_equals((string)$k, $pass)) return ['r' => $r, 'c' => null, 'l' => null, 'w' => null];
         }
         return false;
     }
@@ -92,4 +94,23 @@ function itemsSeleccion($items) {
         $out[] = ['caseroId' => $id, 'escenaIdx' => $idx, 't' => $idx >= 0 ? intval($esc[$idx]['t'] ?? 0) : 0];
     }
     return $out;
+}
+
+// Tramos que puede ver quien entra con PIN: [[caseroId, ini, fin], …]. ini null = vídeo completo;
+// fin null = hasta el final. Van en el token de sesión ('w') y los aplican api.php?action=video y
+// stream.php, que solo sirve los trozos HLS de ese tramo (restricción en el servidor, 2 nov 2026).
+function ventanasDeItems(array $items) {
+    $videos = [];
+    foreach (leerJSON(FILE_CASEROS) as $v) $videos[intval($v['id'] ?? 0)] = $v;
+    $w = [];
+    foreach ($items as $it) {
+        $v = $videos[$it['caseroId']] ?? null;
+        $idx = intval($it['escenaIdx'] ?? -1);
+        if (!$v || $idx < 0 || !isset($v['escenas'][$idx])) { $w[] = [$it['caseroId'], null, null]; continue; }
+        $esc = $v['escenas'];
+        $ini = (float)($esc[$idx]['t'] ?? 0);
+        $fin = isset($esc[$idx + 1]) ? (float)($esc[$idx + 1]['t'] ?? 0) : (!empty($v['duracion']) ? (float)$v['duracion'] : null);
+        $w[] = [$it['caseroId'], $ini, $fin];
+    }
+    return $w;
 }

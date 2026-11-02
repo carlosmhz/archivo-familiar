@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros; selecciones compartidas: varias escenas o vídeos con un solo PIN).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros; selecciones compartidas: varias escenas o vídeos con un solo PIN; la escena compartida se limita también en el servidor).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -122,8 +122,18 @@ Varias escenas o vídeos completos, de uno o de varios vídeos, con **un único 
 - **Familia** (roles `todo` y `caseros`, también OTP): en la ventana «Compartir» del reproductor hay un bloque «Selección» con «＋ Añadir esta escena» (si hay escena activa), «＋ Añadir el vídeo completo» y «Ver la selección ›». La selección vive en el dispositivo (`localStorage['af_seleccion']` = `{titulo, items:[{caseroId, escenaIdx}]}`, máximo 30, sin repetidos). Una barra fija abajo (`#sel-barra`, oculta con el reproductor abierto y en la tele) abre la ventana `#sel-modal`: título opcional (80), subir/bajar, quitar, «Compartir · 24 h / Permanente» (WhatsApp, mismo formato de mensaje) y «Vaciar». Al compartir se vacía. Atrás cierra la ventana (`ui.js`).
 - **Invitado:** `login` con un PIN de selección devuelve `rol: 'compartir-lista'` y `lista: {titulo, items}`; el front pone `body.rol-compartir` y muestra `#screen-seleccion` (título, «N momentos · duración», «Ver todo» y una tarjeta por fragmento). Tocar una tarjeta reproduce solo ese fragmento; «Ver todo» los encadena: al acabar (fin de escena, o `ended` si es un vídeo completo) el panel de fin muestra «Siguiente en 5 s ›» y pasa solo (`SEL_ESPERA`); «Ver de nuevo» o «Cerrar» lo paran. El título del reproductor lleva «2 de 5». Al cerrar vuelve a la lista, con ✓ en los vistos. Las escenas siguen encerradas como en un PIN normal (`compartido: true`) y se puede comentar en cada vídeo de la lista.
 - **Servidor:** el token de sesión del invitado lleva `l: [ids]` (vídeos permitidos) y `c: null`. `caseros-listar`, `video` y los comentarios comprueban con `puedeVerCasero()`. Los fragmentos se validan al generar y al entrar: vídeo inexistente → se quita; escena inexistente → pasa a vídeo completo; el `t` lo pone el servidor.
-- Los PIN de un solo vídeo funcionan igual que antes. Como en ellos, la restricción a la escena es solo de pantalla.
+- Los PIN de un solo vídeo funcionan igual que antes, y la escena también queda limitada en el servidor (apartado 0.7).
 - Probado en local (Chromium, móvil y PC, tema claro): añadir, repetido, barra, ordenar, Atrás, compartir, entrada del invitado, «Ver todo» con escena → vídeo completo → escena, tocar uno suelto (no encadena), comentarios, PIN antiguo, roles `caseros` y `actuaciones`, admin. **Sin probar:** Safari/iOS y LiteSpeed.
+
+## 0.7 Escena compartida limitada en el servidor (2 nov 2026, petición de Carlos)
+
+Antes, quien tenía un PIN de escena solo estaba encerrado en la escena por la pantalla (`vigilarEscena()`), y pidiendo `stream.php` a mano podía ver el vídeo entero. Ahora el servidor solo entrega los trozos HLS de la escena. Vale para los PIN de un vídeo y para las selecciones.
+- **Token de sesión:** al entrar con PIN, `login` añade `w: [[caseroId, ini, fin], …]` (`ventanasDeItems()` en `lib/sesion.php`): `ini` null = vídeo completo, `fin` null = hasta el final. El tramo de una escena va de su `t` al `t` de la siguiente (o `duracion`). Los tokens anteriores al cambio no llevan `w` y siguen sin límite hasta caducar (24 h).
+- **`action=video`:** recibe `&t=` (el segundo de inicio; `pedirUrlsVideo(url, desde)` en `player.js`). Si la sesión tiene tramos para ese vídeo y ninguno es «completo», elige el tramo que contiene `t` (con 2 s de margen); si no hay ninguno responde `Sin acceso`. Firma un token de vídeo `{ v, a: ini, b: fin }` y devuelve **solo HLS** (`mp4: null`) y `tramo`. Si el vídeo no tiene HLS: `Este video aun no esta preparado`.
+- **`stream.php`:** con un token de tramo, la lista marca con `#EXT-X-GAP` los trozos que no se solapan con `[a, b + 1]` (hls.js 1.5.17 no los pide y la línea de tiempo no cambia: los segundos siguen siendo los del original, así que el reproductor no necesita desplazamientos). Pedir un trozo fuera da 403 (`trozosHls()` calcula el inicio de cada trozo sumando los `#EXTINF`). El MP4 da 403.
+- **Precisión:** el corte va por trozos de 6 s, así que el servidor puede dejar ver unos segundos de más por cada lado; la pantalla sigue cortando en el segundo exacto.
+- La familia (`todo`, `caseros`, `admin`) y los fragmentos «vídeo completo» no cambian.
+- Probado en local (Chromium): PIN antiguo de escena (arranque, intento de salir, fin, Ver de nuevo), selección con escena → completo → escena del mismo vídeo, petición manual de trozos fuera (403) y del MP4 (403), familia sin límite. Ningún trozo marcado como hueco se llega a pedir. **Sin probar:** Safari/iOS (en iOS anterior a 17.1, sin hls.js, el HLS nativo podría pedir los huecos y pararse al final de la escena) y LiteSpeed.
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -274,7 +284,7 @@ Selección (apartado 0.6): `{ pin, titulo, items: [{ caseroId, escenaIdx, t }], 
 | `caseros` | contraseña fija | solo caseros (con inicio adaptado desde el 1 nov 2026) |
 | `actuaciones` | contraseña fija | solo actuaciones (con inicio adaptado desde el 1 nov 2026) |
 | OTP | PIN de 4 dígitos generado en el admin, un solo uso, 24 h | según el rol de la OTP (con rol `todo` o `caseros` también puede compartir) |
-| `compartir` | PIN de 6 cifras de un enlace compartido (los antiguos, de 4), o de una selección (0.6) | **solo ese vídeo** (o los de su selección); la restricción a una escena se aplica en la pantalla (`vigilarEscena()`), no en el servidor: alguien con conocimientos podría ver el vídeo completo |
+| `compartir` | PIN de 6 cifras de un enlace compartido (los antiguos, de 4), o de una selección (0.6) | **solo ese vídeo** (o los de su selección); si es una escena, el servidor solo sirve los trozos HLS de esa escena (0.7) y la pantalla la encierra (`vigilarEscena()`) |
 
 **Pantalla de acceso** (cambio de Carlos, 1–2 nov 2026): el campo dice "PIN" y abre el teclado numérico, **sin límite de longitud** (hay contraseñas fijas de más de 4 cifras).
 
@@ -284,8 +294,8 @@ Selección (apartado 0.6): `{ pin, titulo, items: [{ caseroId, escenaIdx, t }], 
 - Si falta el archivo, la API responde con un error 500 claro.
 
 **Tokens (en `auth.php`):** HMAC-SHA256 sobre el payload en base64url, con el formato `payload.firma`.
-- **Token de sesión** (lo devuelve `login`): `{ r: rol, c: idCasero|null, f: entróConContraseñaFija, e: caducidad }`; con un PIN de selección, `{ r: 'compartir', c: null, l: [ids] }`. Dura **24 h**.
-- **Token de vídeo** (lo devuelve `video`): `{ v: nombre, e }`. Dura **12 h** y sirve solo para ese vídeo.
+- **Token de sesión** (lo devuelve `login`): `{ r: rol, c: idCasero|null, f: entróConContraseñaFija, e: caducidad }`; con un PIN de selección, `{ r: 'compartir', c: null, l: [ids] }`; con cualquier PIN, además `w` (tramos permitidos, apartado 0.7). Dura **24 h**.
+- **Token de vídeo** (lo devuelve `video`): `{ v: nombre, e }`, o `{ v, a, b, e }` si está limitado a una escena (0.7). Dura **12 h** y sirve solo para ese vídeo.
 
 **Freno anti fuerza bruta:** 8 fallos en 15 minutos desde la misma IP bloquean esa IP durante 15 minutos. Afecta a toda la API y a `stream.php`, y responde con un 429. Cuentan como fallo los mensajes `No autorizado` y `Contrasena incorrecta`. `Sesion caducada` no cuenta.
 
@@ -307,7 +317,7 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `login` | GET `?pass=` | — | Devuelve `{ rol, token }`. El rol `compartir:ID:escena:t` se usa con PIN; con PIN de selección, `rol: 'compartir-lista'` y además `lista: {titulo, items}` |
 | `listar` | GET | `token` o `pass` | Actuaciones. A los roles sin acceso les devuelve `[]` |
 | `caseros-listar` | GET | `token` o `pass` | Al rol `compartir` solo le devuelve su vídeo. A `actuaciones` le devuelve `[]` |
-| `video` | GET `?url=&token=` | token de sesión | Devuelve `{ hls, mp4 }` con URLs firmadas de `stream.php`, o `{ directo: true }` si no es un MP4 de este servidor |
+| `video` | GET `?url=&token=&t=` | token de sesión | Devuelve `{ hls, mp4 }` con URLs firmadas de `stream.php`, o `{ directo: true }` si no es un MP4 de este servidor. Con PIN de escena usa `t` para elegir el tramo y devuelve solo `hls` y `tramo` (0.7) |
 | `anadir` / `editar` / `eliminar` / `youtube` | POST JSON | `pass` de admin | Actuaciones |
 | `caseros-anadir` / `caseros-editar` / `caseros-eliminar` | POST JSON | `pass` de admin | Vídeos caseros |
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
@@ -323,9 +333,9 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `comentarios-recientes` | GET `?pass=` | admin | Últimos 300 comentarios y "me gusta" por vídeo |
 
 **`stream.php?v=<nombre>&f=<archivo>&t=<tokenVideo>`**, donde `f` puede ser:
-- `index.m3u8`: la lista, reescrita para que cada fragmento lleve el token.
-- `seg_NNNN.ts`: un fragmento.
-- `mp4`: el original, con soporte de rangos HTTP.
+- `index.m3u8`: la lista, reescrita para que cada fragmento lleve el token (con token de tramo, los de fuera llevan `#EXT-X-GAP`).
+- `seg_NNNN.ts`: un fragmento (403 si queda fuera del tramo).
+- `mp4`: el original, con soporte de rangos HTTP (403 con token de tramo).
 
 `stream.php?img=<ruta>`: miniaturas públicas (sin token), solo de `miniaturas/` y `caseros/miniaturas/`.
 
@@ -431,6 +441,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
 - Fin de escena en iPhone con pantalla completa (apartado 7, 2 nov 2026, `?v=20261102c`): sin probar en iOS real.
+- **Escena compartida limitada en el servidor** (apartado 0.7, 2 nov 2026, `?v=20261102j`). Probada en local; pendiente de que Carlos abra un PIN de escena en producción (y, si alguien tiene iPhone, en Safari).
 - **Selección compartida** (apartado 0.6, 2 nov 2026, `?v=20261102i`): varias escenas o vídeos con un PIN. Probada en local; pendiente de que Carlos la pruebe en producción (y en Safari/iOS).
 - Pestaña **"🔗 Compartidos"** del admin (2 nov 2026, `js/admin-compartidos.js`, `?v=20261102c`): lista los PIN con vídeo, escena, inicio y caducidad (marca los de 4 cifras y los de vídeos borrados) y permite borrarlos. Probada en local; pendiente de que Carlos la use en producción.
 - Avisos y confirmaciones en ventanas propias (apartado 0.5, 2 nov 2026, `?v=20261102b`). Probado en local (móvil, PC y admin); pendiente de verlo en la tele.
@@ -461,7 +472,6 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 5. Opcionales, ofrecidos sin respuesta:
    - Login por POST: hoy la contraseña viaja en la URL y queda en los registros del servidor.
    - Que el panel de admin recuerde la sesión.
-   - Restringir la escena compartida también en el servidor.
 6. **Android Auto:** descartado por Carlos (1 nov 2026). No admite WebView; si algún día se retoma, lo viable sería una app nativa solo de audio.
 
 ---
