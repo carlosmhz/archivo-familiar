@@ -8,7 +8,14 @@
 // Lo llama player.js: comentariosAbrir(url) al abrir y comentariosCerrar() al cerrar.
 
 const COM_MAX = 1000;
-let _com = { caseroId: null, datos: null, todos: false, cargando: 0 };
+// Reacciones a un comentario: la misma lista que COM_REACCIONES en lib/comentarios.php
+const COM_REACS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+const COM_RESP_VISIBLES = 2;   // respuestas que se ven antes de "Ver N respuestas más"
+function comNuevoEstado(caseroId) {
+  // resp: respuesta en curso { raiz, a: id al que se responde, texto }; abiertos: hilos desplegados
+  return { caseroId, datos: null, todos: false, cargando: 0, resp: null, abiertos: new Set() };
+}
+let _com = comNuevoEstado(null);
 let _comVista = 'escenas';
 
 // ── Dispositivo ──────────────────────────────────────────────────────────────
@@ -66,6 +73,7 @@ function comMsg(m) {
   if (/caducada/i.test(m || '')) return 'Tu sesión ha caducado. Vuelve a entrar.';
   if (/demasiados/i.test(m || '')) return 'Demasiados comentarios seguidos. Espera un poco.';
   if (/vacio|largo/i.test(m || '')) return 'El comentario está vacío o es demasiado largo.';
+  if (/ya no existe/i.test(m || '')) return 'El comentario al que respondes ya no existe.';
   if (/nombre/i.test(m || '')) return 'Escribe un nombre (máximo 40 letras).';
   return 'No se pudo completar (' + (m || 'error') + ').';
 }
@@ -97,7 +105,7 @@ function comentariosAbrir(url) {
     comVista(hayEscenas ? _comVista : 'comentarios');
     comPintarEscena(); return;
   }
-  _com = { caseroId: c.id, datos: null, todos: false, cargando: 0 };
+  _com = comNuevoEstado(c.id);
   box.innerHTML = comEsqueleto();
   comPestanas(hayEscenas);
   comVista(hayEscenas ? 'escenas' : 'comentarios');    // Escenas, por defecto
@@ -111,7 +119,7 @@ function comentariosCerrar() {
   if (bar) { bar.classList.remove('visible'); bar.innerHTML = ''; }
   const pb = document.querySelector('.player-box');
   if (pb) pb.classList.remove('vista-escenas', 'vista-comentarios');
-  _com = { caseroId: null, datos: null, todos: false, cargando: 0 };
+  _com = comNuevoEstado(null);
 }
 
 // Pestañas Escenas / Comentarios y botón de "me gusta"
@@ -242,22 +250,187 @@ function comPintarLista() {
   const lista = _com.datos.comentarios;
   const n = document.querySelector('#player-pestanas .pp-n-com');
   if (n) n.textContent = lista.length;
-  const ver = _com.todos ? lista : lista.slice(0, 3);
-  box.querySelector('.pc-lista').innerHTML = ver.length ? ver.map(c => `
-    <li class="pc-item${c.mio ? ' mio' : ''}">
-      <div class="pc-meta"><b>${comEsc(c.nombre)}</b><span>${comHace(c.creado)}</span>
-        ${c.mio ? `<button type="button" class="pc-borrar" onclick="comBorrar(${c.id})" aria-label="Borrar mi comentario">Borrar</button>` : ''}</div>
-      ${c.escena ? `<button type="button" class="pc-escena" onclick="comIrA(${c.escena.t})">Escena «${comEsc(c.escena.titulo)}» · ${comTiempo(c.escena.t)}</button>` : ''}
-      <p class="pc-texto">${comEsc(c.texto)}</p>
-    </li>`).join('') : '<li class="pc-vacio">Aún no hay comentarios. ¡Sé el primero!</li>';
+  // Lo que se está escribiendo en una respuesta no se pierde al repintar
+  const ta = box.querySelector('.pc-resp-form textarea');
+  if (ta && _com.resp) _com.resp.texto = ta.value;
+  const principales = lista.filter(c => !c.padre);
+  const ver = _com.todos ? principales : principales.slice(0, 3);
+  box.querySelector('.pc-lista').innerHTML = ver.length ? ver.map(comItem).join('')
+    : '<li class="pc-vacio">Aún no hay comentarios. ¡Sé el primero!</li>';
   const mas = box.querySelector('.pc-mas');
-  mas.hidden = _com.todos || lista.length <= 3;
-  mas.textContent = 'Ver los ' + lista.length + ' comentarios';
+  mas.hidden = _com.todos || principales.length <= 3;
+  mas.textContent = 'Ver los ' + principales.length + ' comentarios';
+  const nuevo = box.querySelector('.pc-resp-form textarea');
+  if (nuevo) comAjustar(nuevo);
+}
+
+// Un comentario principal con sus reacciones, sus respuestas y, si toca, el formulario de respuesta
+function comItem(c) {
+  const resps = _com.datos.comentarios.filter(r => r.padre === c.id);
+  const abierto = _com.abiertos.has(c.id) || resps.length <= COM_RESP_VISIBLES + 1;
+  const verResps = abierto ? resps : resps.slice(0, COM_RESP_VISIBLES);
+  const r = _com.resp && _com.resp.raiz === c.id ? _com.resp : null;
+  return `
+    <li class="pc-item${c.mio ? ' mio' : ''}" data-id="${c.id}">
+      ${comCuerpo(c, c.id)}
+      ${resps.length || r ? `<ul class="pc-respuestas">
+        ${verResps.map(x => `<li class="pc-item pc-resp${x.mio ? ' mio' : ''}" data-id="${x.id}">${comCuerpo(x, c.id)}</li>`).join('')}
+        ${abierto ? '' : `<li><button type="button" class="pc-ver-resp" onclick="comAbrirHilo(${c.id})">Ver ${resps.length - COM_RESP_VISIBLES} respuestas más</button></li>`}
+      </ul>` : ''}
+      ${r ? comFormRespuesta(r) : ''}
+    </li>`;
+}
+
+function comCuerpo(c, raiz) {
+  return `
+    <div class="pc-meta"><b>${comEsc(c.nombre)}</b><span>${comHace(c.creado)}</span>
+      ${c.mio ? `<button type="button" class="pc-borrar" onclick="comBorrar(${c.id})" aria-label="Borrar mi comentario">Borrar</button>` : ''}</div>
+    ${c.escena ? `<button type="button" class="pc-escena" onclick="comIrA(${c.escena.t})">Escena «${comEsc(c.escena.titulo)}» · ${comTiempo(c.escena.t)}</button>` : ''}
+    <p class="pc-texto">${comEsc(c.texto)}</p>
+    <div class="pc-acciones">
+      ${(c.reacciones || []).map(x => {
+        const i = COM_REACS.indexOf(x.emoji);
+        return i < 0 ? '' : `<button type="button" class="pc-reac${x.mio ? ' mio' : ''}" onclick="comReaccionar(${c.id}, ${i})"
+          title="${comEsc(comQuienReac(x))}" aria-pressed="${x.mio ? 'true' : 'false'}"><span class="pc-reac-e">${x.emoji}</span><span class="pc-reac-n">${x.n}</span></button>`;
+      }).join('')}
+      <span class="pc-reac-caja">
+        <button type="button" class="pc-reac-add" onclick="comSelector(event, ${c.id})" aria-label="Reaccionar" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="12" r="8"/><path d="M8 14.2c.8 1.1 1.8 1.7 3 1.7s2.2-.6 3-1.7"/><circle cx="8.4" cy="10" r=".6"/><circle cx="13.6" cy="10" r=".6"/><path d="M20 3v5M17.5 5.5h5"/></svg>
+        </button>
+      </span>
+      <button type="button" class="pc-responder" onclick="comResponder(${raiz}, ${c.id})">Responder</button>
+    </div>`;
+}
+
+function comQuienReac(x) {
+  const n = x.nombres.slice(0, 3), resto = x.n - n.length;
+  return x.emoji + ' ' + (resto > 0 ? n.join(', ') + ' y ' + resto + ' más'
+    : n.length > 1 ? n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1] : n[0] || '');
+}
+
+function comFormRespuesta(r) {
+  const a = _com.datos.comentarios.find(x => x.id === r.a);
+  return `
+    <form class="pc-resp-form" onsubmit="comPublicarRespuesta(event)">
+      <p class="pc-resp-a">Respondiendo a <b>${comEsc(a ? a.nombre : '')}</b></p>
+      <textarea rows="1" maxlength="${COM_MAX}" placeholder="Escribe tu respuesta…" oninput="comAjustar(this)">${comEsc(r.texto || '')}</textarea>
+      <div class="pc-fila">
+        <button type="button" class="pc-btn ghost" onclick="comCancelarRespuesta()">Cancelar</button>
+        <button type="submit" class="pc-btn">Responder</button>
+      </div>
+    </form>`;
 }
 
 // ── Acciones ─────────────────────────────────────────────────────────────────
 function comAjustar(t) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; }
 function comVerTodos() { _com.todos = true; comPintarLista(); }
+function comAbrirHilo(id) { _com.abiertos.add(id); comPintarLista(); }
+
+// ── Reacciones ───────────────────────────────────────────────────────────────
+function comCerrarSelector() {
+  document.querySelectorAll('#player-comentarios .pc-selector').forEach(el => {
+    const b = el.parentNode.querySelector('.pc-reac-add');
+    if (b) b.setAttribute('aria-expanded', 'false');
+    el.remove();
+  });
+}
+function comSelector(ev, id) {
+  ev.stopPropagation();
+  const caja = ev.currentTarget.parentNode;
+  const yaAbierto = caja.querySelector('.pc-selector');
+  comCerrarSelector();
+  if (yaAbierto) return;
+  if (!COM_DISP.nombre) { comPedirNombre(); return; }
+  const c = _com.datos.comentarios.find(x => x.id === id);
+  const mia = c && (c.reacciones || []).find(x => x.mio);
+  const sel = document.createElement('div');
+  sel.className = 'pc-selector';
+  sel.setAttribute('role', 'menu');
+  sel.innerHTML = COM_REACS.map((e, i) => `<button type="button" role="menuitem" class="${mia && mia.emoji === e ? 'mio' : ''}"
+    onclick="comCerrarSelector(); comReaccionar(${id}, ${i})" aria-label="Reaccionar con ${e}">${e}</button>`).join('');
+  caja.appendChild(sel);
+  ev.currentTarget.setAttribute('aria-expanded', 'true');
+  // Si no cabe a la derecha (móvil estrecho), se abre hacia la izquierda
+  const r = sel.getBoundingClientRect();
+  if (r.right > window.innerWidth - 8) sel.classList.add('izq');
+}
+document.addEventListener('click', ev => {
+  if (!ev.target.closest || !ev.target.closest('.pc-selector')) comCerrarSelector();
+});
+
+// Pulsar el mismo emoji quita la reacción; otro la cambia (una por persona y comentario)
+async function comReaccionar(id, i) {
+  if (!_com.datos) return;
+  if (!COM_DISP.nombre) { comPedirNombre(); return; }
+  const emoji = COM_REACS[i];
+  const c = _com.datos.comentarios.find(x => x.id === id);
+  if (!c || !emoji) return;
+  const antes = JSON.parse(JSON.stringify(c.reacciones || []));
+  // Respuesta inmediata en pantalla
+  let rs = antes.map(x => Object.assign({}, x, { nombres: x.nombres.slice() }));
+  const mia = rs.find(x => x.mio);
+  const quita = mia && mia.emoji === emoji;
+  if (mia) { mia.n--; mia.mio = false; mia.nombres = mia.nombres.filter(n => n !== COM_DISP.nombre); }
+  if (!quita) {
+    let x = rs.find(y => y.emoji === emoji);
+    if (!x) { x = { emoji, n: 0, mio: false, nombres: [] }; rs.push(x); }
+    x.n++; x.mio = true; x.nombres.unshift(COM_DISP.nombre);
+  }
+  c.reacciones = rs.filter(x => x.n > 0).sort((a, b) => COM_REACS.indexOf(a.emoji) - COM_REACS.indexOf(b.emoji));
+  comPintarLista();
+  const caso = _com.caseroId;
+  const d = await comApi('comentarios-reaccion', '', { dispositivo: COM_DISP.id, id, emoji });
+  if (caso !== _com.caseroId) return;
+  if (d.ok) c.reacciones = d.data;
+  else {
+    c.reacciones = antes;
+    if (/falta el nombre/i.test(d.msg || '')) { COM_DISP.nombre = ''; comGuardarDispositivo(COM_DISP); comPedirNombre(); }
+    else if (/no encontrado/i.test(d.msg || '')) { avisar('Ese comentario ya no existe.'); comCargar(); }
+    else avisar(comMsg(d.msg));
+  }
+  comPintarLista();
+}
+
+// ── Respuestas ───────────────────────────────────────────────────────────────
+function comResponder(raiz, a) {
+  if (!COM_DISP.nombre) { comPedirNombre(); return; }
+  const dest = _com.datos.comentarios.find(x => x.id === a);
+  // A una respuesta se contesta en el mismo hilo, mencionando a quien la escribió
+  const texto = a !== raiz && dest && !dest.mio ? '@' + dest.nombre + ' ' : '';
+  _com.resp = { raiz, a, texto };
+  _com.abiertos.add(raiz);
+  comPintarLista();
+  const ta = document.querySelector('#player-comentarios .pc-resp-form textarea');
+  if (ta) {
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.closest('form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+function comCancelarRespuesta() { _com.resp = null; comPintarLista(); }
+
+async function comPublicarRespuesta(ev) {
+  ev.preventDefault();
+  const ta = ev.target.querySelector('textarea');
+  const texto = ta.value.trim();
+  if (!texto) { ta.focus(); return; }
+  const btn = ev.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  const id = _com.caseroId, r = _com.resp;
+  const d = await comApi('comentarios-anadir', '', { dispositivo: COM_DISP.id, caseroId: id, texto, padreId: r.a });
+  btn.disabled = false;
+  if (id !== _com.caseroId) return;
+  if (!d.ok) {
+    if (/falta el nombre/i.test(d.msg || '')) { COM_DISP.nombre = ''; comGuardarDispositivo(COM_DISP); comPedirNombre(); return; }
+    avisar(comMsg(d.msg));
+    if (/ya no existe/i.test(d.msg || '')) { _com.resp = null; comCargar(); }
+    return;
+  }
+  _com.resp = null;
+  _com.datos.comentarios.push(d.data);
+  _com.abiertos.add(d.data.padre);
+  comPintarLista();
+}
 
 function comIrA(t) {
   const v = document.getElementById('player-video');
@@ -324,9 +497,13 @@ async function comPublicar(ev) {
 }
 
 async function comBorrar(idCom) {
-  if (!await confirmar('Se borrará para todos los que ven este vídeo.', { titulo: '¿Borrar tu comentario?', aceptar: 'Borrar', peligro: true })) return;
+  const c = _com.datos.comentarios.find(x => x.id === idCom);
+  const nResp = c && !c.padre ? _com.datos.comentarios.filter(x => x.padre === idCom).length : 0;
+  const texto = 'Se borrará para todos los que ven este vídeo' + (nResp ? (nResp === 1 ? ', con su respuesta.' : ', con sus ' + nResp + ' respuestas.') : '.');
+  if (!await confirmar(texto, { titulo: '¿Borrar tu comentario?', aceptar: 'Borrar', peligro: true })) return;
   const d = await comApi('comentarios-borrar', '', { dispositivo: COM_DISP.id, id: idCom });
   if (!d.ok) { avisar(comMsg(d.msg)); return; }
-  _com.datos.comentarios = _com.datos.comentarios.filter(c => c.id !== idCom);
+  if (_com.resp && (_com.resp.raiz === idCom || _com.resp.a === idCom)) _com.resp = null;
+  _com.datos.comentarios = _com.datos.comentarios.filter(c => c.id !== idCom && c.padre !== idCom);
   comPintarLista();
 }

@@ -22,8 +22,9 @@ async function cargarComentariosAdmin() {
           <div style="font-size:11px;color:#5a7299;margin-bottom:3px;">
             <b style="color:#1a2a4a;">${escAdm(c.nombre)}</b> · ${escAdm(roles[c.rol] || c.rol || '')} · ${new Date(c.creado * 1000).toLocaleString('es-ES')}
           </div>
-          <div style="font-size:11px;color:#2056a8;margin-bottom:4px;">${escAdm(c.video)}${c.escena ? ' · Escena «' + escAdm(c.escena.titulo) + '»' : ''}</div>
+          <div style="font-size:11px;color:#2056a8;margin-bottom:4px;">${escAdm(c.video)}${c.escena ? ' · Escena «' + escAdm(c.escena.titulo) + '»' : ''}${c.padre ? ' · ↳ respuesta' : ''}</div>
           <div style="white-space:pre-wrap;overflow-wrap:anywhere;color:#1a2a4a;">${escAdm(c.texto)}</div>
+          ${(c.reacciones || []).length ? `<div style="font-size:12px;color:#5a7299;margin-top:4px;">${c.reacciones.map(x => escAdm(x.emoji) + ' ' + x.n).join(' · ')}</div>` : ''}
         </td>
         <td style="padding:10px 4px;width:44px;"><button onclick="borrarComentarioAdmin(${c.id})" class="btn btn-danger" title="Borrar">✕</button></td>
       </tr>`).join('')}</tbody></table>`
@@ -35,7 +36,7 @@ async function cargarComentariosAdmin() {
 }
 
 async function borrarComentarioAdmin(id) {
-  if (!await confirmar('El comentario se borrará para todos.', { titulo: '¿Borrar este comentario?', aceptar: 'Borrar', peligro: true })) return;
+  if (!await confirmar('El comentario se borrará para todos (con sus respuestas, si las tiene).', { titulo: '¿Borrar este comentario?', aceptar: 'Borrar', peligro: true })) return;
   const r = await fetch(`${API}?action=comentarios-borrar&pass=${encodeURIComponent(PASS)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
   });

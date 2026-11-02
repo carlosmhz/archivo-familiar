@@ -11,6 +11,8 @@
 define('FILE_COMENTARIOS', DIR_DATOS . '/comentarios.sqlite');
 define('COM_MAX_NOMBRE', 40);
 define('COM_MAX_TEXTO', 1000);
+// Reacciones permitidas a un comentario (una por dispositivo y comentario, como en WhatsApp)
+define('COM_REACCIONES', ['👍', '❤️', '😂', '😮', '😢', '🙏']);
 
 function db() {
     static $pdo = null;
@@ -52,7 +54,19 @@ function db() {
                 creado      INTEGER NOT NULL,
                 PRIMARY KEY (casero_id, dispositivo)
             );
+            CREATE TABLE IF NOT EXISTS reacciones (
+                comentario_id INTEGER NOT NULL,
+                dispositivo   TEXT NOT NULL REFERENCES dispositivos(id),
+                emoji         TEXT NOT NULL,
+                creado        INTEGER NOT NULL,
+                PRIMARY KEY (comentario_id, dispositivo)
+            );
         ');
+        // Respuestas (2 nov 2026): padre_id = comentario al que responde (siempre uno principal).
+        // Las bases creadas antes no tienen la columna: se añade sin tocar los comentarios.
+        $cols = array_column($pdo->query('PRAGMA table_info(comentarios)')->fetchAll(), 'name');
+        if (!in_array('padre_id', $cols, true)) $pdo->exec('ALTER TABLE comentarios ADD COLUMN padre_id INTEGER');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS comentarios_padre ON comentarios (padre_id)');
     } catch (Throwable $e) {
         responder(false, null, 'No se pudo abrir la base de datos de comentarios');
     }
@@ -123,9 +137,51 @@ function megustaDe($caseroId, $d) {
     return ['total' => $total, 'mio' => $mio, 'nombres' => $nombres];
 }
 
-function filaComentario(array $f, $d) {
+// Reacciones de una lista de comentarios: [idComentario => [{emoji, n, mio, nombres[≤5]}]]
+function reaccionesDe(array $ids, $d) {
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) return [];
+    $res = [];
+    foreach (array_chunk($ids, 400) as $trozo) {
+        $st = db()->prepare('SELECT r.comentario_id, r.emoji, r.dispositivo, d.nombre FROM reacciones r
+                             JOIN dispositivos d ON d.id = r.dispositivo
+                             WHERE r.comentario_id IN (' . implode(',', array_fill(0, count($trozo), '?')) . ')
+                             ORDER BY r.creado');
+        $st->execute($trozo);
+        foreach ($st->fetchAll() as $f) {
+            $c = intval($f['comentario_id']); $e = $f['emoji'];
+            if (!isset($res[$c][$e])) $res[$c][$e] = ['emoji' => $e, 'n' => 0, 'mio' => false, 'nombres' => []];
+            $res[$c][$e]['n']++;
+            if (count($res[$c][$e]['nombres']) < 5) $res[$c][$e]['nombres'][] = $f['nombre'];
+            if ($d !== '' && hash_equals((string)$f['dispositivo'], (string)$d)) $res[$c][$e]['mio'] = true;
+        }
+    }
+    // Orden fijo (el de COM_REACCIONES), para que los botones no bailen
+    $orden = array_flip(COM_REACCIONES);
+    foreach ($res as $c => $porEmoji) {
+        uksort($porEmoji, fn($a, $b) => ($orden[$a] ?? 99) <=> ($orden[$b] ?? 99));
+        $res[$c] = array_values($porEmoji);
+    }
+    return $res;
+}
+
+// Borra un comentario con sus respuestas y las reacciones de todos ellos.
+function borrarComentarioYRespuestas($id) {
+    $pdo = db();
+    $st = $pdo->prepare('SELECT id FROM comentarios WHERE id = ? OR padre_id = ?');
+    $st->execute([$id, $id]);
+    $ids = array_map('intval', $st->fetchAll(PDO::FETCH_COLUMN));
+    if (!$ids) return;
+    $m = implode(',', array_fill(0, count($ids), '?'));
+    $pdo->prepare("DELETE FROM reacciones WHERE comentario_id IN ($m)")->execute($ids);
+    $pdo->prepare("DELETE FROM comentarios WHERE id IN ($m)")->execute($ids);
+}
+
+function filaComentario(array $f, $d, array $reac = []) {
     return [
         'id'     => intval($f['id']),
+        'padre'  => isset($f['padre_id']) && $f['padre_id'] !== null ? intval($f['padre_id']) : null,
+        'reacciones' => $reac[intval($f['id'])] ?? [],
         'nombre' => $f['nombre'],
         'texto'  => $f['texto'],
         'escena' => $f['escena_idx'] === null ? null
