@@ -85,8 +85,12 @@ function comCaseroDeUrl(url) {
   return CASEROS.find(x => x.youtube && x.youtube === url)
     || (window._compartirData ? window._compartirData.casero : null);
 }
+// Quien entra con un PIN que le deja ver solo una escena no ve la marca de escena (ni en el
+// formulario ni en los comentarios) y sus comentarios no la llevan: no tiene sentido para él.
+// La marca queda para quien ve el vídeo entero (familia, PIN de vídeo completo).
+function comEscenaOculta() { return !!(_escenaActiva && _escenaActiva.compartido); }
 function comEscenaActual() {
-  if (!_escenaActiva) return null;
+  if (!_escenaActiva || comEscenaOculta()) return null;
   const c = CASEROS.find(x => x.id === _escenaActiva.caseroId);
   const e = c && c.escenas ? c.escenas[_escenaActiva.escenaIdx] : null;
   return e ? { idx: _escenaActiva.escenaIdx, titulo: e.titulo } : null;
@@ -103,7 +107,9 @@ function comentariosAbrir(url) {
   if (_com.caseroId === c.id && _com.datos) {          // otra escena del mismo vídeo: se queda la pestaña
     comPestanas(hayEscenas);
     comVista(hayEscenas ? _comVista : 'comentarios');
-    comPintarEscena(); return;
+    comPintarEscena();
+    comPintarLista();   // en una selección, el fragmento nuevo puede ser escena o vídeo completo
+    return;
   }
   _com = comNuevoEstado(c.id);
   box.innerHTML = comEsqueleto();
@@ -285,7 +291,7 @@ function comCuerpo(c, raiz) {
   return `
     <div class="pc-meta"><b>${comEsc(c.nombre)}</b><span>${comHace(c.creado)}</span>
       ${c.mio ? `<button type="button" class="pc-borrar" onclick="comBorrar(${c.id})" aria-label="Borrar mi comentario">Borrar</button>` : ''}</div>
-    ${c.escena ? `<button type="button" class="pc-escena" onclick="comIrA(${c.escena.t})">Escena «${comEsc(c.escena.titulo)}» · ${comTiempo(c.escena.t)}</button>` : ''}
+    ${c.escena && !comEscenaOculta() ? `<button type="button" class="pc-escena" onclick="comIrA(${c.escena.t})">Escena «${comEsc(c.escena.titulo)}» · ${comTiempo(c.escena.t)}</button>` : ''}
     <p class="pc-texto">${comEsc(c.texto)}</p>
     <div class="pc-acciones">
       ${(c.reacciones || []).map(x => {
