@@ -12,10 +12,10 @@
 <title>Archivo Familiar de Vídeos</title>
 <link rel="preload" href="vendor/fonts/newsreader-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=20261102f">
-<link rel="stylesheet" href="css/sala.css?v=20261102f">
-<link rel="stylesheet" href="css/comentarios.css?v=20261102f">
-<link rel="stylesheet" href="css/dialogo.css?v=20261102f">
+<link rel="stylesheet" href="css/app.css?v=20261102g">
+<link rel="stylesheet" href="css/sala.css?v=20261102g">
+<link rel="stylesheet" href="css/comentarios.css?v=20261102g">
+<link rel="stylesheet" href="css/dialogo.css?v=20261102g">
 </head>
 <body>
 
@@ -92,6 +92,9 @@
         </span>
         <span class="dia-play"><svg class="ico"><use href="#i-play"/></svg></span>
       </button>
+      <button class="dia-flecha prev" onclick="diaIr(-1)" aria-label="Recuerdo anterior">‹</button>
+      <button class="dia-flecha next" onclick="diaIr(1)" aria-label="Recuerdo siguiente">›</button>
+      <div class="dia-puntos" id="dia-puntos"></div>
     </section>
 
     <button class="continue-card" id="continue-card" onclick="continuarViendo()">
@@ -248,16 +251,16 @@
 
 
 <script src="vendor/hls.min.js"></script>
-<script src="js/dialogo.js?v=20261102f"></script>
-<script src="js/estado.js?v=20261102f"></script>
-<script src="js/auth.js?v=20261102f"></script>
-<script src="js/inicio.js?v=20261102f"></script>
-<script src="js/navegacion.js?v=20261102f"></script>
-<script src="js/caseros.js?v=20261102f"></script>
-<script src="js/player.js?v=20261102f"></script>
-<script src="js/comentarios.js?v=20261102f"></script>
-<script src="js/transiciones.js?v=20261102f"></script>
-<script src="js/ui.js?v=20261102f"></script>
+<script src="js/dialogo.js?v=20261102g"></script>
+<script src="js/estado.js?v=20261102g"></script>
+<script src="js/auth.js?v=20261102g"></script>
+<script src="js/inicio.js?v=20261102g"></script>
+<script src="js/navegacion.js?v=20261102g"></script>
+<script src="js/caseros.js?v=20261102g"></script>
+<script src="js/player.js?v=20261102g"></script>
+<script src="js/comentarios.js?v=20261102g"></script>
+<script src="js/transiciones.js?v=20261102g"></script>
+<script src="js/ui.js?v=20261102g"></script>
 <!-- MODAL CASEROS -->
 <div class="caseros-modal-overlay" id="caseros-modal" onclick="cerrarModalCaseros(event)">
   <div class="caseros-modal-box">
@@ -272,7 +275,7 @@
   </div>
 </div>
 <!-- Bloque modo TV (solo activo con ?tv=1, no afecta a móvil/PC) -->
-<link rel="stylesheet" href="css/tv.css?v=20261102f">
+<link rel="stylesheet" href="css/tv.css?v=20261102g">
 
 <div id="tv-remote-indicator">
   <div>▲▼◀▶ &nbsp;Navegar</div>
@@ -281,12 +284,12 @@
   <div>⬅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Volver</div>
 </div>
 
-<script src="js/tv.js?v=20261102f"></script>
+<script src="js/tv.js?v=20261102g"></script>
 
 <!-- Bloque modo TV — Actuaciones (solo activo con ?tv=1) -->
 
 <!-- ESTILOS ACTUACIONES TV -->
-<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261102f">
+<link rel="stylesheet" href="css/tv-actuaciones.css?v=20261102g">
 
 <!-- Modal de actuaciones de un año -->
 <div id="tv-sev-modal">
@@ -299,7 +302,7 @@
   </div>
 </div>
 
-<script src="js/tv-actuaciones.js?v=20261102f"></script>
+<script src="js/tv-actuaciones.js?v=20261102g"></script>
 
 </body>
 </html>

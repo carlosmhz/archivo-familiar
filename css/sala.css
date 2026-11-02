@@ -585,3 +585,47 @@ body:not(.modo-tv) .decada-row { margin:0 -14px; padding:2px 14px 0; }
 body:not(.modo-tv) .decada-section .nf-info { background:var(--surface); }
 body:not(.modo-tv) .decada-section .nf-fecha { margin-bottom:4px; }
 body:not(.modo-tv) .decada-section .fila-barra { margin-top:12px; }
+
+/* ─── CARRUSEL DE RECUERDOS DE LA PORTADA (2 nov 2026, petición de Carlos: "tipo Movistar") ───
+   5 diapositivas que pasan solas cada 7 s (barra de progreso = reloj), fundido entre fotos y zoom
+   lento (Ken Burns). Pausa con el ratón encima o el dedo apoyado. Para cambiar el ritmo: la
+   duración de dia-prog (aquí) y la de dia-kb. Para volver a una sola portada: MAX_RECUERDOS = 1
+   en js/inicio.js. */
+.dia-fondo { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.9s ease; }
+.dia-fondo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.dia-fondo.activo { opacity:1; }
+.dia-fondo.activo, .dia-fondo.saliendo { animation:dia-kb 10s ease-out both; transform-origin:var(--kb-o, 50% 50%); }
+.dia-fondo:nth-child(odd) { --kb-o:35% 40%; }
+.dia-fondo:nth-child(even) { --kb-o:65% 55%; }
+@keyframes dia-kb { from { transform:scale(1); } to { transform:scale(1.12); } }
+.dia-txt { transition:opacity 0.28s ease, transform 0.28s ease; }
+.dia-txt.cambia { opacity:0; transform:translateY(6px); }
+.dia-card { touch-action:pan-y; }
+.dia-puntos, .dia-flecha { display:none; }
+body:not(.modo-tv) .home-hero.dia-multi { position:relative; }
+body:not(.modo-tv) .home-hero.dia-multi .dia-puntos {
+  display:flex; position:absolute; z-index:4; bottom:6px; gap:6px; left:max(20px, calc(50vw - 518px));
+}
+.dia-punto { width:34px; height:22px; padding:0; border:0; background:none; cursor:pointer; display:flex; align-items:center; }
+.dia-punto i { position:relative; display:block; width:100%; height:3px; border-radius:2px; overflow:hidden; background:rgba(244,239,230,0.3); }
+.dia-punto i::after { content:''; position:absolute; inset:0; background:#F4EFE6; transform:scaleX(0); transform-origin:left; }
+.dia-punto.hecho i::after { transform:scaleX(1); }
+.dia-punto.activo i::after { animation:dia-prog 7s linear forwards; }
+@keyframes dia-prog { to { transform:scaleX(1); } }
+.home-hero.dia-pausa .dia-punto.activo i::after, .home-hero.dia-pausa .dia-fondo { animation-play-state:paused; }
+@media (hover:hover) and (pointer:fine) {
+  body:not(.modo-tv) .home-hero.dia-multi .dia-flecha {
+    display:flex; align-items:center; justify-content:center; position:absolute; z-index:4; top:42%;
+    width:44px; height:44px; border:0; border-radius:50%; background:rgba(18,17,14,0.5); color:#F4EFE6;
+    font-size:26px; line-height:1; cursor:pointer; opacity:0; transition:opacity 0.2s, background 0.2s;
+  }
+  body:not(.modo-tv) .home-hero.dia-multi:hover .dia-flecha { opacity:1; }
+  body:not(.modo-tv) .home-hero.dia-multi .dia-flecha:hover { background:rgba(18,17,14,0.8); }
+  .dia-flecha.prev { left:14px; }
+  .dia-flecha.next { right:14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dia-fondo.activo, .dia-fondo.saliendo { animation:none; }
+  .dia-fondo, .dia-txt { transition:none; }
+  .dia-punto.activo i::after { animation:none; transform:scaleX(1); }   /* sin movimiento no pasa solo: se cambia a mano */
+}

@@ -88,6 +88,16 @@ Todo vive en `js/transiciones.js` (cargado justo antes de `ui.js`) y al final de
 - **5. Cascada:** al abrir una pantalla, sus tarjetas y filas entran una a una (`.sala-casc`, retraso en `--d`). También la primera vez que aparece el inicio.
 - Para grabar demostraciones a cámara lenta: `window.__transK = 3` en la consola multiplica las duraciones de `transiciones.js`.
 
+## 0.5 Carrusel de recuerdos en la portada (2 nov 2026; Carlos: "tipo Movistar", 5 diapositivas cada 7 s, con "Hace X años" y Ken Burns)
+
+Sustituye al recuerdo único. Es solo la portada del inicio (`#dia-card`, que sigue siendo un único botón: el efecto de vuelta y `verRecuerdo()` no cambian).
+- **Lista (`elegirRecuerdos()`, `js/inicio.js`):** hasta `MAX_RECUERDOS` = 5, fija todo el día (`semillaDia()`), sin dos del mismo vídeo (si hay pocos, se admiten escenas del mismo). Orden: hasta 3 de "Tal día como hoy" → 1 de "Hace N años" (N múltiplo de 10; mismo mes si lo hay, si no cualquier mes) → 1 de "Un mes como este" → el resto "Recuerdo del día" al azar. El rol de solo actuaciones usa actuaciones.
+- **Ritmo:** la barra de progreso del punto activo (`.dia-punto.activo i::after`, animación `dia-prog` de 7 s en `sala.css`) hace de reloj: al terminar (`animationend`) pasa a la siguiente. No avanza con el reproductor abierto ni mientras la foto vuelve (`.sala-vuelta`). Pausa con el ratón encima o el dedo apoyado.
+- **Fotos:** `.dia-fondo` (una por diapositiva, dentro de `.dia-thumb`), fundido de 0,9 s y zoom lento `dia-kb` de 10 s (Ken Burns, el origen alterna entre pares e impares).
+- **Mandos:** deslizar con el dedo, puntos pulsables, flechas ‹ › solo con ratón. Con una sola diapositiva no hay puntos. Con "reducir animaciones" no pasa solo (se cambia a mano) y no hay zoom. En la tele no existe.
+- Volver al inicio no recrea la lista si es la misma (`_diaClave`), así que el carrusel no salta. Para volver a una sola portada: `MAX_RECUERDOS = 1`.
+- Probado en local (Chromium, fecha fijada al 2 nov): ritmo, pausa, puntos, flechas, deslizar, reproductor abierto, ir y volver, reducir animaciones, roles `caseros` y `actuaciones`, y `?tv=1`. **Sin probar:** Safari/iOS y LiteSpeed. Pendiente de que Carlos lo vea en su móvil.
+
 ## 0.3 Comentarios y "me gusta" (en `main` desde el 1 nov 2026, autor de commits: "Agente comentarios")
 
 Quien ve un vídeo casero puede comentarlo y darle "me gusta": la familia (`todo`, `caseros`, `admin`) y los invitados con PIN (`compartir`, solo en su vídeo). Decisiones de Carlos (1 nov 2026): todos los que acceden a un vídeo ven todos sus comentarios (aunque vengan de enlaces distintos); la familia también comenta; los comentarios salen al momento, sin aprobación; el comentario es del vídeo entero, con una marca si se escribió viendo una escena.
@@ -419,6 +429,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 
 - Esquinas redondeadas (apartado 0.2, 2 nov 2026, `?v=20261102e`). Probado en local (móvil, PC, TV); pendiente de que Carlos lo vea en su móvil.
 
+- Carrusel de recuerdos en la portada (apartado 0.5, 2 nov 2026, `?v=20261102g`). Probado en local; pendiente de que Carlos lo vea en su móvil (y en Safari/iOS).
 - Décadas en recuadros y menos espacio entre filas (apartado 0.2, 2 nov 2026, `?v=20261102f`). Probado en local (móvil y PC); pendiente de que Carlos lo vea en su móvil.
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.

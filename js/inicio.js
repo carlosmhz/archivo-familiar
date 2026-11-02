@@ -181,8 +181,15 @@ function semillaDia(extra) {
   for (let i = 0; i < txt.length; i++) { x ^= txt.charCodeAt(i); x = Math.imul(x, 16777619) >>> 0; }
   return x;
 }
-let _recuerdo = null;
-function elegirRecuerdo() {
+// ─── Portada: carrusel de recuerdos (2 nov 2026) ─────────────────────────────
+// Hasta MAX_RECUERDOS diapositivas que pasan solas cada DIA_SEG segundos (barra de progreso
+// bajo la portada; la barra es la que manda el ritmo: al terminar su animación, avanza).
+// La lista es fija todo el día (semillaDia), así que volver al inicio no la cambia.
+const MAX_RECUERDOS = 5;
+let _recuerdos = [], _recuerdo = null, _diaIdx = 0, _diaClave = '', _diaIniciado = false, _diaSwipe = 0;
+function vidRecuerdo(x) { return x.tipo === 'actuacion' ? 'a' + x.a.id : 'c' + x.c.id; }
+function claveRecuerdo(x) { return vidRecuerdo(x) + (x.tipo === 'escena' ? ':' + x.idx : ''); }
+function elegirRecuerdos() {
   const hoy = new Date(), d = hoy.getDate(), m = hoy.getMonth() + 1, y = hoy.getFullYear();
   const pool = [];
   CASEROS.forEach(c => {
@@ -194,42 +201,135 @@ function elegirRecuerdo() {
     }
   });
   if (!pool.length) {
-    // Sin vídeos caseros (rol de solo actuaciones): una actuación del día
+    // Sin vídeos caseros (rol de solo actuaciones): actuaciones del día
     ACTUACIONES.forEach(a => { if (a.youtube) pool.push({ tipo: 'actuacion', a, f: fechaDMY(a.fecha) }); });
   }
-  if (!pool.length) return null;
-  const elegir = (lista, extra) => lista[semillaDia(extra) % lista.length];
-  const dia = pool.filter(x => x.f.d === d && x.f.m === m && x.f.y && x.f.y < y);
-  if (dia.length) { const x = elegir(dia, 'd'); return { ...x, motivo: 'dia', anios: y - x.f.y }; }
-  const mes = pool.filter(x => x.f.m === m && x.f.y && x.f.y < y);
-  if (mes.length) { const x = elegir(mes, 'm'); return { ...x, motivo: 'mes', anios: y - x.f.y }; }
-  return { ...elegir(pool, 'r'), motivo: 'azar' };
+  if (!pool.length) return [];
+  const orden = (lista, extra) => lista.map((x, i) => ({ x, k: semillaDia(extra + i) })).sort((p, q) => p.k - q.k).map(o => o.x);
+  const res = [], usados = new Set(), videos = new Set();
+  // Toma hasta n de la lista, sin repetir ficha y (salvo repetirVideo) sin dos del mismo vídeo
+  const tomar = (lista, n, motivo, extra, repetirVideo) => {
+    for (const x of orden(lista, extra)) {
+      if (res.length >= MAX_RECUERDOS || n <= 0) break;
+      if (usados.has(claveRecuerdo(x)) || (!repetirVideo && videos.has(vidRecuerdo(x)))) continue;
+      usados.add(claveRecuerdo(x)); videos.add(vidRecuerdo(x)); n--;
+      res.push({ ...x, motivo, anios: motivo === 'azar' ? 0 : y - x.f.y });
+    }
+  };
+  const antes = x => x.f.y && x.f.y < y;
+  tomar(pool.filter(x => antes(x) && x.f.d === d && x.f.m === m), 3, 'dia', 'd');          // tal día como hoy
+  const redondo = x => antes(x) && (y - x.f.y) % 10 === 0;                                   // hace 10, 20, 30… años
+  const n0 = res.length;
+  tomar(pool.filter(x => redondo(x) && x.f.m === m), 1, 'aniv', 'a');
+  if (res.length === n0) tomar(pool.filter(redondo), 1, 'aniv', 'a2');
+  tomar(pool.filter(x => antes(x) && x.f.m === m), 1, 'mes', 'm');                           // un mes como este
+  tomar(pool, MAX_RECUERDOS, 'azar', 'r');                                                   // el resto, al azar
+  tomar(pool, MAX_RECUERDOS, 'azar', 'r', true);                                             // pocos vídeos: se admiten escenas del mismo
+  return res;
+}
+function textoRecuerdo(r) {
+  const titulo = r.tipo === 'escena' ? r.e.titulo : r.tipo === 'casero' ? r.c.titulo : r.a.act;
+  const fecha = r.tipo === 'escena' ? (r.e.fecha || '') : r.tipo === 'casero' ? (r.c.fecha || '') : formatDate(r.a.fecha);
+  const hace = r.motivo === 'aniv' || !r.anios ? '' : ` · hace ${r.anios} año${r.anios !== 1 ? 's' : ''}`;
+  const kick = r.motivo === 'dia' ? 'Tal día como hoy' : r.motivo === 'mes' ? 'Un mes como este'
+    : r.motivo === 'aniv' ? `Hace ${r.anios} años` : 'Recuerdo del día';
+  return {
+    titulo,
+    kicker: (r.tipo === 'actuacion' ? 'Actuación · ' : '') + kick,
+    sub: (r.tipo === 'escena' ? `Escena de «${r.c.titulo}» · ` : '') + fecha + hace
+  };
+}
+function fondoRecuerdo(r) {
+  if (r.tipo === 'actuacion') {
+    const yt = idYoutube(r.a.youtube);
+    return `<span class="dia-fondo t-otros">${svgIcon('i-music')}${yt ? `<img src="https://i.ytimg.com/vi/${yt}/hqdefault.jpg" alt="" onerror="this.remove()">` : ''}</span>`;
+  }
+  const mini = (r.tipo === 'escena' && r.e.miniatura) || r.c.miniatura;
+  return `<span class="dia-fondo t-${thumbClass(r.c.tipo, r.c.categoria)}">${thumbIcon(r.c.tipo, r.c.categoria)}${mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : ''}</span>`;
 }
 function renderRecuerdoDia() {
   const card = document.getElementById('dia-card');
   if (!card) return;
-  _recuerdo = elegirRecuerdo();
-  if (!_recuerdo) { card.classList.remove('visible'); return; }
-  const r = _recuerdo;
-  const titulo = r.tipo === 'escena' ? r.e.titulo : r.tipo === 'casero' ? r.c.titulo : r.a.act;
-  const fecha = r.tipo === 'escena' ? (r.e.fecha || '') : r.tipo === 'casero' ? (r.c.fecha || '') : formatDate(r.a.fecha);
-  const hace = r.anios ? ` · hace ${r.anios} año${r.anios !== 1 ? 's' : ''}` : '';
-  document.getElementById('dia-kicker').textContent =
-    r.motivo === 'dia' ? 'Tal día como hoy' : r.motivo === 'mes' ? 'Un mes como este' : 'Recuerdo del día';
-  document.getElementById('dia-title').textContent = titulo;
-  document.getElementById('dia-sub').textContent = (r.tipo === 'escena' ? `Escena de «${r.c.titulo}» · ` : '') + fecha + hace;
-  const th = document.getElementById('dia-thumb');
-  if (r.tipo === 'casero' || r.tipo === 'escena') {
-    th.className = 'dia-thumb t-' + thumbClass(r.c.tipo, r.c.categoria);
-    const mini = (r.tipo === 'escena' && r.e.miniatura) || r.c.miniatura;
-    th.innerHTML = thumbIcon(r.c.tipo, r.c.categoria) + (mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : '');
-  } else {
-    th.className = 'dia-thumb t-otros';
-    const yt = idYoutube(r.a.youtube);
-    th.innerHTML = svgIcon('i-music') + (yt ? `<img src="https://i.ytimg.com/vi/${yt}/hqdefault.jpg" alt="" onerror="this.remove()">` : '');
+  const hero = card.parentElement, puntos = document.getElementById('dia-puntos');
+  const lista = elegirRecuerdos();
+  if (!lista.length) {
+    _recuerdos = []; _recuerdo = null; _diaClave = '';
+    card.classList.remove('visible'); hero.classList.remove('dia-multi');
+    return;
   }
-  document.getElementById('dia-kicker').textContent = (r.tipo === 'actuacion' ? 'Actuación · ' : '') + document.getElementById('dia-kicker').textContent;
+  const clave = lista.map(claveRecuerdo).join('|');
+  if (clave === _diaClave && card.classList.contains('visible')) return;   // la misma portada: no se toca, no parpadea
+  _diaClave = clave; _recuerdos = lista;
+  iniciarCarruselDia(card, hero, puntos);
+  document.getElementById('dia-thumb').innerHTML = lista.map(fondoRecuerdo).join('');
+  puntos.innerHTML = lista.map((_, i) => `<button class="dia-punto" data-i="${i}" aria-label="Recuerdo ${i + 1} de ${lista.length}"><i></i></button>`).join('');
+  hero.classList.toggle('dia-multi', lista.length > 1);
   card.classList.add('visible');
+  mostrarRecuerdo(0, true);
+}
+function mostrarRecuerdo(i, inicial) {
+  const n = _recuerdos.length;
+  if (!n) return;
+  i = ((i % n) + n) % n;
+  const card = document.getElementById('dia-card'), th = document.getElementById('dia-thumb');
+  const puntos = document.getElementById('dia-puntos'), txt = card.querySelector('.dia-txt');
+  // Fondo: el anterior se desvanece (sigue con su zoom hasta apagarse) y el nuevo entra con el suyo
+  const prev = th.querySelector('.dia-fondo.activo'), nuevo = th.children[i];
+  if (prev && prev !== nuevo) {
+    prev.classList.remove('activo'); prev.classList.add('saliendo');
+    setTimeout(() => prev.classList.remove('saliendo'), 1000);
+  }
+  if (nuevo) { nuevo.classList.remove('saliendo'); nuevo.classList.add('activo'); }
+  // Texto: se apaga, cambia y vuelve
+  _diaIdx = i; _recuerdo = _recuerdos[i];
+  const t = textoRecuerdo(_recuerdo);
+  const poner = () => {
+    document.getElementById('dia-kicker').textContent = t.kicker;
+    document.getElementById('dia-title').textContent = t.titulo;
+    document.getElementById('dia-sub').textContent = t.sub;
+    txt.classList.remove('cambia');
+  };
+  clearTimeout(txt._t);
+  if (inicial) poner(); else { txt.classList.add('cambia'); txt._t = setTimeout(poner, 280); }
+  reiniciarBarraDia();
+}
+// La barra activa corre 7 s (CSS); las anteriores quedan llenas, las siguientes vacías
+function reiniciarBarraDia() {
+  const puntos = document.getElementById('dia-puntos');
+  const bs = [...puntos.children];
+  bs.forEach(b => b.classList.remove('activo', 'hecho'));
+  void puntos.offsetWidth;                         // para que la animación vuelva a empezar
+  bs.forEach((b, k) => { if (k < _diaIdx) b.classList.add('hecho'); else if (k === _diaIdx) b.classList.add('activo'); });
+}
+function diaIr(delta) { mostrarRecuerdo(_diaIdx + delta); }
+function iniciarCarruselDia(card, hero, puntos) {
+  if (_diaIniciado) return;
+  _diaIniciado = true;
+  // Al terminar la barra, siguiente. Si hay un vídeo abierto (o la foto está volviendo), espera
+  puntos.addEventListener('animationend', e => {
+    if (e.animationName !== 'dia-prog') return;
+    if (document.querySelector('.player-overlay.open') || card.classList.contains('sala-vuelta')) { reiniciarBarraDia(); return; }
+    diaIr(1);
+  });
+  puntos.addEventListener('click', e => {
+    const b = e.target.closest('.dia-punto');
+    if (b) mostrarRecuerdo(+b.dataset.i);
+  });
+  // Pausa: ratón encima o dedo apoyado
+  hero.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') hero.classList.add('dia-pausa'); });
+  hero.addEventListener('pointerleave', () => hero.classList.remove('dia-pausa'));
+  // Deslizar con el dedo cambia de recuerdo; el toque que lo sigue no abre el vídeo
+  let x0 = 0, y0 = 0;
+  card.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; hero.classList.add('dia-pausa'); }, { passive: true });
+  card.addEventListener('touchend', e => {
+    hero.classList.remove('dia-pausa');
+    const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) { _diaSwipe = Date.now(); diaIr(dx < 0 ? 1 : -1); }
+  }, { passive: true });
+  card.addEventListener('touchcancel', () => hero.classList.remove('dia-pausa'), { passive: true });
+  card.addEventListener('click', e => {
+    if (Date.now() - _diaSwipe < 450) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
 }
 // Id de un vídeo de YouTube (watch?v=, youtu.be/, embed/, shorts/), para su miniatura pública
 function idYoutube(url) {
