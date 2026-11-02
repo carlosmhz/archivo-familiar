@@ -263,7 +263,7 @@ function comIrA(t) {
   const v = document.getElementById('player-video');
   if (!v || v.style.display === 'none') return;
   if (_escenaActiva && _escenaActiva.compartido && t < _escenaActiva.inicioT) t = _escenaActiva.inicioT;
-  v.currentTime = t;
+  if (typeof irA === 'function') irA(v, t); else v.currentTime = t;
   v.play().catch(() => {});
   document.getElementById('player-embed').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

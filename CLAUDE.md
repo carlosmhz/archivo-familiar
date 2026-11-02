@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros; selecciones compartidas: varias escenas o vídeos con un solo PIN; la escena compartida se limita también en el servidor).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas, esquinas redondeadas y décadas en recuadros; selecciones compartidas: varias escenas o vídeos con un solo PIN; la escena compartida se limita también en el servidor y su barra de progreso abarca solo la escena).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -125,15 +125,17 @@ Varias escenas o vídeos completos, de uno o de varios vídeos, con **un único 
 - Los PIN de un solo vídeo funcionan igual que antes, y la escena también queda limitada en el servidor (apartado 0.7).
 - Probado en local (Chromium, móvil y PC, tema claro): añadir, repetido, barra, ordenar, Atrás, compartir, entrada del invitado, «Ver todo» con escena → vídeo completo → escena, tocar uno suelto (no encadena), comentarios, PIN antiguo, roles `caseros` y `actuaciones`, admin. **Sin probar:** Safari/iOS y LiteSpeed.
 
-## 0.7 Escena compartida limitada en el servidor (2 nov 2026, petición de Carlos)
+## 0.7 Escena compartida limitada en el servidor y barra de progreso recortada (2 nov 2026, petición de Carlos)
 
 Antes, quien tenía un PIN de escena solo estaba encerrado en la escena por la pantalla (`vigilarEscena()`), y pidiendo `stream.php` a mano podía ver el vídeo entero. Ahora el servidor solo entrega los trozos HLS de la escena. Vale para los PIN de un vídeo y para las selecciones.
 - **Token de sesión:** al entrar con PIN, `login` añade `w: [[caseroId, ini, fin], …]` (`ventanasDeItems()` en `lib/sesion.php`): `ini` null = vídeo completo, `fin` null = hasta el final. El tramo de una escena va de su `t` al `t` de la siguiente (o `duracion`). Los tokens anteriores al cambio no llevan `w` y siguen sin límite hasta caducar (24 h).
 - **`action=video`:** recibe `&t=` (el segundo de inicio; `pedirUrlsVideo(url, desde)` en `player.js`). Si la sesión tiene tramos para ese vídeo y ninguno es «completo», elige el tramo que contiene `t` (con 2 s de margen); si no hay ninguno responde `Sin acceso`. Firma un token de vídeo `{ v, a: ini, b: fin }` y devuelve **solo HLS** (`mp4: null`) y `tramo`. Si el vídeo no tiene HLS: `Este video aun no esta preparado`.
-- **`stream.php`:** con un token de tramo, la lista marca con `#EXT-X-GAP` los trozos que no se solapan con `[a, b + 1]` (hls.js 1.5.17 no los pide y la línea de tiempo no cambia: los segundos siguen siendo los del original, así que el reproductor no necesita desplazamientos). Pedir un trozo fuera da 403 (`trozosHls()` calcula el inicio de cada trozo sumando los `#EXTINF`). El MP4 da 403.
-- **Precisión:** el corte va por trozos de 6 s, así que el servidor puede dejar ver unos segundos de más por cada lado; la pantalla sigue cortando en el segundo exacto.
+- **`stream.php`:** con un token de tramo, la lista **solo contiene** los trozos que se solapan con el tramo (`trozoPermitido()` en `lib/datos.php`: acaba antes de `a` → fuera; empieza a partir de `b − 0,5 s` → fuera). Así el vídeo dura lo que la escena y **la barra de progreso del navegador abarca solo la escena** (y también en la pantalla completa del iPhone y en la tele). Pedir un trozo fuera da 403 (`trozosHls()` calcula el inicio de cada trozo sumando los `#EXTINF`). El MP4 da 403.
+- **Desplazamiento (`offset`):** `action=video` devuelve `offset` = segundo del original en que empieza el primer trozo permitido (`inicioTramoHls()`); el segundo 0 del vídeo recibido es ese. En `player.js`, `_tramoOff` lo guarda y `tOrig(video)` / `irA(video, t)` convierten entre tiempo del vídeo recibido y tiempo del original: los usan `vigilarEscena()`, `repetirEscena()` y `comIrA()` (comentarios). `startPosition` de hls.js y el salto inicial se calculan restando el desplazamiento. `_tramoOff` vale 0 en la familia y en los «vídeo completo».
+- **`engancharVigilancia(video)`** (`player.js`): `ontimeupdate/onseeking/onplay/onended` se enganchan en `reproducirVideo()` cuando ya se sabe el desplazamiento del vídeo nuevo, y `abrirPlayer()` los anula antes. Con los manejadores del vídeo anterior un evento suelto veía el tiempo mal y fijaba `currentTime` en el elemento vacío (la escena 30–40 s de una selección arrancaba parada al final). **No volver a asignarlos en `abrirPlayer()`.**
+- **Precisión:** el corte va por trozos de 6 s, así que la barra puede incluir hasta unos 6 s de más al principio y al final de la escena; el panel de fin de escena y el encierro siguen cortando en el segundo exacto.
 - La familia (`todo`, `caseros`, `admin`) y los fragmentos «vídeo completo» no cambian.
-- Probado en local (Chromium): PIN antiguo de escena (arranque, intento de salir, fin, Ver de nuevo), selección con escena → completo → escena del mismo vídeo, petición manual de trozos fuera (403) y del MP4 (403), familia sin límite. Ningún trozo marcado como hueco se llega a pedir. **Sin probar:** Safari/iOS (en iOS anterior a 17.1, sin hls.js, el HLS nativo podría pedir los huecos y pararse al final de la escena) y LiteSpeed.
+- Probado en local (Chromium): PIN antiguo de escena (arranque, intento de salir, fin, Ver de nuevo), selección con escena → completo → escena del mismo vídeo, petición manual de trozos fuera (403) y del MP4 (403), familia sin límite. Barra recortada: escena 15–30 s → vídeo de 18 s con `offset` 12; intento de ir antes del inicio (vuelve), fin, «Ver de nuevo», salto desde un comentario, selección escena → completo → escena (30–40 s) y la familia con la barra completa. **Sin probar:** Safari/iOS (HLS nativo) y LiteSpeed.
 
 **Fase 3 (opcional, por decidir):** pasar los scripts a módulos ES y quitar los `onclick`. Objetivo final de la estructura:
 
@@ -317,7 +319,7 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `login` | GET `?pass=` | — | Devuelve `{ rol, token }`. El rol `compartir:ID:escena:t` se usa con PIN; con PIN de selección, `rol: 'compartir-lista'` y además `lista: {titulo, items}` |
 | `listar` | GET | `token` o `pass` | Actuaciones. A los roles sin acceso les devuelve `[]` |
 | `caseros-listar` | GET | `token` o `pass` | Al rol `compartir` solo le devuelve su vídeo. A `actuaciones` le devuelve `[]` |
-| `video` | GET `?url=&token=&t=` | token de sesión | Devuelve `{ hls, mp4 }` con URLs firmadas de `stream.php`, o `{ directo: true }` si no es un MP4 de este servidor. Con PIN de escena usa `t` para elegir el tramo y devuelve solo `hls` y `tramo` (0.7) |
+| `video` | GET `?url=&token=&t=` | token de sesión | Devuelve `{ hls, mp4 }` con URLs firmadas de `stream.php`, o `{ directo: true }` si no es un MP4 de este servidor. Con PIN de escena usa `t` para elegir el tramo y devuelve solo `hls`, `tramo` y `offset` (0.7) |
 | `anadir` / `editar` / `eliminar` / `youtube` | POST JSON | `pass` de admin | Actuaciones |
 | `caseros-anadir` / `caseros-editar` / `caseros-eliminar` | POST JSON | `pass` de admin | Vídeos caseros |
 | `otp-crear` / `otp-eliminar` | POST JSON | `pass` de admin | |
@@ -333,7 +335,7 @@ Todas las respuestas tienen la forma `{ ok, data, msg }`.
 | `comentarios-recientes` | GET `?pass=` | admin | Últimos 300 comentarios y "me gusta" por vídeo |
 
 **`stream.php?v=<nombre>&f=<archivo>&t=<tokenVideo>`**, donde `f` puede ser:
-- `index.m3u8`: la lista, reescrita para que cada fragmento lleve el token (con token de tramo, los de fuera llevan `#EXT-X-GAP`).
+- `index.m3u8`: la lista, reescrita para que cada fragmento lleve el token (con token de tramo, solo lleva los trozos de la escena).
 - `seg_NNNN.ts`: un fragmento (403 si queda fuera del tramo).
 - `mp4`: el original, con soporte de rangos HTTP (403 con token de tramo).
 
@@ -441,7 +443,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Transiciones (apartado 0.4), fusionadas en `main` el 1 nov 2026 (PR #31 y #32), con `?v=20261101i`. Pendiente de que Carlos las pruebe en su móvil: el arrastre de las hojas (umbral de 110 px) puede necesitar ajuste, y no se ha probado en Safari/iOS.
 
 - Fin de escena en iPhone con pantalla completa (apartado 7, 2 nov 2026, `?v=20261102c`): sin probar en iOS real.
-- **Escena compartida limitada en el servidor** (apartado 0.7, 2 nov 2026, `?v=20261102j`). Probada en local; pendiente de que Carlos abra un PIN de escena en producción (y, si alguien tiene iPhone, en Safari).
+- **Escena compartida limitada en el servidor, con la barra de progreso recortada a la escena** (apartado 0.7, 2 nov 2026, `?v=20261102j` y `?v=20261102l`). Probada en local; pendiente de que Carlos abra un PIN de escena en producción (y, si alguien tiene iPhone, en Safari).
 - **Selección compartida** (apartado 0.6, 2 nov 2026, `?v=20261102i`): varias escenas o vídeos con un PIN. Probada en local; pendiente de que Carlos la pruebe en producción (y en Safari/iOS).
 - Pestaña **"🔗 Compartidos"** del admin (2 nov 2026, `js/admin-compartidos.js`, `?v=20261102c`): lista los PIN con vídeo, escena, inicio y caducidad (marca los de 4 cifras y los de vídeos borrados) y permite borrarlos. Probada en local; pendiente de que Carlos la use en producción.
 - Avisos y confirmaciones en ventanas propias (apartado 0.5, 2 nov 2026, `?v=20261102b`). Probado en local (móvil, PC y admin); pendiente de verlo en la tele.

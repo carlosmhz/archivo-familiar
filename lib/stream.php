@@ -63,33 +63,27 @@ if (!$p || ($p['v'] ?? null) !== $v || !nombreValido($v)) fin(403, 'Acceso deneg
 
 // Permiso con tramo (PIN de escena): solo los trozos que se solapan con [a, b] (b null = hasta el final).
 $tramo = array_key_exists('a', $p) ? [(float)$p['a'], isset($p['b']) ? (float)$p['b'] : null] : null;
-function trozoPermitido($ini, $dur, $tramo) {
-    if (!$tramo) return true;
-    return $ini + $dur > $tramo[0] && ($tramo[1] === null || $ini < $tramo[1] + 1);
-}
-// Inicio y duración de cada trozo según la lista: ['seg_0000.ts' => [ini, dur], …]
-function trozosHls($ruta) {
-    $r = []; $t = 0.0; $dur = 0.0;
-    foreach (preg_split('/\r?\n/', (string)file_get_contents($ruta)) as $l) {
-        $l = trim($l);
-        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) $dur = (float)$m[1];
-        elseif ($l !== '' && $l[0] !== '#') { $r[$l] = [$t, $dur]; $t += $dur; $dur = 0.0; }
-    }
-    return $r;
-}
-
 if ($f === 'index.m3u8') {
     $ruta = DIR_HLS . '/' . $v . '/index.m3u8';
     if (!is_file($ruta)) fin(404, 'No existe');
-    $out = []; $tt = 0.0; $dur = 0.0;
+    // Con tramo (PIN de escena) la lista solo contiene los trozos de la escena: el vídeo dura lo que
+    // la escena y su barra de progreso la abarca entera. Su segundo 0 es el inicio del primer trozo
+    // (api.php?action=video lo devuelve como 'offset').
+    $out = []; $tt = 0.0; $dur = 0.0; $extinf = null; $primero = true;
     foreach (preg_split('/\r?\n/', (string)file_get_contents($ruta)) as $l) {
         $l = trim($l);
-        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) $dur = (float)$m[1];
+        if ($tramo && $l === '') continue;
+        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) {
+            $dur = (float)$m[1];
+            if ($tramo) { $extinf = $l; continue; }     // se decide al ver el trozo
+        }
+        if ($tramo && $l !== '' && $l[0] === '#' && preg_match('/^#EXT-X-(MEDIA-SEQUENCE|DISCONTINUITY|BYTERANGE|GAP)/', $l)) continue;
         if ($l !== '' && $l[0] !== '#' && preg_match('/^seg_\d{4}\.ts$/', $l)) {
-            // Fuera del tramo: se marca como hueco (#EXT-X-GAP) y el reproductor no lo pide.
-            // Así la línea de tiempo del vídeo no cambia (los segundos siguen siendo los del original).
-            if (!trozoPermitido($tt, $dur, $tramo)) $out[] = '#EXT-X-GAP';
+            $ok = trozoPermitido($tt, $dur, $tramo);
             $tt += $dur; $dur = 0.0;
+            if (!$ok) { $extinf = null; continue; }
+            if ($tramo && $primero) { $out[] = '#EXT-X-MEDIA-SEQUENCE:0'; $primero = false; }
+            if ($extinf !== null) { $out[] = $extinf; $extinf = null; }
             $l = 'stream.php?v=' . rawurlencode($v) . '&f=' . $l . '&t=' . $t;
         }
         $out[] = $l;

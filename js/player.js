@@ -50,6 +50,12 @@ function ocultarPanelEscena() {
 // suelta nunca: si después se pulsa reproducir, vuelve a pararse.
 // En una escena COMPARTIDA (enlace con PIN) tampoco se puede salir de ella: si se
 // mueve la barra antes del inicio o después del final, se devuelve dentro de la escena.
+// Con un PIN de escena el servidor entrega solo la escena: el vídeo empieza en el segundo _tramoOff del
+// original y su barra de progreso abarca solo la escena. Todo lo que habla en tiempo del original
+// (inicio y fin de escena, saltos desde comentarios) pasa por tOrig() e irA().
+let _tramoOff = 0;
+const tOrig = v => v.currentTime + _tramoOff;
+const irA = (v, t) => { v.currentTime = Math.max(0, t - _tramoOff); };
 const panelEscenaAbierto = () => document.getElementById('escena-end-panel').classList.contains('open');
 function inicioEscena(e) {
   if (e.inicioT != null) return e.inicioT;
@@ -61,11 +67,11 @@ function vigilarEscena(video) {
   if (!e || video.style.display === 'none') return;
   const ini = inicioEscena(e);
   if (e.compartido) {
-    if (video.currentTime < ini - 0.5) { video.currentTime = ini; return; }
-    if (e.finT && video.currentTime > e.finT) video.currentTime = Math.max(ini, e.finT - 0.6);
+    if (tOrig(video) < ini - 0.5) { irA(video, ini); return; }
+    if (e.finT && tOrig(video) > e.finT) irA(video, Math.max(ini, e.finT - 0.6));
   }
   if (!e.finT) return;
-  const alFinal = video.currentTime >= e.finT - 0.5;
+  const alFinal = tOrig(video) >= e.finT - 0.5;
   if (!alFinal && !panelEscenaAbierto()) return;
   if (!video.paused) video.pause();
   if (alFinal && !panelEscenaAbierto()) mostrarFinEscena();
@@ -118,7 +124,7 @@ function repetirEscena() {
   const v = document.getElementById('player-video');
   if (!v || (!e && !listaActiva())) return;
   ocultarPanelEscena();
-  v.currentTime = e ? inicioEscena(e) : 0;
+  irA(v, e ? inicioEscena(e) : 0);
   v.play().catch(() => {});
 }
 
@@ -165,10 +171,13 @@ async function reproducirVideo(video, url, min, token) {
   const info = await pedirUrlsVideo(url, min);
   if (token !== _playToken) return;   // se cerró o se abrió otro mientras esperábamos
   if (info.error) { errorVideo(info.error); return; }
+  _tramoOff = info.offset || 0;       // PIN de escena: el vídeo recibido es solo la escena
+  engancharVigilancia(video);
+  const minV = Math.max(0, (min || 0) - _tramoOff);   // 'min' en tiempo del vídeo recibido
 
   const usarMp4 = (src) => {
     video.src = src;
-    if (min) video.currentTime = min;
+    if (minV) video.currentTime = minV;
     video.play().catch(() => {});
   };
   if (info.directo) { usarMp4(url); return; }          // vídeo ajeno a este servidor
@@ -176,7 +185,7 @@ async function reproducirVideo(video, url, min, token) {
 
   if (window.Hls && Hls.isSupported()) {
     // Chrome, Firefox, Android, Safari de escritorio...: hls.js
-    const hls = new Hls({ startPosition: min || -1, maxBufferLength: 40 });
+    const hls = new Hls({ startPosition: minV || -1, maxBufferLength: 40 });
     _hlsInst = hls;
     hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
     hls.on(Hls.Events.ERROR, (ev, data) => {
@@ -192,13 +201,21 @@ async function reproducirVideo(video, url, min, token) {
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     // iPhone/iPad antiguos: HLS nativo
     video.src = info.hls;
-    if (min) video.addEventListener('loadedmetadata', () => { video.currentTime = min; }, { once: true });
+    if (minV) video.addEventListener('loadedmetadata', () => { video.currentTime = minV; }, { once: true });
     video.play().catch(() => {});
   } else if (info.mp4) {
     usarMp4(info.mp4);                                  // navegador sin HLS (p. ej. TV antigua)
   } else {
     errorVideo('Navegador no compatible');
   }
+}
+
+function engancharVigilancia(video) {
+  video.ontimeupdate = () => vigilarEscena(video);
+  video.onseeking = () => vigilarEscena(video);
+  video.onplay = () => vigilarEscena(video);
+  // Selección compartida con un vídeo completo: al terminar, panel con el siguiente fragmento
+  video.onended = () => { if (listaActiva() && !_escenaActiva) mostrarFinEscena(); };
 }
 
 // ─── Tarjeta desde la que se abre el vídeo ───────────────────────────────────
@@ -230,6 +247,7 @@ function abrirPlayer(url, titulo, fecha, min) {
   document.getElementById('player-titulo').textContent = titulo;
   _urlActual = url || '';
   const token = ++_playToken;
+  _tramoOff = 0;                      // hasta saber si el vídeo llega recortado (reproducirVideo)
   // Mostrar botón compartir solo para roles con acceso a caseros y solo MP4
   const shareBtn = document.getElementById('player-share-btn');
   const isMp4 = url && !url.includes('youtube.com') && !url.includes('youtu.be');
@@ -265,12 +283,10 @@ function abrirPlayer(url, titulo, fecha, min) {
     iframe.style.display = 'none';
     iframe.src = '';
     video.oncanplay = () => loading.classList.add('hidden');
+    // La vigilancia de escena se engancha en reproducirVideo, cuando ya se sabe el desplazamiento del
+    // vídeo nuevo: con los manejadores del anterior, un evento suelto veía el tiempo mal y movía el vídeo.
+    video.ontimeupdate = video.onseeking = video.onplay = video.onended = null;
     reproducirVideo(video, url, min, token);
-    video.ontimeupdate = () => vigilarEscena(video);
-    video.onseeking = () => vigilarEscena(video);
-    video.onplay = () => vigilarEscena(video);
-    // Selección compartida con un vídeo completo: al terminar, panel con el siguiente fragmento
-    video.onended = () => { if (listaActiva() && !_escenaActiva) mostrarFinEscena(); };
   }
 }
 
@@ -478,6 +494,7 @@ function cerrarPlayer(e) {
   vid.onended = null;
   vid.src = '';
   _urlActual = '';
+  _tramoOff = 0;
   document.getElementById('player-loading').classList.add('hidden');
   ocultarPanelEscena();
   _escenaActiva = null;

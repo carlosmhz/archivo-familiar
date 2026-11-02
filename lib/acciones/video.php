@@ -35,7 +35,10 @@ if ($method === 'GET' && $action === 'video') {
             if (!$elegido) responder(false, null, 'Sin acceso');
             if (!$hayHls) responder(false, null, 'Este video aun no esta preparado');
             $vt = firmarToken(['v' => $nombre, 'a' => (float)$elegido[1], 'b' => $elegido[2] === null ? null : (float)$elegido[2]], 43200);
-            responder(true, ['hls' => 'stream.php?v=' . rawurlencode($nombre) . '&t=' . $vt . '&f=index.m3u8', 'mp4' => null, 'tramo' => [$elegido[1], $elegido[2]]]);
+            // El vídeo que recibe es solo el tramo: su segundo 0 es el segundo 'offset' del original.
+            $tr = [(float)$elegido[1], $elegido[2] === null ? null : (float)$elegido[2]];
+            responder(true, ['hls' => 'stream.php?v=' . rawurlencode($nombre) . '&t=' . $vt . '&f=index.m3u8', 'mp4' => null,
+                'tramo' => $tr, 'offset' => inicioTramoHls(DIR_HLS . '/' . $nombre . '/index.m3u8', $tr)]);
         }
     }
     if (!$hayHls && !$hayMp4) responder(true, ['directo' => true]);

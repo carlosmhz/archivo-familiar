@@ -68,3 +68,26 @@ function esRutaImagenValida($ruta) {
         && preg_match('#^(caseros/)?miniaturas/[\p{L}\p{N}._ \-]+\.(jpe?g|png|webp)$#iu', $ruta) === 1
         && strpos($ruta, '..') === false;
 }
+
+// ── HLS con tramo (PIN de escena) ────────────────────────────────────────────
+// Un trozo se sirve si se solapa con el tramo [a, b] (b null = hasta el final). Al final hay una
+// holgura de 0,5 s: un trozo que empieza justo donde acaba la escena no hace falta.
+function trozoPermitido($ini, $dur, $tramo) {
+    if (!$tramo) return true;
+    return $ini + $dur > $tramo[0] && ($tramo[1] === null || $ini < $tramo[1] - 0.5);
+}
+// Inicio y duración de cada trozo según la lista: ['seg_0000.ts' => [ini, dur], …]
+function trozosHls($ruta) {
+    $r = []; $t = 0.0; $dur = 0.0;
+    foreach (preg_split('/\r?\n/', (string)file_get_contents($ruta)) as $l) {
+        $l = trim($l);
+        if (preg_match('/^#EXTINF:([\d.]+)/', $l, $m)) $dur = (float)$m[1];
+        elseif ($l !== '' && $l[0] !== '#') { $r[$l] = [$t, $dur]; $t += $dur; $dur = 0.0; }
+    }
+    return $r;
+}
+// Segundo (del vídeo original) en que empieza el primer trozo permitido: el vídeo recortado empieza ahí.
+function inicioTramoHls($ruta, $tramo) {
+    foreach (trozosHls($ruta) as $tr) if (trozoPermitido($tr[0], $tr[1], $tramo)) return $tr[0];
+    return 0.0;
+}
