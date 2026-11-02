@@ -3,8 +3,8 @@
 // · Familia (roles todo/caseros): en "Compartir" del reproductor se añaden fragmentos a la
 //   selección, que vive en este dispositivo (localStorage 'af_seleccion'). Una barra abajo
 //   abre la ventana de la selección: título, orden (↑ ↓), quitar y compartir por WhatsApp.
-// · Invitado (PIN de selección): entra en #screen-seleccion, con los fragmentos como tarjetas
-//   y "Ver todo", que los encadena (al acabar uno pasa al siguiente en 5 s).
+// · Invitado (PIN de selección): entra en #screen-seleccion, con una fila por año (como las décadas)
+//   y una tarjeta por fragmento, y "Ver todo", que los encadena (al acabar uno pasa al siguiente en 5 s).
 const SEL_MAX = 30;
 const SEL_ESPERA = 5;   // segundos antes de pasar solo al siguiente en "Ver todo"
 
@@ -191,12 +191,46 @@ async function selCompartir(permanente) {
 // window._compartirLista = { titulo, items:[{caseroId, escenaIdx, t}], actual, todo, vistos:Set }
 function listaActiva() { return window._compartirLista || null; }
 
+// Año de un fragmento: el de la escena si lo tiene, si no el del vídeo. 'Sin fecha' va al final.
+function anioFragmento(it) {
+  const inf = selInfo(it);
+  if (!inf) return 'Sin fecha';
+  const a = extraerAnio((inf.esc && inf.esc.fecha) || inf.c.fecha);
+  return /^\d{4}$/.test(a) ? a : 'Sin fecha';
+}
+
 function iniciarListaCompartida(lista) {
   const items = (lista.items || []).filter(it => CASEROS.some(c => c.id === it.caseroId));
-  window._compartirLista = { titulo: lista.titulo || '', items, actual: -1, todo: false, vistos: new Set() };
+  // Se ve como las décadas, pero con una fila por año (de más antiguo a más reciente) y una tarjeta
+  // por fragmento. Dentro de cada año se respeta el orden que eligió quien compartió. «Ver todo» y
+  // el «2 de 5» siguen este mismo orden, el que se ve en pantalla.
+  const anios = [...new Set(items.map(anioFragmento))].sort((x, y) => (x === 'Sin fecha') - (y === 'Sin fecha') || x - y);
+  const ordenados = anios.flatMap(a => items.filter(it => anioFragmento(it) === a));
+  window._compartirLista = { titulo: lista.titulo || '', items: ordenados, actual: -1, todo: false, vistos: new Set() };
   document.getElementById('home-screen').style.display = 'none';
   pintarPantallaLista();
   document.getElementById('screen-seleccion').classList.add('active');
+}
+
+function tarjetaFragmento(it, i, L) {
+  const inf = selInfo(it);
+  const visto = L.vistos.has(i);
+  // Sin miniatura: el mismo fondo de color e icono de categoría que las tarjetas de décadas
+  const ph = `background:var(--th-${thumbClass(inf.c.tipo, inf.c.categoria)})`, ti = thumbIcon(inf.c.tipo, inf.c.categoria);
+  const thumb = inf.mini
+    ? `<img class="nf-thumb" src="${escSel(inf.mini)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="nf-thumb-placeholder" style="display:none;${ph}">${ti}</div>`
+    : `<div class="nf-thumb-placeholder" style="${ph}">${ti}</div>`;
+  const fecha = [(inf.esc ? inf.esc.fecha : inf.c.fecha) || '', inf.dur ? selFmtDur(inf.dur) : ''].filter(Boolean).join(' · ');
+  return `<div class="nf-card lista-card${visto ? ' visto' : ''}" data-i="${i}">
+    <div class="nf-badge lista-visto"${visto ? '' : ' hidden'}>✓ Visto</div>
+    ${thumb}
+    <div class="nf-info">
+      <div class="nf-cat">${escSel(inf.esc ? inf.c.titulo : 'Vídeo completo')}</div>
+      <div class="nf-titulo">${escSel(inf.titulo)}</div>
+      <div class="nf-fecha">${escSel(fecha)}</div>
+      <div class="nf-btns"><button class="nf-btn primary" onclick="verItemLista(${i},false)" aria-label="Ver ${escSel(inf.titulo)}">${svgIcon('i-play')}</button></div>
+    </div>
+  </div>`;
 }
 
 function pintarPantallaLista() {
@@ -206,16 +240,20 @@ function pintarPantallaLista() {
   document.getElementById('lista-titulo').textContent = L.titulo || 'Momentos del Archivo Familiar';
   document.getElementById('lista-sub').textContent =
     `${L.items.length} ${L.items.length === 1 ? 'momento' : 'momentos'}${total ? ' · ' + selFmtDur(total) : ''}`;
-  document.getElementById('lista-items').innerHTML = L.items.map((it, i) => {
-    const inf = selInfo(it);
-    return `<button class="lista-item${L.vistos.has(i) ? ' visto' : ''}" onclick="verItemLista(${i},false)">
-      <span class="lista-num">${i + 1}</span>
-      ${selMiniHtml(inf)}
-      <span class="sel-txt"><span class="sel-tit">${escSel(inf.titulo)}</span>
-        <span class="sel-sub">${escSel(inf.sub)}${inf.dur ? ' · ' + selFmtDur(inf.dur) : ''}</span></span>
-      <span class="lista-play">${L.vistos.has(i) ? '✓' : svgIcon('i-play')}</span>
-    </button>`;
-  }).join('');
+  // Filas por año, como las de décadas (mismas tarjetas, arrastre con inercia y barra de "hay más")
+  const grupos = [];
+  L.items.forEach((it, i) => {
+    const a = anioFragmento(it);
+    if (!grupos.length || grupos[grupos.length - 1].anio !== a) grupos.push({ anio: a, idx: [] });
+    grupos[grupos.length - 1].idx.push(i);
+  });
+  const el = document.getElementById('lista-items');
+  el.innerHTML = grupos.map(g => `<div class="decada-section">
+      <div class="decada-title">${escSel(g.anio)}<small>${g.idx.length} ${g.idx.length === 1 ? 'momento' : 'momentos'}</small></div>
+      <div class="decada-row">${g.idx.map(i => tarjetaFragmento(L.items[i], i, L)).join('')}</div>
+    </div>`).join('');
+  el.querySelectorAll('.decada-row').forEach(arrastrarConInercia);
+  if (!document.body.classList.contains('modo-tv')) el.querySelectorAll('.decada-row').forEach(barraFila);
 }
 
 // Reproduce el fragmento i. 'todo' = encadenar con los siguientes ("Ver todo").
@@ -225,9 +263,9 @@ function verItemLista(i, todo) {
   if (todo !== undefined) L.todo = !!todo;
   L.actual = i;
   L.vistos.add(i);
-  // Se marca como visto sin volver a pintar la lista (la tarjeta hace el efecto de vuelta al cerrar)
-  const card = document.querySelectorAll('#lista-items .lista-item')[i];
-  if (card) { card.classList.add('visto'); card.querySelector('.lista-play').textContent = '✓'; }
+  // Se marca como visto sin volver a pintar las filas (la tarjeta hace el efecto de vuelta al cerrar)
+  const card = document.querySelector(`#lista-items .lista-card[data-i="${i}"]`);
+  if (card) { card.classList.add('visto'); const b = card.querySelector('.lista-visto'); if (b) b.hidden = false; }
   ocultarPanelEscena();
   const it = L.items[i], inf = selInfo(it), c = inf.c;
   if (inf.esc) {

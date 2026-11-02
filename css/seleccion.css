@@ -63,23 +63,14 @@ body:has(.player-overlay.open) #sel-barra, body:has(.sel-modal.open) #sel-barra,
 @keyframes sel-sube { from { transform:translateY(40%); opacity:0; } to { transform:none; opacity:1; } }
 @media (prefers-reduced-motion: reduce) { .sel-box { animation:none; } #sel-barra, #sel-aviso { transition:none; } }
 
-/* Pantalla del invitado */
-#screen-seleccion { display:none; max-width:720px; margin:0 auto; padding:28px 18px 60px; }
+/* Pantalla del invitado: cabecera y filas por año (las filas y tarjetas son las de las décadas) */
+#screen-seleccion { display:none; max-width:1100px; margin:0 auto; padding:36px 32px 60px; }
 #screen-seleccion.active { display:block; }
 .lista-cab { text-align:center; margin-bottom:22px; }
 .lista-etq { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); }
 .lista-titulo { font-family:var(--serif); font-weight:400; font-size:32px; line-height:1.15; margin:8px 0 6px; color:var(--text); overflow-wrap:anywhere; }
 .lista-sub { font-size:13px; color:var(--muted); margin-bottom:18px; }
 .lista-todo { max-width:300px; margin:0 auto; }
-.lista-items { display:flex; flex-direction:column; gap:10px; }
-.lista-item { display:flex; align-items:center; gap:12px; width:100%; padding:10px; border:none; cursor:pointer; font:inherit; color:inherit;
-  background:var(--surface); border-radius:var(--r-lg, 14px); text-align:left; transition:background .15s, transform .15s; overflow:hidden; }
-.lista-item:hover { background:var(--surface-2, var(--surface-3)); }
-.lista-item:active { transform:scale(.98); }
-.lista-item .sel-mini { width:120px; }
-.lista-num { width:22px; flex-shrink:0; text-align:center; font-family:var(--serif); font-size:20px; color:var(--muted); }
-.lista-play { width:36px; height:36px; flex-shrink:0; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; }
-.lista-item.visto .lista-play { background:var(--surface-3); color:var(--muted); }
-.lista-item.sala-vuelta .sel-mini img { animation:lista-vuelta 1.2s ease-out; }
-@keyframes lista-vuelta { from { transform:scale(1.14); filter:brightness(.6); } to { transform:none; filter:none; } }
-@media (max-width:640px) { .lista-item .sel-mini { width:92px; } .lista-titulo { font-size:27px; } }
+.lista-card .lista-visto[hidden] { display:none; }
+.lista-card.visto .nf-thumb { filter:saturate(.75) brightness(.85); }
+@media (max-width:640px) { #screen-seleccion { padding:20px 16px 48px; } .lista-titulo { font-size:27px; } }

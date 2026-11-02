@@ -221,7 +221,7 @@ function engancharVigilancia(video) {
 // ─── Tarjeta desde la que se abre el vídeo ───────────────────────────────────
 // Al cerrar el reproductor, su foto "se aleja" a su tamaño normal (css/sala.css).
 // Se apunta la última tarjeta pulsada; cualquier otro clic fuera de las ventanas la olvida.
-const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card, .lista-item';
+const SEL_TARJETA = '.nf-card, .recent-card, .tl-card, .continue-card, .dia-card';
 let _tarjetaPulsada = null, _tarjetaVuelta = null;
 document.addEventListener('click', e => {
   const t = e.target.closest && e.target.closest(SEL_TARJETA);
