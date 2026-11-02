@@ -572,3 +572,16 @@ body:not(.modo-tv) .player-close, body:not(.modo-tv) .caseros-modal-close { bord
 }
 /* lista de escenas: líneas separadoras como siempre y solo las miniaturas redondeadas (opción B de Carlos) */
 body:not(.modo-tv) .pe-mini { border-radius:var(--r-sm); }
+
+/* ─── DÉCADAS EN RECUADROS (2 nov 2026, petición de Carlos) ───
+   Cada década va en un panel redondeado y el espacio entre filas se reduce (antes había un hueco
+   de ~70px). La fila se desplaza hasta el borde del panel (margen negativo = su relleno). */
+body:not(.modo-tv) .decada-section {
+  background:var(--surface); border-radius:var(--r-xl); overflow:hidden;
+  padding:2px 14px 16px; margin:0 0 14px;
+}
+body:not(.modo-tv) .decada-title { margin:14px 0 14px; }
+body:not(.modo-tv) .decada-row { margin:0 -14px; padding:2px 14px 0; }
+body:not(.modo-tv) .decada-section .nf-info { background:var(--surface); }
+body:not(.modo-tv) .decada-section .nf-fecha { margin-bottom:4px; }
+body:not(.modo-tv) .decada-section .fila-barra { margin-top:12px; }
