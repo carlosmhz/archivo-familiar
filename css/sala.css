@@ -629,3 +629,20 @@ body:not(.modo-tv) .home-hero.dia-multi .dia-puntos {
   .dia-fondo, .dia-txt { transition:none; }
   .dia-punto.activo i::after { animation:none; transform:scaleX(1); }   /* sin movimiento no pasa solo: se cambia a mano */
 }
+
+/* ─── PORTADA MÁS COMPACTA Y "VER AHORA" (2 nov 2026, petición de Carlos: "ocupa demasiado") ───
+   Reduce la altura de la portada, el tamaño del título y el botón. Está aquí, al final, para poder
+   quitarlo de un golpe. Para más o menos altura: min-height de .home-hero. */
+body:not(.modo-tv) .home-hero:has(.dia-card.visible) { min-height:min(40vh, 330px); padding-bottom:26px; }
+body:not(.modo-tv) .home-hero:has(.dia-card.visible) .home-hello { top:12px; font-size:13px; }
+body:not(.modo-tv) .home-hero:has(.dia-card.visible) .home-title { font-size:17px; margin:0 0 6px; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-kicker { font-size:10px; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-title { font-size:28px; margin-top:6px; -webkit-line-clamp:2; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-sub { font-size:12.5px; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-txt { max-width:100%; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-play { height:38px; margin-top:12px; padding:0 20px; font-size:13px; }
+.home-hero .dia-card.visible .dia-play::after { content:'Ver ahora'; }
+@media (min-width:700px) {
+  body:not(.modo-tv) .home-hero:has(.dia-card.visible) { min-height:min(44vh, 400px); }
+  body:not(.modo-tv) .home-hero .dia-card.visible .dia-title { font-size:38px; }
+}
