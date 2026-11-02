@@ -540,3 +540,35 @@ body:not(.modo-tv) .content-screen.active { animation:none; }
   .sala-casc { animation:none; }
   body:not(.modo-tv) .player-box, body:not(.modo-tv) .caseros-modal-box { transition:none !important; }
 }
+
+/* ─── REDONDEO (2 nov 2026, petición de Carlos) ───
+   Esquinas redondeadas en tarjetas, botones y ventanas. Está todo aquí, al final, para que
+   se pueda quitar de un golpe. Radios: 22px tarjetas grandes, 14px tarjetas y miniaturas,
+   10px detalles pequeños, 999px botones y etiquetas (píldora). No afecta al modo TV. */
+:root { --r-xl:22px; --r-lg:14px; --r-sm:10px; --r-pill:999px; }
+body:not(.modo-tv) .home-hero .dia-card.visible .dia-play { border-radius:var(--r-pill); padding:0 26px; }
+body:not(.modo-tv) .login-btn,
+body:not(.modo-tv) .share-btn, body:not(.modo-tv) .escena-end-btn,
+body:not(.modo-tv) .compartir-btn, body:not(.modo-tv) .caseros-modal-card .mc-btn,
+body:not(.modo-tv) .pc-btn, body:not(.modo-tv) .pc-mas, body:not(.modo-tv) .pc-like,
+body:not(.modo-tv) .pc-escena-chip, body:not(.modo-tv) .chip,
+body:not(.modo-tv) .nf-btn.primary[disabled], body:not(.modo-tv) .dlg-btn { border-radius:var(--r-pill); }
+/* tarjetas grandes */
+body:not(.modo-tv) .section-card, body:not(.modo-tv) .seccion-cab { border-radius:var(--r-xl); }
+body:not(.modo-tv) .section-card .card-icon { border-radius:var(--r-lg); }
+/* tarjetas y miniaturas */
+body:not(.modo-tv) .nf-card, body:not(.modo-tv) .nf-thumb, body:not(.modo-tv) .nf-thumb-placeholder,
+body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled]) { border-radius:var(--r-lg); }
+body:not(.modo-tv) .recent-thumb, body:not(.modo-tv) #cc-img { border-radius:var(--r-lg); }
+body:not(.modo-tv) .tl-card, body:not(.modo-tv) .caseros-modal-card, body:not(.modo-tv) .compartir-card { border-radius:var(--r-lg); overflow:hidden; }
+body:not(.modo-tv) .tl-play { border-radius:var(--r-sm); }
+body:not(.modo-tv) .nf-badge, body:not(.modo-tv) .recent-new { border-radius:8px; }
+body:not(.modo-tv) .pc-form textarea, body:not(.modo-tv) .pc-nombre input { border-radius:var(--r-lg); }
+body:not(.modo-tv) .player-close, body:not(.modo-tv) .caseros-modal-close { border-radius:50%; }
+/* ventanas: en el móvil ya suben como hojas con las esquinas de arriba redondeadas */
+@media (min-width:761px) {
+  body:not(.modo-tv) .player-box, body:not(.modo-tv) .caseros-modal-box { border-radius:var(--r-xl); overflow:hidden; }
+  body:not(.modo-tv) .dlg-caja { border-radius:var(--r-xl); }
+}
+/* lista de escenas: líneas separadoras como siempre y solo las miniaturas redondeadas (opción B de Carlos) */
+body:not(.modo-tv) .pe-mini { border-radius:var(--r-sm); }

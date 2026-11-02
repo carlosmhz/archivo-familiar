@@ -1,7 +1,7 @@
 # Archivo Familiar — Contexto y fuente de la verdad
 
 > Documento de referencia para cualquier agente que trabaje en este proyecto. Vive en la raíz del repositorio como `CLAUDE.md`.
-> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul y barra de progreso en las filas de décadas).
+> Última actualización: 2 de noviembre de 2026 (se trabaja directo en `main` y `develop` desaparece; compartir arreglado con token de sesión; PIN de compartir de 6 cifras; acceso sin límite de 4 caracteres; avisos y confirmaciones en ventanas propias; pestaña "Compartidos" en el admin; tema oscuro "noche clara" con acento azul, barra de progreso en las décadas y esquinas redondeadas).
 > Si algo de este documento contradice al código de `main`, **manda el código**. Corrige el documento en el mismo cambio.
 
 ---
@@ -73,6 +73,7 @@ Rediseño visual inspirado en la maqueta de Grok (estética) y en la de Gemini (
 - **Colecciones del inicio** (1 nov 2026, la opción "vistosa" que eligió Carlos): cada colección es una tarjeta (`.section-card`) con su color (`--col`: terracota las actuaciones, verde salvia los caseros), su icono (nota musical / cinta de vídeo), un **mosaico de miniaturas de fondo** (`.card-mos`, hasta 5 de los caseros y 3 de las actuaciones, estas con la miniatura pública de YouTube), un degradado oscuro para que se lea el texto, el texto «Ver los N vídeos» / «Ver las N actuaciones» y una flecha en círculo. `renderMosaicos()` (`inicio.js`) elige las fotos con `semillaDia()`: cambian cada día pero no parpadean al volver al inicio. Al pulsar, la tarjeta se aprieta (escala 0,97) y la flecha avanza; con ratón, las fotos se acercan. Con una sola colección (rol de caseros o de actuaciones) la tarjeta ocupa todo el ancho. En la tele (`?tv=1`) se conservan las celdas con líneas de antes, sin fotos ni flecha, y los recuentos sin «Ver».
 - Ritmo del efecto de vuelta: el reproductor desaparece en 0,16 s; la tarjeta se queda un instante ampliada (escala 1,14) con el velo y el ▶, y en algo más de un segundo vuelve a su tamaño.
 - **Desplazamiento horizontal con inercia** (1 nov 2026): se quitó el `scroll-snap` de las filas de décadas (`sala.css`), que frenaba en seco el desplazamiento táctil; en el móvil manda la inercia nativa. Con ratón, `arrastrarConInercia()` (`caseros.js`) arrastra y, al soltar, sigue con la velocidad que llevaba (`FRICCION = 0.94`; más cerca de 1, más inercia), y el clic que sigue a un arrastre no abre el vídeo. Se usa en las filas de décadas y en la línea de tiempo.
+- **Redondeo** (2 nov 2026, petición de Carlos): bloque al final de `sala.css` ("REDONDEO"; se quita de un golpe) con radios `--r-xl` 22px (tarjetas de colección y cabeceras), `--r-lg` 14px (tarjetas, miniaturas, ventanas internas), `--r-sm` 10px (miniaturas de escena) y `--r-pill` (botones y etiquetas: Proyectar, entrar, compartir, comentarios, diálogos, chips). Las hojas del móvil ya tenían las esquinas de arriba redondeadas; en pantallas anchas las ventanas llevan 22px. La lista de escenas conserva las líneas separadoras y solo redondea las miniaturas (opción B entre tres). No afecta al modo TV.
 - **Indicador de "hay más vídeos a la derecha"** (2 nov 2026, opción C que eligió Carlos entre tres): en el móvil las tarjetas de década miden `calc((100vw - 44px) / 2.3)`, así que caben dos y asoma un 30 % de la tercera. Bajo cada fila, una barra fina (`.fila-barra`, la pinta `barraFila()` en `caseros.js`) cuyo tramo azul es la parte visible de la fila y avanza al desplazar; se oculta si todo cabe y no existe en la tele. Sustituye a la barra de desplazamiento nativa (oculta en esas filas).
 - Colores de la barra del sistema: `#15202B` / `#F4EFE6` (en `index.html`, `js/ui.js` y `manifest.json`).
 
@@ -414,6 +415,8 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Compartir por WhatsApp arreglado (2 nov 2026, `?v=20261102a`): funciona tras restaurar la sesión y con OTP; PIN de 6 cifras. Probado en local; pendiente de que Carlos lo confirme en producción.
 
 - Tema oscuro "noche clara" con acento azul e indicador de más vídeos en las décadas (apartado 0.2, 2 nov 2026, `?v=20261102d`). Probado en local (móvil, PC, tema claro, reproductor y tele); pendiente de que Carlos lo vea en su móvil.
+
+- Esquinas redondeadas (apartado 0.2, 2 nov 2026, `?v=20261102e`). Probado en local (móvil, PC, TV); pendiente de que Carlos lo vea en su móvil.
 
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
