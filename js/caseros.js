@@ -381,6 +381,35 @@ function renderDecadas() {
 
   // Arrastrar con el ratón para desplazar cada fila (con inercia)
   el.querySelectorAll('.decada-row').forEach(arrastrarConInercia);
+  // Barra de progreso: deja claro que hay más vídeos a la derecha
+  if (!document.body.classList.contains('modo-tv')) el.querySelectorAll('.decada-row').forEach(barraFila);
+}
+
+// Barra fina bajo una fila horizontal: su tramo de color es la parte visible de la fila.
+// Si todo cabe, se oculta.
+function barraFila(fila) {
+  const barra = document.createElement('div');
+  barra.className = 'fila-barra';
+  barra.setAttribute('aria-hidden', 'true');
+  const tramo = document.createElement('span');
+  barra.appendChild(tramo);
+  fila.after(barra);
+  let raf = 0;
+  const pintar = () => {
+    raf = 0;
+    const total = fila.scrollWidth, vista = fila.clientWidth;
+    if (!total || total <= vista + 2) { barra.hidden = true; return; }
+    barra.hidden = false;
+    const ancho = vista / total;
+    const pos = fila.scrollLeft / (total - vista);   // 0 al principio, 1 al final
+    tramo.style.width = (ancho * 100) + '%';
+    tramo.style.transform = `translateX(${pos * (1 - ancho) / ancho * 100}%)`;
+  };
+  const pedir = () => { if (!raf) raf = requestAnimationFrame(pintar); };
+  fila.addEventListener('scroll', pedir, { passive: true });
+  if (window.ResizeObserver) new ResizeObserver(pedir).observe(fila);
+  else window.addEventListener('resize', pedir);
+  pintar();
 }
 
 // ─── Arrastre con el ratón con inercia ────────────────────────────────────────

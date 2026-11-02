@@ -19,24 +19,27 @@
 @font-face { font-family:'Outfit'; font-style:normal; font-weight:500; font-display:swap; src:url('../vendor/fonts/outfit-latin-500-normal.woff2') format('woff2'); }
 @font-face { font-family:'Outfit'; font-style:normal; font-weight:600; font-display:swap; src:url('../vendor/fonts/outfit-latin-600-normal.woff2') format('woff2'); }
 
-/* ─── PALETA: "sala" (oscuro) ─── */
+/* ─── PALETA: "noche clara" (oscuro, como el tema Dim de Twitter; 2 nov 2026) ─── */
 :root {
-  --bg:#12110E; --surface:#1C1915; --surface-2:#2A261F; --surface-3:#3A342C;
-  --line:#2E2923; --muted:#A3988A; --muted-2:#D3C9BB; --faint:#746C62;
-  --accent:#D4652F; --accent-hover:#E07A45; --accent-ink:#1C0E08; --accent-soft:rgba(212,101,47,0.15);
+  --bg:#15202B; --surface:#192734; --surface-2:#22303C; --surface-3:#38444D;
+  --line:#2F3B47; --muted:#8B98A5; --muted-2:#C5CED6; --faint:#6E7D8B;
+  --accent:#1D9BF0; --accent-hover:#4DB0F3; --accent-ink:#FFFFFF; --accent-soft:rgba(29,155,240,0.15);
+  /* Fondo oscuro de las tarjetas de colección y cabeceras con foto (oscuras también en el tema claro) */
+  --oscuro:#15202B; --oscuro-rgb:21,32,43;
   --serif:'Newsreader', Georgia, 'Times New Roman', serif;
   --sans:'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --th-boda:#3B2E26; --th-comunion:#2F3326; --th-cotidiano:#3E3125; --th-vacaciones:#263234; --th-navidad:#41262A; --th-otros:#352A33; --th-multi:#2E2B33;
-  --tl-tick:#3A342C; --tl-label:#8A8176; --tl-label-bg:rgba(18,17,14,0.88); --row-hover:#1C1915; --row-num:#2A261F;
+  --th-boda:#22303C; --th-comunion:#22303C; --th-cotidiano:#22303C; --th-vacaciones:#22303C; --th-navidad:#22303C; --th-otros:#22303C; --th-multi:#22303C;
+  --tl-tick:#38444D; --tl-label:#8B98A5; --tl-label-bg:rgba(21,32,43,0.88); --row-hover:#192734; --row-num:#22303C;
   --ease-sala:cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-body { --text:#F4EFE6; --dark:#F4EFE6; --shadow:rgba(0,0,0,0.5); --blue-pale:#3A342C; }
+body { --text:#F7F9F9; --dark:#F7F9F9; --shadow:rgba(0,0,0,0.5); --blue-pale:#38444D; }
 
 /* ─── PALETA: "papel" (claro) ─── */
 body.tema-claro {
   --bg:#F4EFE6; --surface:#FFFDF8; --surface-2:#E8E0D2; --surface-3:#DDD3C4;
   --line:#DDD3C4; --muted:#5C554C; --muted-2:#3A342C; --faint:#8A8176;
   --accent:#B54818; --accent-hover:#9A3C12; --accent-ink:#FFF8F3; --accent-soft:rgba(181,72,24,0.12);
+  --oscuro:#12110E; --oscuro-rgb:18,17,14;
   --text:#1C1914; --dark:#1C1914; --blue-pale:#DDD3C4; --shadow:rgba(28,25,20,0.14);
   --th-boda:#EADFD2; --th-comunion:#E2E4D3; --th-cotidiano:#EDE2D0; --th-vacaciones:#D9E2E0; --th-navidad:#EFD9D6; --th-otros:#E7DCE3; --th-multi:#E0DCE6;
   --tl-tick:#DDD3C4; --tl-label:#8A8176; --tl-label-bg:rgba(244,239,230,0.92); --row-hover:#EFE8DC; --row-num:#E8E0D2;
@@ -44,7 +47,7 @@ body.tema-claro {
 
 /* ─── BASE ─── */
 body { font-family:var(--sans); background:var(--bg); color:var(--text); overflow-x:clip; }
-::selection { background:rgba(212,101,47,0.35); color:inherit; }
+::selection { background:rgba(29,155,240,0.35); color:inherit; }
 body.tema-claro ::selection { background:rgba(181,72,24,0.22); color:inherit; }
 h1, h2, h3 { text-wrap:balance; }
 /* Grano de película: una textura casi invisible sobre todo, como en una proyección */
@@ -58,7 +61,7 @@ body.tema-claro::before { opacity:0.07; }
 /* ─── LOGIN ─── */
 #login-screen { background:
   radial-gradient(ellipse 70% 55% at 50% -10%, rgba(244,239,230,0.07), transparent 70%),
-  radial-gradient(ellipse 40% 30% at 50% 110%, rgba(212,101,47,0.10), transparent 70%),
+  radial-gradient(ellipse 40% 30% at 50% 110%, rgba(29,155,240,0.10), transparent 70%),
   var(--bg); }
 body.tema-claro #login-screen { background:radial-gradient(ellipse 70% 55% at 50% -10%, rgba(255,253,248,0.9), transparent 70%), var(--bg); }
 .login-box { display:flex; flex-direction:column; align-items:stretch; text-align:left; max-width:400px; padding:40px 28px; }
@@ -193,16 +196,16 @@ body:not(.modo-tv) .section-card {
   --col:#D4652F;
   position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;
   min-height:260px; padding:22px; gap:0; text-align:left; color:#F4EFE6;
-  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E);
+  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, var(--oscuro)), var(--oscuro));
   border:1px solid color-mix(in srgb, var(--col) 55%, transparent); border-radius:0;
   transition:transform 0.22s var(--ease-sala), border-color 0.22s; transform:none; -webkit-tap-highlight-color:transparent;
 }
 body:not(.modo-tv) .section-card[onclick*="caseros"] { --col:#9DB5A4; }
 body:not(.modo-tv) .section-card::before {
   content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:linear-gradient(to top, rgba(18,17,14,.98) 10%, rgba(18,17,14,.84) 58%, rgba(18,17,14,.62) 100%);
+  background:linear-gradient(to top, rgba(var(--oscuro-rgb),.98) 10%, rgba(var(--oscuro-rgb),.84) 58%, rgba(var(--oscuro-rgb),.62) 100%);
 }
-body:not(.modo-tv) .section-card:hover { background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E); transform:none; border-color:var(--col); }
+body:not(.modo-tv) .section-card:hover { background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, var(--oscuro)), var(--oscuro)); transform:none; border-color:var(--col); }
 body:not(.modo-tv) .section-card:active { transform:scale(0.97); }
 body:not(.modo-tv) .section-card:focus-visible { outline:2px solid var(--col); outline-offset:3px; }
 /* Mosaico */
@@ -216,7 +219,7 @@ body:not(.modo-tv) .section-card:focus-visible { outline:2px solid var(--col); o
 /* Icono, texto y pie */
 body:not(.modo-tv) .section-card .card-icon {
   position:absolute; top:18px; left:22px; display:flex; width:44px; height:44px; border-radius:0; font-size:22px;
-  background:rgba(18,17,14,.55); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  background:rgba(var(--oscuro-rgb),.55); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
   border:1px solid var(--col); color:var(--col);
 }
 body:not(.modo-tv) .section-card .card-icon .ico { stroke-width:1.5; }
@@ -225,7 +228,7 @@ body:not(.modo-tv) .card-title { font-family:var(--serif); font-weight:400; font
 body:not(.modo-tv) .card-desc { font-size:14px; margin-top:8px; max-width:34ch; color:#D3C9BB; text-shadow:0 1px 8px rgba(0,0,0,.7); }
 body:not(.modo-tv) .card-pie { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; }
 body:not(.modo-tv) .card-count { font-family:var(--sans); font-size:15px; font-weight:600; color:#F4EFE6; text-align:left; }
-body:not(.modo-tv) .card-flecha { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:50%; background:var(--col); color:#12110E; font-size:20px; transition:transform 0.22s var(--ease-sala); }
+body:not(.modo-tv) .card-flecha { display:grid; place-items:center; flex-shrink:0; width:44px; height:44px; border-radius:50%; background:var(--col); color:var(--oscuro); font-size:20px; transition:transform 0.22s var(--ease-sala); }
 body:not(.modo-tv) .card-flecha .ico { stroke-width:2; }
 body:not(.modo-tv) .section-card:active .card-flecha { transform:translateX(5px); }
 @media (hover:hover) {
@@ -286,8 +289,8 @@ body.tema-claro .actuacion-row { border-bottom-color:var(--line); }
 .decada-section { margin-bottom:40px; }
 .decada-title { font-family:var(--serif); font-weight:400; font-size:34px; letter-spacing:-0.01em; margin:28px 0 16px; }
 .decada-title small { font-size:13px; }
-.decada-row { gap:20px; scrollbar-color:rgba(212,101,47,0.3) transparent; }
-.decada-row::-webkit-scrollbar-thumb { background:rgba(212,101,47,0.3); }
+.decada-row { gap:20px; scrollbar-color:color-mix(in srgb, var(--accent) 30%, transparent) transparent; }
+.decada-row::-webkit-scrollbar-thumb { background:color-mix(in srgb, var(--accent) 30%, transparent); }
 body:not(.modo-tv) .decada-row .nf-card { flex:0 0 232px; width:232px; }
 body:not(.modo-tv) .nf-card { position:relative; background:none; border:none; border-radius:0; overflow:visible; transform:none !important; }
 body:not(.modo-tv) .nf-thumb, body:not(.modo-tv) .nf-thumb-placeholder { aspect-ratio:16/9; border-radius:0; transition:transform 0.5s var(--ease-sala); }
@@ -316,19 +319,29 @@ body:not(.modo-tv) .nf-btn.secondary:hover, body.tema-claro:not(.modo-tv) .nf-bt
 body:not(.modo-tv) .nf-btn.primary[disabled] { border-radius:0; height:34px; background:var(--surface-2); color:var(--muted); font-weight:500; }
 @media (max-width:760px) {
   body:not(.modo-tv) .decada-row { gap:14px; }
-  body:not(.modo-tv) .decada-row .nf-card { flex:0 0 172px; width:172px; }
-  body:not(.modo-tv) .nf-titulo { font-size:18px; }
+  /* Caben 2 tarjetas y asoma un 30 % de la tercera, para que se vea que la fila sigue (2 nov 2026) */
+  body:not(.modo-tv) .decada-row .nf-card { flex:0 0 calc((100vw - 44px) / 2.3); width:calc((100vw - 44px) / 2.3); }
+  body:not(.modo-tv) .nf-titulo { font-size:17px; }
   .section-title { font-size:42px; }
   .decada-title { font-size:30px; }
 }
+
+/* Barra de progreso bajo cada fila de década: dice cuánto queda a la derecha.
+   La pinta barraFila() (js/caseros.js); sustituye a la barra de desplazamiento. */
+body:not(.modo-tv) .decada-row { scrollbar-width:none; padding-bottom:6px; }
+body:not(.modo-tv) .decada-row::-webkit-scrollbar { display:none; }
+.fila-barra { position:relative; height:3px; margin-top:8px; background:var(--surface-3); overflow:hidden; }
+.fila-barra[hidden] { display:none; }
+.fila-barra span { position:absolute; top:0; bottom:0; left:0; background:var(--accent); will-change:transform; }
+body.modo-tv .fila-barra { display:none; }
 
 /* Línea de tiempo */
 .tl-card { border-radius:0; background:var(--surface); }
 .tl-title { font-family:var(--serif); font-weight:400; font-size:15px; }
 .tl-play { border-radius:0; }
 .tl-year-bar { background:var(--surface-2); color:var(--muted-2); }
-.tl-scroll { scrollbar-color:rgba(212,101,47,0.3) transparent; }
-.tl-scroll::-webkit-scrollbar-thumb { background:rgba(212,101,47,0.3); }
+.tl-scroll { scrollbar-color:color-mix(in srgb, var(--accent) 30%, transparent) transparent; }
+.tl-scroll::-webkit-scrollbar-thumb { background:color-mix(in srgb, var(--accent) 30%, transparent); }
 .tl-scroll-arrow { background:linear-gradient(to right, transparent, color-mix(in srgb, var(--bg) 95%, transparent)); }
 body.tema-claro .tl-scroll-arrow { background:linear-gradient(to right, transparent, color-mix(in srgb, var(--bg) 95%, transparent)); }
 
@@ -424,7 +437,7 @@ body:not(.modo-tv) .tl-thumb img { transition:transform 0.5s var(--ease-sala); }
 body:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
 body:not(.modo-tv) :is(.recent-thumb, .tl-thumb)::after {
   content:''; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0;
-  background:rgba(10,9,7,0.42) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%23D4652F'/><path fill='%231C0E08' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>") center / 48px no-repeat;
+  background:rgba(10,9,7,0.42) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='24' fill='%231D9BF0'/><path fill='%23FFFFFF' d='M19 15.5v17a1 1 0 0 0 1.5.86l13.5-8.5a1 1 0 0 0 0-1.72L20.5 14.64a1 1 0 0 0-1.5.86Z'/></svg>") center / 48px no-repeat;
   transition:opacity 0.3s ease;
 }
 body.tema-claro:not(.modo-tv) .nf-card .nf-btn.primary:not([disabled])::before,
@@ -476,13 +489,13 @@ body:not(.modo-tv) .seccion-cab {
   --col:#D4652F;
   position:relative; isolation:isolate; overflow:hidden; display:flex; align-items:flex-end;
   min-height:170px; padding:20px 22px; margin-bottom:22px; color:#F4EFE6;
-  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, #12110E), #12110E);
+  background:linear-gradient(135deg, color-mix(in srgb, var(--col) 24%, var(--oscuro)), var(--oscuro));
   border:1px solid color-mix(in srgb, var(--col) 55%, transparent);
 }
 body:not(.modo-tv) #cab-caseros { --col:#9DB5A4; }
 body:not(.modo-tv) .seccion-cab::before {
   content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:linear-gradient(to top, rgba(18,17,14,.98) 10%, rgba(18,17,14,.84) 58%, rgba(18,17,14,.62) 100%);
+  background:linear-gradient(to top, rgba(var(--oscuro-rgb),.98) 10%, rgba(var(--oscuro-rgb),.84) 58%, rgba(var(--oscuro-rgb),.62) 100%);
 }
 body:not(.modo-tv) .cab-txt .section-title { margin:0; font-size:40px; color:#F4EFE6; text-shadow:0 1px 8px rgba(0,0,0,.7); }
 body:not(.modo-tv) .cab-txt .section-subtitle { margin:6px 0 0; color:#D3C9BB; text-shadow:0 1px 8px rgba(0,0,0,.7); }
