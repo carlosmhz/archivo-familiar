@@ -67,7 +67,10 @@ function vigilarEscena(video) {
   if (!e || video.style.display === 'none') return;
   const ini = inicioEscena(e);
   if (e.compartido) {
-    if (tOrig(video) < ini - 0.5) { irA(video, ini); return; }
+    // e.reanudar: «Continuar viendo» de una selección; mientras el vídeo carga (currentTime 0) se lleva
+    // a ese segundo y no al inicio de la escena. Se olvida en cuanto el vídeo ya está dentro.
+    if (tOrig(video) < ini - 0.5) { irA(video, e.reanudar || ini); return; }
+    if (e.reanudar && video.currentTime > 0) e.reanudar = null;
     if (e.finT && tOrig(video) > e.finT) irA(video, Math.max(ini, e.finT - 0.6));
   }
   if (!e.finT) return;
@@ -502,7 +505,7 @@ function cerrarPlayer(e) {
   document.body.style.overflow = '';
   animarVuelta();
   // Si es modo compartir, mostrar pantalla de "ver de nuevo" (o la de la selección)
-  if (listaActiva()) document.getElementById('screen-seleccion').classList.add('active');
+  if (listaActiva()) { document.getElementById('screen-seleccion').classList.add('active'); pintarContinuarLista(); }
   else if (window._compartirData) mostrarPantallaCompartir();
 }
 

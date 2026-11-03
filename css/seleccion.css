@@ -74,3 +74,9 @@ body:has(.player-overlay.open) #sel-barra, body:has(.sel-modal.open) #sel-barra,
 .lista-card .lista-visto[hidden] { display:none; }
 .lista-card.visto .nf-thumb { filter:saturate(.75) brightness(.85); }
 @media (max-width:640px) { #screen-seleccion { padding:20px 16px 48px; } .lista-titulo { font-size:27px; } }
+
+/* Portada (carrusel) y «Continuar viendo» del invitado: los mismos del inicio, movidos aquí por
+   iniciarListaCompartida() y alimentados con los fragmentos de la selección (3 nov 2026) */
+#screen-seleccion.con-portada { padding-top:0; }
+#screen-seleccion .continue-card.visible { margin:18px auto 4px; }
+#screen-seleccion .continue-card.visible + .lista-cab, #screen-seleccion.con-portada .lista-cab { margin-top:26px; }

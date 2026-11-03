@@ -208,8 +208,81 @@ function iniciarListaCompartida(lista) {
   const ordenados = anios.flatMap(a => items.filter(it => anioFragmento(it) === a));
   window._compartirLista = { titulo: lista.titulo || '', items: ordenados, actual: -1, todo: false, vistos: new Set() };
   document.getElementById('home-screen').style.display = 'none';
+  // La portada del inicio (carrusel) y «Continuar viendo» pasan a la pantalla del invitado, arriba,
+  // con sus mismos estilos y funciones; solo cambian los datos (elegirRecuerdos() y continuarViendo()
+  // usan los fragmentos de la selección cuando hay una activa).
+  const scr = document.getElementById('screen-seleccion');
+  const hero = document.querySelector('.home-hero'), cc = document.getElementById('continue-card');
+  if (cc) scr.insertBefore(cc, scr.firstChild);
+  if (hero) scr.insertBefore(hero, scr.firstChild);
   pintarPantallaLista();
-  document.getElementById('screen-seleccion').classList.add('active');
+  renderRecuerdoDia();
+  scr.classList.toggle('con-portada', !!(hero && hero.querySelector('.dia-card.visible')));
+  pintarContinuarLista();
+  scr.classList.add('active');
+}
+
+// ── Continuar viendo (invitado) ──────────────────────────────────────────────
+// Se guarda en este dispositivo por qué fragmento y segundo iba, ligado a esta selección
+// (la sesión del invitado se recuerda 24 h, así que sirve también tras recargar).
+const ULT_LISTA_KEY = 'af_ultimo_lista';
+let _ultListaGuardado = 0;
+function claveListaActual() {
+  const L = listaActiva();
+  return L ? L.titulo + '|' + L.items.map(it => it.caseroId + ':' + it.escenaIdx).join(',') : '';
+}
+function tramoFragmento(inf) {
+  if (inf.esc) {
+    const sig = inf.c.escenas[inf.c.escenas.indexOf(inf.esc) + 1];
+    return { ini: inf.esc.t || 0, fin: sig ? sig.t : (inf.c.duracion || null) };
+  }
+  return { ini: 0, fin: inf.c.duracion || null };
+}
+function leerUltimoLista() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(ULT_LISTA_KEY) || 'null'); } catch (e) {}
+  const L = listaActiva();
+  return d && L && d.lista === claveListaActual() && L.items[d.i] ? d : null;
+}
+function guardarUltimoLista(d) {
+  try { d ? localStorage.setItem(ULT_LISTA_KEY, JSON.stringify(d)) : localStorage.removeItem(ULT_LISTA_KEY); } catch (e) {}
+}
+function actualizarUltimoLista(video) {
+  const L = listaActiva();
+  if (!L || L.actual < 0 || !video.duration || !isFinite(video.duration) || document.body.classList.contains('modo-tv')) return;
+  const inf = selInfo(L.items[L.actual]);
+  if (!inf) return;
+  const { ini } = tramoFragmento(inf);
+  const fin = tramoFragmento(inf).fin || (video.duration + _tramoOff);
+  const t = tOrig(video), pct = fin > ini ? (t - ini) / (fin - ini) : 0;
+  // Se guarda cada 4 s, y siempre al llegar al final (el panel de fin pausa justo antes)
+  const ahora = Date.now();
+  if (ahora - _ultListaGuardado < 4000 && pct <= 0.97) return;
+  _ultListaGuardado = ahora;
+  // Acabado: si era el último, ya no hay nada que continuar; si no, se ofrece el siguiente
+  if (pct > 0.97) {
+    guardarUltimoLista(L.actual < L.items.length - 1 ? { lista: claveListaActual(), i: L.actual + 1, t: null, pct: 0, todo: L.todo } : null);
+    return;
+  }
+  guardarUltimoLista({ lista: claveListaActual(), i: L.actual, t: Math.floor(t), pct: Math.max(0, pct), todo: L.todo });
+}
+function pintarContinuarLista() {
+  const card = document.getElementById('continue-card');
+  if (!card || !listaActiva()) return;
+  const d = leerUltimoLista(), L = listaActiva();
+  if (!d) { card.className = 'continue-card'; return; }
+  const inf = selInfo(L.items[d.i]);
+  document.getElementById('cc-title').textContent = inf.titulo;
+  document.getElementById('cc-sub').textContent =
+    `${d.i + 1} de ${L.items.length} · ${inf.esc ? 'Escena de «' + inf.c.titulo + '»' : 'Vídeo completo'}`;
+  document.getElementById('cc-progress').style.width = Math.round((d.pct || 0) * 100) + '%';
+  document.getElementById('cc-img').innerHTML = inf.mini ? `<img src="${escSel(inf.mini)}" alt="" onerror="this.remove()">` : '';
+  card.querySelector('.cc-kicker').textContent = d.t == null ? 'A continuación' : 'Continuar viendo';
+  card.className = 'continue-card visible t-' + thumbClass(inf.c.tipo, inf.c.categoria);
+}
+function continuarLista() {
+  const d = leerUltimoLista();
+  if (d) verItemLista(d.i, !!d.todo, d.t);
 }
 
 function tarjetaFragmento(it, i, L) {
@@ -257,7 +330,8 @@ function pintarPantallaLista() {
 }
 
 // Reproduce el fragmento i. 'todo' = encadenar con los siguientes ("Ver todo").
-function verItemLista(i, todo) {
+// 'desde' = segundo del original en que empezar (Continuar viendo); si no, el inicio del fragmento.
+function verItemLista(i, todo, desde) {
   const L = listaActiva();
   if (!L || !L.items[i]) return;
   if (todo !== undefined) L.todo = !!todo;
@@ -268,14 +342,17 @@ function verItemLista(i, todo) {
   if (card) { card.classList.add('visto'); const b = card.querySelector('.lista-visto'); if (b) b.hidden = false; }
   ocultarPanelEscena();
   const it = L.items[i], inf = selInfo(it), c = inf.c;
+  const { ini, fin } = tramoFragmento(inf);
+  // Reanudar dentro del fragmento (con un margen para no caer justo en el final)
+  let t0 = ini;
+  if (desde != null && desde > ini && (!fin || desde < fin - 3)) t0 = desde;
+  guardarUltimoLista({ lista: claveListaActual(), i, t: t0, pct: fin > ini ? (t0 - ini) / (fin - ini) : 0, todo: L.todo });
   if (inf.esc) {
-    const sig = c.escenas[it.escenaIdx + 1];
-    _escenaActiva = { caseroId: c.id, escenaIdx: it.escenaIdx, inicioT: inf.esc.t || 0,
-      finT: sig ? sig.t : (c.duracion || null), compartido: true };
-    abrirPlayer(c.youtube, inf.esc.titulo, inf.esc.fecha || '', inf.esc.t || 0);
+    _escenaActiva = { caseroId: c.id, escenaIdx: it.escenaIdx, inicioT: ini, finT: fin, compartido: true, reanudar: t0 > ini ? t0 : null };
+    abrirPlayer(c.youtube, inf.esc.titulo, inf.esc.fecha || '', t0);
   } else {
     _escenaActiva = null;
-    abrirPlayer(c.youtube, c.titulo, c.fecha || '', 0);
+    abrirPlayer(c.youtube, c.titulo, c.fecha || '', t0);
   }
   const pf = document.getElementById('player-fecha');
   if (pf && L.items.length > 1) pf.textContent = `${i + 1} de ${L.items.length}${pf.textContent ? ' · ' + pf.textContent : ''}`;

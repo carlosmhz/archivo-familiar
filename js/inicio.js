@@ -42,6 +42,7 @@ function actualizarUltimo(video) {
   try { localStorage.setItem(ULT_KEY, JSON.stringify(d)); } catch (e) {}
 }
 function continuarViendo() {
+  if (typeof listaActiva === 'function' && listaActiva()) { continuarLista(); return; }   // invitado con selección
   const d = leerUltimo();
   if (!d) return;
   const c = d.caseroId != null ? CASEROS.find(x => x.id === d.caseroId) : null;
@@ -188,11 +189,18 @@ function semillaDia(extra) {
 const MAX_RECUERDOS = 5;
 let _recuerdos = [], _recuerdo = null, _diaIdx = 0, _diaClave = '', _diaIniciado = false, _diaSwipe = 0;
 function vidRecuerdo(x) { return x.tipo === 'actuacion' ? 'a' + x.a.id : 'c' + x.c.id; }
-function claveRecuerdo(x) { return vidRecuerdo(x) + (x.tipo === 'escena' ? ':' + x.idx : ''); }
+function claveRecuerdo(x) { return x.tipo === 'frag' ? 'f' + x.i : vidRecuerdo(x) + (x.tipo === 'escena' ? ':' + x.idx : ''); }
 function elegirRecuerdos() {
   const hoy = new Date(), d = hoy.getDate(), m = hoy.getMonth() + 1, y = hoy.getFullYear();
   const pool = [];
-  CASEROS.forEach(c => {
+  // Invitado con PIN de selección: la portada solo usa sus fragmentos (con 2 o más; con uno ya lo tiene en la lista)
+  const L = typeof listaActiva === 'function' ? listaActiva() : null;
+  if (L) {
+    if (L.items.length >= 2) L.items.forEach((it, i) => {
+      const inf = selInfo(it);
+      if (inf) pool.push({ tipo: 'frag', i, c: inf.c, e: inf.esc, f: fechaDMY((inf.esc && inf.esc.fecha) || inf.c.fecha) });
+    });
+  } else CASEROS.forEach(c => {
     if (!c.youtube) return;
     if (c.escenas && c.escenas.length) {
       c.escenas.forEach((e, idx) => { if (e && e.fecha) pool.push({ tipo: 'escena', c, idx, e, f: fechaDMY(e.fecha) }); });
@@ -200,7 +208,7 @@ function elegirRecuerdos() {
       pool.push({ tipo: 'casero', c, f: fechaDMY(c.fecha) });
     }
   });
-  if (!pool.length) {
+  if (!pool.length && !L) {
     // Sin vídeos caseros (rol de solo actuaciones): actuaciones del día
     ACTUACIONES.forEach(a => { if (a.youtube) pool.push({ tipo: 'actuacion', a, f: fechaDMY(a.fecha) }); });
   }
@@ -228,15 +236,16 @@ function elegirRecuerdos() {
   return res;
 }
 function textoRecuerdo(r) {
-  const titulo = r.tipo === 'escena' ? r.e.titulo : r.tipo === 'casero' ? r.c.titulo : r.a.act;
-  const fecha = r.tipo === 'escena' ? (r.e.fecha || '') : r.tipo === 'casero' ? (r.c.fecha || '') : formatDate(r.a.fecha);
+  const conE = r.tipo === 'escena' || (r.tipo === 'frag' && r.e);   // fragmento de una selección: escena o vídeo completo
+  const titulo = conE ? r.e.titulo : r.tipo === 'actuacion' ? r.a.act : r.c.titulo;
+  const fecha = conE ? (r.e.fecha || '') : r.tipo === 'actuacion' ? formatDate(r.a.fecha) : (r.c.fecha || '');
   const hace = r.motivo === 'aniv' || !r.anios ? '' : ` · hace ${r.anios} año${r.anios !== 1 ? 's' : ''}`;
   const kick = r.motivo === 'dia' ? 'Tal día como hoy' : r.motivo === 'mes' ? 'Un mes como este'
     : r.motivo === 'aniv' ? `Hace ${r.anios} años` : 'Recuerdo del día';
   return {
     titulo,
     kicker: (r.tipo === 'actuacion' ? 'Actuación · ' : '') + kick,
-    sub: (r.tipo === 'escena' ? `Escena de «${r.c.titulo}» · ` : '') + fecha + hace
+    sub: (conE ? `Escena de «${r.c.titulo}» · ` : r.tipo === 'frag' ? 'Vídeo completo · ' : '') + fecha + hace
   };
 }
 function fondoRecuerdo(r) {
@@ -244,7 +253,7 @@ function fondoRecuerdo(r) {
     const yt = idYoutube(r.a.youtube);
     return `<span class="dia-fondo t-otros">${svgIcon('i-music')}${yt ? `<img src="https://i.ytimg.com/vi/${yt}/hqdefault.jpg" alt="" onerror="this.remove()">` : ''}</span>`;
   }
-  const mini = (r.tipo === 'escena' && r.e.miniatura) || r.c.miniatura;
+  const mini = (r.e && r.e.miniatura) || r.c.miniatura;
   return `<span class="dia-fondo t-${thumbClass(r.c.tipo, r.c.categoria)}">${thumbIcon(r.c.tipo, r.c.categoria)}${mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : ''}</span>`;
 }
 function renderRecuerdoDia() {
@@ -339,7 +348,8 @@ function idYoutube(url) {
 function verRecuerdo() {
   const r = _recuerdo;
   if (!r) return;
-  if (r.tipo === 'escena') abrirPlayerEscena(r.c.id, r.idx);
+  if (r.tipo === 'frag') verItemLista(r.i, false);
+  else if (r.tipo === 'escena') abrirPlayerEscena(r.c.id, r.idx);
   else if (r.tipo === 'casero') abrirPlayer(r.c.youtube, r.c.titulo, r.c.fecha || '', 0);
   else abrirPlayer(buildLink(r.a), r.a.act, formatDate(r.a.fecha), r.a.min || 0);
 }
@@ -369,7 +379,7 @@ function marcarEscenaActual(video) {
 }
 document.addEventListener('DOMContentLoaded', () => {
   const v = document.getElementById('player-video');
-  if (v) v.addEventListener('timeupdate', () => { actualizarUltimo(v); marcarEscenaActual(v); });
+  if (v) v.addEventListener('timeupdate', () => { actualizarUltimo(v); actualizarUltimoLista(v); marcarEscenaActual(v); });
   const hola = document.getElementById('home-hello');
   if (hola) hola.textContent = saludo();
 });
