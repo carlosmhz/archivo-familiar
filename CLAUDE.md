@@ -29,7 +29,7 @@
 
 **Estado del repositorio y del servidor (1 de noviembre de 2026, tarde):**
 - `main` es lo que sirve producción: hPanel → GIT despliega `main` en `public_html/videos/`. Carlos lo comprobó: acceso, vídeos, miniaturas, app del móvil y 403 en `datos/`, `lib/`, `docs/`, `scripts/` y `CLAUDE.md`.
-- **Datos migrados** a `~/domains/app.mpi-sala.es/archivo-datos/` (fuera de la web): `datos/`, `hls/`, `caseros/` (MP4 originales y `caseros/miniaturas/`), `miniaturas/` (de escenas). El código los encuentra solo (`lib/config.php`); **no hay `privado/config.php`**.
+- **Datos migrados** a `~/domains/app.mpi-sala.es/archivo-datos/` (fuera de la web): `datos/`, `hls/`, `caseros/` (MP4 originales y `caseros/miniaturas/`), `miniaturas/` (de escenas). El código los encuentra solo (`lib/config.php`). Desde el 7 nov 2026 existe `privado/config.php`, solo con `youtube_api_key` (sin `'datos'`, así que los datos se siguen buscando en `archivo-datos/`).
 - En `archivo-datos/` queda también `archivo-familiar.apk` (única copia; no se sirve por web, la app es la PWA). Carlos está borrando de ahí el código viejo (`index.html`, `api.php`, etc.).
 - `videos-nuevo/` y `videos_antiguo/` ya no existen.
 
@@ -469,7 +469,7 @@ Incidente: antes de la protección, `datos/compartir.json` y `datos/otp.json` es
 - Décadas en recuadros y menos espacio entre filas (apartado 0.2, 2 nov 2026, `?v=20261102f`). Probado en local (móvil y PC); pendiente de que Carlos lo vea en su móvil.
 
 - **Reacciones con emoji y respuestas en los comentarios** (apartado 0.3, 2 nov 2026, `?v=20261102o`; sin marca de escena para PIN de escena en `?v=20261102p`). Probadas en local (móvil, tema claro y oscuro, base antigua sin las tablas nuevas, invitado con PIN, admin); pendiente de que Carlos las pruebe en producción. La base de producción se amplía sola la primera vez que alguien abre los comentarios.
-- Miniaturas de YouTube en la lista de actuaciones (apartado 0.2, 7 nov 2026; versión final «foto aproximada + minuto» y portadas de listas en `?v=20261107e`). Probado en local con YouTube simulado; las portadas de listas ya funcionan en producción. La página `/embed/` no da la duración ni la de la lista las partes: pendiente de que Carlos cree la clave de la API de YouTube en `privado/config.php` y lo compruebe con `?diag=minis`.
+- Miniaturas de YouTube en la lista de actuaciones (apartado 0.2, 7 nov 2026; versión final «foto aproximada + minuto» y portadas de listas en `?v=20261107e`). Probado en local con YouTube simulado; las portadas de listas ya funcionan en producción. Con la clave de la API de YouTube en `privado/config.php` (7 nov 2026) el diagnóstico dio 25 de 25 listas con partes. **Ventana «Partes»** fusionada el 7 nov 2026 (`?v=20261107i`); pendiente de que Carlos la vea en su móvil y de comprobar que el título «Parte N de M» cambia solo al pasar de parte.
 - Sesión recordada también para invitados con PIN (apartado 5, 2 nov 2026, `?v=20261102n`). Probada en local (PIN de escena, selección, Salir, familia); pendiente de que Carlos la confirme en producción.
 - Sesión recordada (marca `f` en el token, `localStorage` y cookie): Carlos confirmó el 1 nov 2026 que funciona y que la sesión ya no se cierra al recargar.
 
