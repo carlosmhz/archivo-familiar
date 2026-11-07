@@ -92,13 +92,20 @@ function renderActRow(a, conAnio) {
   const fechaHtml = p.d
     ? `<span class="act-day">${p.d}</span><span class="act-mon">${p.m}</span>${conAnio ? `<span class="act-year">${p.y}</span>` : ''}`
     : `<span class="act-mon">${p.y || '—'}</span>`;
+  const yt = typeof idYoutube === 'function' ? idYoutube(a.youtube) : null;
+  const abrir = link ? `abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})` : '';
+  // Miniatura pública de YouTube (la misma para todas las actuaciones de un mismo vídeo)
+  const mini = yt
+    ? `<button class="act-mini" tabindex="-1" aria-hidden="true" onclick="${abrir}"><svg class="ico"><use href="#i-music"/></svg><img src="https://i.ytimg.com/vi/${yt}/mqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"></button>`
+    : `<span class="act-mini" aria-hidden="true"><svg class="ico"><use href="#i-music"/></svg></span>`;
   const meta = [a.kw ? `<span class="act-kw">${a.kw}</span>` : '', timeStr ? `Empieza en ${timeStr}` : ''].filter(Boolean).join(' · ');
   return `
     <div class="actuacion-row">
       <span class="act-date">${fechaHtml}</span>
+      ${mini}
       <span class="act-info"><span class="act-name">${a.act}</span>${meta ? `<span class="act-meta">${meta}</span>` : ''}</span>
       ${link
-        ? `<button class="act-link" aria-label="Ver ${a.act.replace(/"/g, '&quot;')}" onclick="abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})"><svg class="ico"><use href="#i-play"/></svg></button>`
+        ? `<button class="act-link" aria-label="Ver ${a.act.replace(/"/g, '&quot;')}" onclick="${abrir}"><svg class="ico"><use href="#i-play"/></svg></button>`
         : `<span class="act-link pending">Próximamente</span>`}
     </div>`;
 }
