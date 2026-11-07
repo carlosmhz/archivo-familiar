@@ -166,12 +166,20 @@ function pintarMinisAct(raiz) {
 
 async function cargarMinisAct() {
   if (_minisAct || _minisPidiendo || document.body.classList.contains('modo-tv')) return;
-  if (!document.querySelector('.act-mini[data-lista], .act-mini[data-v]:not([data-t="0"])')) return;
+  if (!document.querySelector('.act-mini[data-lista], .act-mini[data-v]:not([data-t="0"])') && !/[?&]diag=minis/.test(location.search)) return;
   _minisPidiendo = true;
   try {
-    const r = await fetch(`${API}?action=actuaciones-minis&token=${encodeURIComponent(TOKEN)}`);
+    // Diagnóstico: abrir la web con ?diag=minis y entrar en Actuaciones muestra qué responde YouTube
+    const diag = /[?&]diag=minis/.test(location.search);
+    const r = await fetch(`${API}?action=actuaciones-minis&token=${encodeURIComponent(TOKEN)}${diag ? '&diag=1' : ''}`);
     const d = await r.json();
     _minisAct = (d.ok && d.data) ? d.data : { l: {}, s: {} };
+    if (diag && typeof avisar === 'function') {
+      const g = (d.data && d.data.diag) || {};
+      const fallos = Object.entries(g.fallos || {}).slice(0, 4).map(([k, v]) => `• ${k}: ${v}`).join('\n');
+      avisar(d.ok ? `curl: ${g.curl ? 'sí' : 'NO'}\nCintas con foto del minuto: ${g.con_foto} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
+             { titulo: 'Diagnóstico de miniaturas' });
+    }
   } catch (e) { _minisAct = { l: {}, s: {} }; }
   _minisPidiendo = false;
   pintarMinisAct();
