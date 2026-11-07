@@ -93,7 +93,8 @@ function renderActRow(a, conAnio) {
     ? `<span class="act-day">${p.d}</span><span class="act-mon">${p.m}</span>${conAnio ? `<span class="act-year">${p.y}</span>` : ''}`
     : `<span class="act-mon">${p.y || '—'}</span>`;
   const abrir = link ? `abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})` : '';
-  const mini = link ? `<button class="act-mini" tabindex="-1" aria-hidden="true" ${datosMini(a)} onclick="${abrir}">${ICO_MINI}</button>`
+  const etiqueta = a.min > 0 ? `<span class="act-min">${formatTime(a.min)}</span>` : '';
+  const mini = link ? `<button class="act-mini" tabindex="-1" aria-hidden="true" ${datosMini(a)} onclick="${abrir}">${ICO_MINI}${etiqueta}</button>`
                     : `<span class="act-mini" aria-hidden="true">${ICO_MINI}</span>`;
   const meta = [a.kw ? `<span class="act-kw">${a.kw}</span>` : '', timeStr ? `Empieza en ${timeStr}` : ''].filter(Boolean).join(' · ');
   return `
@@ -110,12 +111,13 @@ function renderActRow(a, conAnio) {
 // ── Miniaturas de las actuaciones (7 nov 2026) ──
 // Cada fila lleva data-v (vídeo) y data-t (segundo de inicio) o data-lista (lista de YouTube).
 // - Vídeo que empieza al principio: su portada de YouTube.
-// - Vídeo que empieza a mitad (varias actuaciones en la misma cinta): la foto de ese minuto,
-//   recortada del "storyboard" de YouTube (las fotos de la barra de progreso). Si no hay, la portada.
-// - Lista de YouTube: la portada de su primer vídeo.
-// El servidor (action=actuaciones-minis) da las listas y los storyboards, con caché.
+// - Vídeo que empieza a mitad (varias actuaciones en la misma cinta): la foto automática de YouTube
+//   más cercana a ese punto (mq1/mq2/mq3 ≈ 1/4, 1/2, 3/4 del vídeo; antes de 1/8, la portada) y una
+//   etiqueta con el minuto. Es aproximada: la foto exacta no se puede (YouTube bloquea al servidor).
+//   La duración la da el servidor; si no la tiene, se estima con el último inicio de esa cinta + 10 min.
+// - Lista de YouTube: la portada de su primer vídeo (la da el servidor).
 const ICO_MINI = '<svg class="ico"><use href="#i-music"/></svg>';
-var _minisAct = null;          // { l: {lista: vídeo}, s: {vídeo: storyboard} } cuando llega
+var _minisAct = null;          // { l: {lista: vídeo}, d: {vídeo: segundos} } cuando llega
 let _minisPidiendo = false;
 
 function datosMini(a) {
@@ -126,29 +128,28 @@ function datosMini(a) {
   return l ? `data-lista="${l}"` : '';
 }
 
-function ponerPortada(el, v) {
+function ponerPortada(el, v, foto) {
   if (!v || el.querySelector('img')) return;
-  el.insertAdjacentHTML('beforeend', `<img src="https://i.ytimg.com/vi/${v}/mqdefault.jpg" alt="" loading="lazy" onerror="this.remove()">`);
+  const img = document.createElement('img');
+  img.alt = ''; img.loading = 'lazy';
+  img.onerror = () => { if (foto && foto !== 'mqdefault') { foto = 'mqdefault'; img.src = `https://i.ytimg.com/vi/${v}/mqdefault.jpg`; } else img.remove(); };
+  img.src = `https://i.ytimg.com/vi/${v}/${foto || 'mqdefault'}.jpg`;
+  el.insertBefore(img, el.querySelector('.act-min'));
 }
 
-// Recorta el cuadro del segundo t de un storyboard sb = {u, w, h, n, c, r, i}
-function ponerCuadro(el, v, t, sb) {
-  const porHoja = sb.c * sb.r;
-  const idx = Math.min(sb.n - 1, Math.floor((t + 3) * 1000 / sb.i));   // +3 s: evita el cuadro del corte
-  const hoja = Math.floor(idx / porHoja), pos = idx % porHoja;
-  const resto = sb.n - hoja * porHoja;                                // la última hoja puede ser más pequeña
-  const cols = Math.min(sb.c, resto), filas = Math.min(sb.r, Math.ceil(resto / sb.c));
-  const col = pos % sb.c, fila = Math.floor(pos / sb.c);
-  const url = sb.u.replace('{p}', hoja);
-  const span = document.createElement('span');
-  span.className = 'act-cuadro';
-  span.style.backgroundImage = `url("${url}")`;
-  span.style.backgroundSize = `${cols * 100}% ${filas * 100}%`;
-  span.style.backgroundPosition = `${cols > 1 ? col / (cols - 1) * 100 : 0}% ${filas > 1 ? fila / (filas - 1) * 100 : 0}%`;
-  const prueba = new Image();
-  prueba.onload = () => { if (!el.querySelector('.act-cuadro, img')) el.appendChild(span); };
-  prueba.onerror = () => ponerPortada(el, v);
-  prueba.src = url;
+function duracionCinta(v) {
+  const d = _minisAct && _minisAct.d && _minisAct.d[v];
+  if (d) return d;
+  let max = 0, n = 0;
+  ACTUACIONES.forEach(a => { if (idYoutube(a.youtube) === v) { n++; max = Math.max(max, parseInt(a.min) || 0); } });
+  return n > 1 ? max + 600 : 0;      // una sola actuación en el vídeo: no hay con qué estimar → portada
+}
+
+function fotoAproximada(v, t) {
+  const dur = duracionCinta(v);
+  if (!dur) return 'mqdefault';
+  const f = t / dur;
+  return f < 0.125 ? 'mqdefault' : f < 0.375 ? 'mq1' : f < 0.625 ? 'mq2' : 'mq3';
 }
 
 function pintarMinisAct(raiz) {
@@ -158,7 +159,7 @@ function pintarMinisAct(raiz) {
     if (v && t <= 0) { el.dataset.pintada = 1; ponerPortada(el, v); return; }
     if (!_minisAct) return;                                            // falta la respuesta del servidor
     el.dataset.pintada = 1;
-    if (v) { const sb = _minisAct.s && _minisAct.s[v]; sb ? ponerCuadro(el, v, t, sb) : ponerPortada(el, v); }
+    if (v) ponerPortada(el, v, fotoAproximada(v, t));
     else ponerPortada(el, _minisAct.l && _minisAct.l[el.dataset.lista]);
   });
   if (!_minisAct) cargarMinisAct();
@@ -166,7 +167,10 @@ function pintarMinisAct(raiz) {
 
 async function cargarMinisAct() {
   if (_minisAct || _minisPidiendo || document.body.classList.contains('modo-tv')) return;
-  if (!document.querySelector('.act-mini[data-lista], .act-mini[data-v]:not([data-t="0"])') && !/[?&]diag=minis/.test(location.search)) return;
+  if (!document.querySelector('.act-mini[data-lista]') && !/[?&]diag=minis/.test(location.search)) {
+    // Sin listas no hace falta esperar al servidor para pintar; la duración solo afina la foto.
+    if (!document.querySelector('.act-mini[data-v]:not([data-t="0"])')) return;
+  }
   _minisPidiendo = true;
   try {
     // Diagnóstico: abrir la web con ?diag=minis y entrar en Actuaciones muestra qué responde YouTube
@@ -176,8 +180,8 @@ async function cargarMinisAct() {
     _minisAct = (d.ok && d.data) ? d.data : { l: {}, s: {} };
     if (diag && typeof avisar === 'function') {
       const g = (d.data && d.data.diag) || {};
-      const fallos = Object.entries(g.fallos || {}).slice(0, 1).map(([k, v]) => `• ${k}: ${v}`).join('\n');
-      avisar(d.ok ? `curl: ${g.curl ? 'sí' : 'NO'}\nCintas con foto del minuto: ${g.con_foto} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
+      const fallos = Object.entries(g.fallos || {}).slice(0, 2).map(([k, v]) => `• ${k}: ${v}`).join('\n');
+      avisar(d.ok ? `curl: ${g.curl ? 'sí' : 'NO'}\nCintas con duración: ${g.con_duracion} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
              { titulo: 'Diagnóstico de miniaturas' });
     }
   } catch (e) { _minisAct = { l: {}, s: {} }; }
