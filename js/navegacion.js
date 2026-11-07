@@ -162,7 +162,7 @@ function pintarMinisAct(raiz) {
     if (!_minisAct) return;                                            // falta la respuesta del servidor
     el.dataset.pintada = 1;
     if (v) ponerPortada(el, v, fotoAproximada(v, t));
-    else ponerPortada(el, _minisAct.l && _minisAct.l[el.dataset.lista]);
+    else { const p1 = partesOrdenadas(el.dataset.lista)[0]; ponerPortada(el, p1 ? p1.v : (_minisAct.l && _minisAct.l[el.dataset.lista])); }
   });
   if (!_minisAct) cargarMinisAct();
 }
@@ -198,10 +198,20 @@ async function pedirMinisAct() {
 // ── Actuaciones en una lista de YouTube: ventana «Partes» (7 nov 2026, opción 2 de Carlos) ──
 // Al tocar una actuación enlazada a una lista se abre la ventana de escenas (#caseros-modal) con las
 // partes en orden (foto, «Parte N», título de YouTube y duración). Cada parte se abre como
-// watch?v=<parte>&list=<lista>: YouTube empieza justo en esa parte y sigue sola con las siguientes.
+// watch?v=<parte>&playlist=<siguientes>: YouTube empieza justo en esa parte y sigue sola con las demás.
 // Las partes las da el servidor (actuaciones-minis → p). Si no las tiene, se abre la lista desde la
 // primera parte (portada de la lista) o, en último caso, como antes.
-let _partesActuales = null;    // { act, n, lista } mientras suena una parte, para el título «Parte N de M»
+let _partesActuales = null;
+
+// Algunas listas de YouTube tienen las partes al revés (p. ej. «Teatro 02/26 3» la primera). Si todos
+// los títulos acaban en un número y esos números son 1…N sin repetir, se ordenan por él; si no, se
+// respeta el orden de la lista.
+function partesOrdenadas(lista) {
+  const ps = (_minisAct && _minisAct.p && _minisAct.p[lista]) || [];
+  const nums = ps.map(p => { const m = String(p.t || '').match(/(\d+)\s*\)?\s*$/); return m ? parseInt(m[1]) : NaN; });
+  const ok = ps.length > 1 && nums.every(n => n >= 1 && n <= ps.length) && new Set(nums).size === ps.length;
+  return ok ? ps.map((p, i) => [nums[i], p]).sort((a, b) => a[0] - b[0]).map(x => x[1]) : ps;
+}    // { act, n, lista } mientras suena una parte, para el título «Parte N de M»
 
 function durPartes(s) {
   s = parseInt(s) || 0;
@@ -214,7 +224,7 @@ async function abrirPartes(id) {
   if (!a) return;
   const lista = (String(a.youtube).match(/[?&]list=([\w-]+)/) || [])[1];
   if (!_minisAct) await cargarMinisAct(true);
-  const partes = (_minisAct && _minisAct.p && _minisAct.p[lista]) || [];
+  const partes = partesOrdenadas(lista);
   if (partes.length < 2) {
     const v = partes[0] ? partes[0].v : (_minisAct && _minisAct.l && _minisAct.l[lista]);
     const url = v ? `https://www.youtube.com/watch?v=${v}&list=${lista}` : a.youtube;
@@ -247,12 +257,15 @@ async function abrirPartes(id) {
 function verParte(id, i) {
   const a = ACTUACIONES.find(x => x.id === id);
   const lista = a && (String(a.youtube).match(/[?&]list=([\w-]+)/) || [])[1];
-  const partes = (lista && _minisAct && _minisAct.p && _minisAct.p[lista]) || [];
+  const partes = lista ? partesOrdenadas(lista) : [];
   if (!partes[i]) return;
   cerrarModalCaseros();
-  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}&list=${lista}`,
+  // Cola propia en el orden correcto (no la lista de YouTube, que puede ir al revés): la parte elegida
+  // y detrás las siguientes; YouTube pasa sola de una a otra.
+  const siguen = partes.slice(i + 1).map(p => p.v).join(',');
+  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}${siguen ? '&playlist=' + siguen : ''}`,
               `${a.act} · Parte ${i + 1} de ${partes.length}`, formatDate(a.fecha), 0);
-  _partesActuales = { act: a.act, n: partes.length, lista, ids: partes.map(p => p.v) };
+  _partesActuales = { act: a.act, n: partes.length, ids: partes.map(p => p.v) };
   escucharYoutube();
 }
 
@@ -270,9 +283,8 @@ window.addEventListener('message', ev => {
   let d; try { d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; } catch (e) { return; }
   const info = d && d.info;
   const ifr = document.getElementById('player-iframe');
-  if (!info || !ifr || !ifr.src.includes(_partesActuales.lista)) return;
-  let i = typeof info.playlistIndex === 'number' ? info.playlistIndex : -1;
-  if (i < 0 && info.videoData && info.videoData.video_id) i = _partesActuales.ids.indexOf(info.videoData.video_id);
+  if (!info || !ifr || !_partesActuales.ids.some(id => ifr.src.includes(id))) return;
+  const i = info.videoData && info.videoData.video_id ? _partesActuales.ids.indexOf(info.videoData.video_id) : -1;
   if (i < 0 || i >= _partesActuales.n) return;
   const t = document.getElementById('player-titulo');
   if (t) t.textContent = `${_partesActuales.act} · Parte ${i + 1} de ${_partesActuales.n}`;

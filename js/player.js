@@ -14,6 +14,9 @@ function buildEmbedUrl(url, min) {
   } else if (videoId) {
     embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&enablejsapi=1`;
     if (min) embedUrl += `&start=${min}`;
+    // Cola propia (partes de una lista en el orden correcto, js/navegacion.js → verParte)
+    const cola = url.match(/[?&]playlist=([\w,-]+)/);
+    if (cola) embedUrl += `&playlist=${cola[1]}`;
   } else return null;
   return embedUrl;
 }
