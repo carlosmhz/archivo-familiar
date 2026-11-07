@@ -105,7 +105,12 @@ function renderInicioExtras() {
       card.style.background = '';
       card.className = 'continue-card visible' + (c ? ' t-' + thumbClass(c.tipo, c.categoria) : '');
       const esc = c && d.escenaIdx != null && c.escenas ? c.escenas[d.escenaIdx] : null;
-      const mini = (esc && esc.miniatura) || (c && c.miniatura);
+      let mini = (esc && esc.miniatura) || (c && c.miniatura);
+      if (!mini) {   // actuación de YouTube: su foto pública (la más cercana al minuto de inicio, como en la lista)
+        const yid = idYoutube(d.url), lst = (String(d.url).match(/[?&]list=([\w-]+)/) || [])[1];
+        const cub = yid || (lst && typeof _minisAct !== 'undefined' && _minisAct && _minisAct.l && _minisAct.l[lst]);
+        if (cub) mini = `https://i.ytimg.com/vi/${cub}/${yid && typeof fotoAproximada === 'function' ? fotoAproximada(yid, d.t || 0) : 'mqdefault'}.jpg`;
+      }
       document.getElementById('cc-img').innerHTML = mini ? `<img src="${mini}" alt="" onerror="this.remove()">` : '';
     } else {
       card.className = 'continue-card';
