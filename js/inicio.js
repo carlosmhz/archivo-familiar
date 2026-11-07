@@ -357,6 +357,8 @@ function verRecuerdo() {
 function renderEscenasPlayer(url) {
   const box = document.getElementById('player-escenas');
   if (!box) return;
+  if (typeof _partesActuales !== 'undefined' && _partesActuales && _partesActuales.url !== url) _partesActuales = null;
+  if (typeof _partesActuales !== 'undefined' && _partesActuales) { renderPartesPlayer(box); return; }
   const c = _escenaActiva ? CASEROS.find(x => x.id === _escenaActiva.caseroId) : CASEROS.find(x => x.youtube && x.youtube === url);
   if (!c || !c.escenas || !c.escenas.length || (_escenaActiva && _escenaActiva.compartido) || String(ROL).startsWith('compartir')) {
     box.classList.remove('visible'); box.innerHTML = ''; box.dataset.id = ''; return;

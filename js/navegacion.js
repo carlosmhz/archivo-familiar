@@ -260,15 +260,40 @@ function verParte(id, i) {
   const partes = lista ? partesOrdenadas(lista) : [];
   if (!partes[i]) return;
   cerrarModalCaseros();
+  reproducirParte(a, partes, i);
+}
+
+// Pasa a otra parte desde la lista que hay bajo el vídeo (el reproductor ya está abierto).
+function cambiarParte(i) {
+  const pa = _partesActuales;
+  if (!pa || !pa.partes[i]) return;
+  reproducirParte({ act: pa.act, fecha: pa.fecha }, pa.partes, i);
+}
+
+function reproducirParte(a, partes, i) {
   // Cola propia en el orden correcto (no la lista de YouTube, que puede ir al revés): la parte elegida
   // y detrás las siguientes; YouTube pasa sola de una a otra.
   // La parte elegida va también en la cola: con playlist=<solo las siguientes>, el reproductor
   // incrustado se saltaba la primera y empezaba por la segunda.
   const cola = partes.slice(i).map(p => p.v).join(',');
-  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}&playlist=${cola}`,
-              `${a.act} · Parte ${i + 1} de ${partes.length}`, formatDate(a.fecha), 0);
-  _partesActuales = { act: a.act, n: partes.length, ids: partes.map(p => p.v) };
+  const url = `https://www.youtube.com/watch?v=${partes[i].v}&playlist=${cola}`;
+  // Se fija antes de abrir: renderEscenasPlayer() pinta bajo el vídeo la lista de partes (7 nov 2026)
+  _partesActuales = { act: a.act, fecha: a.fecha, n: partes.length, ids: partes.map(p => p.v), partes, i, url };
+  abrirPlayer(url, `${a.act} · Parte ${i + 1} de ${partes.length}`, formatDate(a.fecha), 0);
   escucharYoutube();
+}
+
+// Lista de partes bajo el vídeo (en el hueco de las escenas de los caseros); la parte que suena, marcada.
+function renderPartesPlayer(box) {
+  const pa = _partesActuales;
+  const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  box.dataset.id = '';
+  box.innerHTML = `<div class="pe-head"><h4>Partes</h4><span>${pa.n} partes</span></div><div class="pe-list">` +
+    pa.partes.map((p, i) => `<button class="pe-item${i === pa.i ? ' actual' : ''}" onclick="cambiarParte(${i})">
+      <span class="pe-mini"><img src="https://i.ytimg.com/vi/${p.v}/mqdefault.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('sin')"><span class="pe-num">${i + 1}</span></span>
+      <span class="pe-txt"><span class="pe-tit" style="display:block">Parte ${i + 1}</span><span class="pe-sub" style="display:block">${p.t && p.t.trim() ? esc(p.t) : ''}</span></span>
+      <span class="pe-t">${p.s ? formatTime(p.s) : ''}</span></button>`).join('') + '</div>';
+  box.classList.add('visible');
 }
 
 // Cuando YouTube pasa sola a la parte siguiente, actualiza «Parte N de M» en el título del reproductor.
@@ -290,6 +315,8 @@ window.addEventListener('message', ev => {
   if (i < 0 || i >= _partesActuales.n) return;
   const t = document.getElementById('player-titulo');
   if (t) t.textContent = `${_partesActuales.act} · Parte ${i + 1} de ${_partesActuales.n}`;
+  _partesActuales.i = i;
+  document.querySelectorAll('#player-escenas .pe-item').forEach((it, k) => it.classList.toggle('actual', k === i));
 });
 
 function filtrarAnio(y, btn) {

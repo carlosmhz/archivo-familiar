@@ -282,7 +282,12 @@ function abrirPlayer(url, titulo, fecha, min) {
     video.style.display = 'none';
     detenerHls();
     video.src = '';
-    iframe.src = buildEmbedUrl(url, min) || '';
+    // Cambiar el src de un iframe ya cargado añade una entrada al historial (Atrás volvería a la parte
+    // anterior en vez de cerrar el reproductor): se recrea el iframe, cuya primera carga no añade nada.
+    let ifr = iframe;
+    if (iframe.getAttribute('src')) { ifr = iframe.cloneNode(false); ifr.removeAttribute('src'); iframe.replaceWith(ifr); }
+    ifr.style.display = 'block';
+    ifr.src = buildEmbedUrl(url, min) || '';
   } else {
     loading.classList.remove('hidden');
     video.style.display = 'block';
