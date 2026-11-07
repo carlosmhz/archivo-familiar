@@ -74,6 +74,56 @@ function ytPartesLista($html) {
     return $partes ?: null;
 }
 
+// ── API de datos de YouTube (opcional) ──
+// Si existe la clave en privado/config.php ('youtube_api_key' => 'AIza…'), las partes de las listas y
+// las duraciones se piden a la API oficial (gratis, cuota de 10 000 unidades al día; aquí se gastan
+// unas pocas por semana gracias a la caché). Sin clave, se intenta leer las páginas de YouTube.
+function ytClaveApi() {
+    $k = configLocal()['youtube_api_key'] ?? '';
+    return (is_string($k) && preg_match('/^[\w-]{20,60}$/', $k)) ? $k : null;
+}
+function ytIsoSegundos($iso) {   // PT1H2M3S → 3723
+    if (!preg_match('/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/', (string)$iso, $m)) return 0;
+    return intval($m[1] ?? 0) * 86400 + intval($m[2] ?? 0) * 3600 + intval($m[3] ?? 0) * 60 + intval($m[4] ?? 0);
+}
+// Duración de varios vídeos: [id => segundos]. $errores recibe el motivo si la API falla.
+function ytApiDuraciones(array $ids, $clave, &$error = null) {
+    $out = [];
+    foreach (array_chunk(array_values(array_unique($ids)), 50) as $grupo) {
+        $r = ytDescargar(['x' => 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&maxResults=50&id=' . implode(',', $grupo) . '&key=' . $clave], 10)['x'];
+        $j = json_decode($r[1], true);
+        if ($r[0] !== 200 || !is_array($j)) { $error = 'API: HTTP ' . $r[0] . ' ' . substr((string)($j['error']['message'] ?? $r[1]), 0, 80); continue; }
+        foreach ($j['items'] ?? [] as $it) $out[$it['id']] = ytIsoSegundos($it['contentDetails']['duration'] ?? '');
+    }
+    return $out;
+}
+// Partes de varias listas en orden: [lista => [{v, t, s}] ] (sin vídeos privados o borrados).
+function ytApiPartes(array $listas, $clave, &$errores = []) {
+    $pet = [];
+    foreach ($listas as $l) $pet[$l] = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,status&maxResults=50&playlistId=' . rawurlencode($l) . '&key=' . $clave;
+    $partes = []; $ids = [];
+    foreach (ytDescargar($pet, 10) as $l => [$codigo, $cuerpo]) {
+        $j = json_decode($cuerpo, true);
+        if ($codigo !== 200 || !is_array($j)) { $errores[$l] = 'API: HTTP ' . $codigo . ' ' . substr((string)($j['error']['message'] ?? ''), 0, 80); continue; }
+        $items = $j['items'] ?? [];
+        usort($items, fn($a, $b) => ($a['snippet']['position'] ?? 0) <=> ($b['snippet']['position'] ?? 0));
+        foreach ($items as $it) {
+            $v = $it['snippet']['resourceId']['videoId'] ?? '';
+            $priv = $it['status']['privacyStatus'] ?? 'public';
+            if (!preg_match('/^[\w-]{11}$/', $v) || $priv === 'private' || $priv === 'privacyStatusUnspecified') continue;
+            $partes[$l][] = ['v' => $v, 't' => mb_substr((string)($it['snippet']['title'] ?? ''), 0, 120), 's' => 0];
+            $ids[] = $v;
+        }
+        if (empty($partes[$l])) $errores[$l] = 'API: lista vacía o privada';
+    }
+    if ($ids) {
+        $dur = ytApiDuraciones($ids, $clave);
+        foreach ($partes as $l => &$ps) foreach ($ps as &$p) $p['s'] = $dur[$p['v']] ?? 0;
+        unset($ps, $p);
+    }
+    return $partes;
+}
+
 if ($method === 'GET' && $action === 'actuaciones-minis') {
     $s = exigirSesion();
     if (!in_array($s['r'], ['admin', 'todo', 'actuaciones'], true)) responder(true, ['l' => (object)[], 'd' => (object)[], 'p' => (object)[]]);
@@ -98,13 +148,38 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
     foreach (array_keys($listas) as $l) {
         $c = $cache['p'][$l] ?? null;
         $edad = $ahora - ($c['t'] ?? 0);
-        if (!$c || (empty($c['i']) && ($diag || $edad > 86400)) || $edad > $semana)
+        $sinApi = ytClaveApi() && empty($c['i']) && ($c['via'] ?? '') !== 'api' && strpos((string)($c['e'] ?? ''), 'API') !== 0;
+        if (!$c || $sinApi || (empty($c['i']) && ($diag || $edad > 86400)) || $edad > $semana)
             $urls['p:' . $l] = 'https://www.youtube.com/playlist?list=' . $l . '&hl=es';
     }
     foreach (array_keys($videos) as $v) {
         $c = $cache['d'][$v] ?? null;
-        if (!$c || (empty($c['s']) && ($diag || $ahora - ($c['t'] ?? 0) > $semana)))
+        $sinApi = ytClaveApi() && empty($c['s']) && strpos((string)($c['e'] ?? ''), 'API') !== 0;
+        if (!$c || $sinApi || (empty($c['s']) && ($diag || $ahora - ($c['t'] ?? 0) > $semana)))
             $urls['d:' . $v] = 'https://www.youtube.com/embed/' . $v . '?hl=es';
+    }
+    $clave = ytClaveApi();
+    if ($clave) {
+        // Con clave: partes y duraciones por la API oficial; se quitan esas páginas de la descarga
+        $lp = []; $vd = [];
+        foreach (array_keys($urls) as $k) {
+            if (strpos($k, 'p:') === 0) { $lp[] = substr($k, 2); unset($urls[$k]); }
+            elseif (strpos($k, 'd:') === 0) { $vd[] = substr($k, 2); unset($urls[$k]); }
+        }
+        if ($lp) {
+            $errores = [];
+            $res = ytApiPartes($lp, $clave, $errores);
+            foreach ($lp as $l) {
+                if (!empty($res[$l])) $cache['p'][$l] = ['i' => $res[$l], 't' => $ahora, 'e' => null, 'via' => 'api'];
+                elseif (empty($cache['p'][$l]['i'])) $cache['p'][$l] = ['i' => null, 't' => $ahora, 'e' => $errores[$l] ?? 'API: sin partes'];
+            }
+        }
+        if ($vd) {
+            $error = null;
+            $res = ytApiDuraciones($vd, $clave, $error);
+            foreach ($vd as $v) $cache['d'][$v] = ['s' => ($res[$v] ?? 0) ?: null, 't' => $ahora, 'e' => !empty($res[$v]) ? null : ($error ?: 'API: vídeo no encontrado')];
+        }
+        if ($lp || $vd) @file_put_contents($fCache, json_encode($cache, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
     }
     if ($urls) {
         foreach (ytDescargar(array_slice($urls, 0, 60, true), 10) as $k => [$codigo, $cuerpo]) {
@@ -136,12 +211,12 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
     $resp = ['l' => (object)$out['l'], 'd' => (object)$out['d'], 'p' => (object)$out['p']];
     if ($diag) {
         $f = [];
-        foreach (array_keys($videos) as $v) if (!empty($cache['d'][$v]['e'])) $f[$v] = $cache['d'][$v]['e'];
+        foreach (array_keys($listas) as $l) if (!empty($cache['p'][$l]['e'])) { $f['partes ' . $l] = $cache['p'][$l]['e']; break; }
+        foreach (array_keys($videos) as $v) if (!empty($cache['d'][$v]['e'])) { $f[$v] = $cache['d'][$v]['e']; break; }
         foreach (array_keys($listas) as $l) {
             if (!empty($cache['l'][$l]['e'])) $f['lista ' . $l] = $cache['l'][$l]['e'];
-            if (!empty($cache['p'][$l]['e'])) $f['partes ' . $l] = $cache['p'][$l]['e'];
         }
-        $resp['diag'] = ['curl' => function_exists('curl_multi_init'), 'videos' => count($videos), 'con_duracion' => count($out['d']),
+        $resp['diag'] = ['clave_api' => (bool)$clave, 'curl' => function_exists('curl_multi_init'), 'videos' => count($videos), 'con_duracion' => count($out['d']),
                          'listas' => count($listas), 'listas_con_foto' => count($out['l']), 'listas_con_partes' => count($out['p']), 'fallos' => $f];
     }
     responder(true, $resp);

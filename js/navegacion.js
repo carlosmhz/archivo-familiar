@@ -181,7 +181,7 @@ async function cargarMinisAct() {
     if (diag && typeof avisar === 'function') {
       const g = (d.data && d.data.diag) || {};
       const fallos = Object.entries(g.fallos || {}).slice(0, 2).map(([k, v]) => `• ${k}: ${v}`).join('\n');
-      avisar(d.ok ? `curl: ${g.curl ? 'sí' : 'NO'}\nCintas con duración: ${g.con_duracion} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\nListas con partes: ${g.listas_con_partes} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
+      avisar(d.ok ? `Clave de la API de YouTube: ${g.clave_api ? 'sí' : 'no'}\nCintas con duración: ${g.con_duracion} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\nListas con partes: ${g.listas_con_partes} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
              { titulo: 'Diagnóstico de miniaturas' });
     }
   } catch (e) { _minisAct = { l: {}, s: {} }; }
