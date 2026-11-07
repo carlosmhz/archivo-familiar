@@ -29,12 +29,13 @@ function cambiarTema() {
   const abierto = id => { const el = document.getElementById(id); return !!el && el.classList.contains('open'); };
 
   const o = {};
-  ['abrirPlayer', 'cerrarPlayer', 'abrirEscenasCasero', 'abrirModalCaseros', 'cerrarModalCaseros',
+  ['abrirPlayer', 'cerrarPlayer', 'abrirEscenasCasero', 'abrirPartes', 'abrirModalCaseros', 'cerrarModalCaseros',
    'abrirShareModal', 'cerrarShareModal', 'abrirSeleccion', 'cerrarSeleccion', 'showSection', 'goHome', 'doSearch', 'clearSearch'].forEach(n => o[n] = window[n]);
 
   window.abrirPlayer = function () { const ya = abierto('player-overlay'); const r = o.abrirPlayer.apply(this, arguments); if (!ya) apilar('player'); return r; };
   window.cerrarPlayer = function () { const ya = abierto('player-overlay'); const r = o.cerrarPlayer.apply(this, arguments); if (ya && !abierto('player-overlay')) consumir(); return r; };
   window.abrirEscenasCasero = function () { const ya = abierto('caseros-modal'); const r = o.abrirEscenasCasero.apply(this, arguments); if (!ya && abierto('caseros-modal')) apilar('modal'); return r; };
+  window.abrirPartes = async function () { const ya = abierto('caseros-modal'); const r = await o.abrirPartes.apply(this, arguments); if (!ya && abierto('caseros-modal')) apilar('modal'); return r; };
   window.abrirModalCaseros = function () { const ya = abierto('caseros-modal'); const r = o.abrirModalCaseros.apply(this, arguments); if (!ya && abierto('caseros-modal')) apilar('modal'); return r; };
   window.cerrarModalCaseros = function () { const ya = abierto('caseros-modal'); const r = o.cerrarModalCaseros.apply(this, arguments); if (ya && !abierto('caseros-modal')) consumir(); return r; };
   window.abrirShareModal = function () { const r = o.abrirShareModal.apply(this, arguments); if (estado() !== 'share') apilar('share'); return r; };

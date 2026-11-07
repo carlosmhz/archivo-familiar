@@ -92,7 +92,9 @@ function renderActRow(a, conAnio) {
   const fechaHtml = p.d
     ? `<span class="act-day">${p.d}</span><span class="act-mon">${p.m}</span>${conAnio ? `<span class="act-year">${p.y}</span>` : ''}`
     : `<span class="act-mon">${p.y || '—'}</span>`;
-  const abrir = link ? `abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})` : '';
+  const esLista = link && !idYoutube(a.youtube) && /[?&]list=/.test(a.youtube);
+  const abrir = !link ? '' : esLista ? `abrirPartes(${a.id})`
+    : `abrirPlayer('${link.replace(/'/g,"\\'")}','${a.act.replace(/'/g,"\\'")}','${formatDate(a.fecha)}',${a.min||0})`;
   const etiqueta = a.min > 0 ? `<span class="act-min">${formatTime(a.min)}</span>` : '';
   const mini = link ? `<button class="act-mini" tabindex="-1" aria-hidden="true" ${datosMini(a)} onclick="${abrir}">${ICO_MINI}${etiqueta}</button>`
                     : `<span class="act-mini" aria-hidden="true">${ICO_MINI}</span>`;
@@ -165,12 +167,16 @@ function pintarMinisAct(raiz) {
   if (!_minisAct) cargarMinisAct();
 }
 
-async function cargarMinisAct() {
-  if (_minisAct || _minisPidiendo || document.body.classList.contains('modo-tv')) return;
-  if (!document.querySelector('.act-mini[data-lista]') && !/[?&]diag=minis/.test(location.search)) {
-    // Sin listas no hace falta esperar al servidor para pintar; la duración solo afina la foto.
-    if (!document.querySelector('.act-mini[data-v]:not([data-t="0"])')) return;
-  }
+let _minisPromesa = null;
+function cargarMinisAct(forzar) {
+  if (_minisAct || document.body.classList.contains('modo-tv')) return Promise.resolve();
+  if (_minisPromesa) return _minisPromesa;
+  if (!forzar && !document.querySelector('.act-mini[data-lista], .act-mini[data-v]:not([data-t="0"])') && !/[?&]diag=minis/.test(location.search)) return Promise.resolve();
+  _minisPromesa = pedirMinisAct().finally(() => { _minisPromesa = null; });
+  return _minisPromesa;
+}
+async function pedirMinisAct() {
+  if (_minisAct || _minisPidiendo) return;
   _minisPidiendo = true;
   try {
     // Diagnóstico: abrir la web con ?diag=minis y entrar en Actuaciones muestra qué responde YouTube
@@ -188,6 +194,89 @@ async function cargarMinisAct() {
   _minisPidiendo = false;
   pintarMinisAct();
 }
+
+// ── Actuaciones en una lista de YouTube: ventana «Partes» (7 nov 2026, opción 2 de Carlos) ──
+// Al tocar una actuación enlazada a una lista se abre la ventana de escenas (#caseros-modal) con las
+// partes en orden (foto, «Parte N», título de YouTube y duración). Cada parte se abre como
+// watch?v=<parte>&list=<lista>: YouTube empieza justo en esa parte y sigue sola con las siguientes.
+// Las partes las da el servidor (actuaciones-minis → p). Si no las tiene, se abre la lista desde la
+// primera parte (portada de la lista) o, en último caso, como antes.
+let _partesActuales = null;    // { act, n, lista } mientras suena una parte, para el título «Parte N de M»
+
+function durPartes(s) {
+  s = parseInt(s) || 0;
+  const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60);
+  return h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`;
+}
+
+async function abrirPartes(id) {
+  const a = ACTUACIONES.find(x => x.id === id);
+  if (!a) return;
+  const lista = (String(a.youtube).match(/[?&]list=([\w-]+)/) || [])[1];
+  if (!_minisAct) await cargarMinisAct(true);
+  const partes = (_minisAct && _minisAct.p && _minisAct.p[lista]) || [];
+  if (partes.length < 2) {
+    const v = partes[0] ? partes[0].v : (_minisAct && _minisAct.l && _minisAct.l[lista]);
+    const url = v ? `https://www.youtube.com/watch?v=${v}&list=${lista}` : a.youtube;
+    _partesActuales = null;
+    abrirPlayer(url, a.act, formatDate(a.fecha), 0);
+    return;
+  }
+  const total = partes.reduce((t, p) => t + (p.s || 0), 0);
+  const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  document.getElementById('caseros-modal-title').textContent = a.act;
+  document.getElementById('caseros-modal-sub').textContent =
+    `${formatDate(a.fecha)} · ${partes.length} partes${total ? ' · ' + durPartes(total) : ''}`;
+  const g = document.getElementById('caseros-modal-grid');
+  g.style.display = 'block';
+  g.style.padding = '12px 16px';
+  g.innerHTML = `<button class="partes-todo" onclick="verParte(${a.id},0)">${svgIcon('i-play')} Ver desde la parte 1</button>
+    <div class="partes-lista">` + partes.map((p, i) => `
+      <div class="partes-item" onclick="verParte(${a.id},${i})">
+        <div class="pe-mini"><img src="https://i.ytimg.com/vi/${p.v}/mqdefault.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add('sin')"><span class="pe-num">${i + 1}</span></div>
+        <div class="partes-txt">
+          <div class="partes-nombre">Parte ${i + 1}</div>
+          <div class="partes-meta">${p.t && p.t.trim() ? esc(p.t) + (p.s ? ' · ' : '') : ''}${p.s ? formatTime(p.s) : ''}</div>
+        </div>
+        <div class="partes-play">${svgIcon('i-play')}</div>
+      </div>`).join('') + '</div>';
+  document.getElementById('caseros-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function verParte(id, i) {
+  const a = ACTUACIONES.find(x => x.id === id);
+  const lista = a && (String(a.youtube).match(/[?&]list=([\w-]+)/) || [])[1];
+  const partes = (lista && _minisAct && _minisAct.p && _minisAct.p[lista]) || [];
+  if (!partes[i]) return;
+  cerrarModalCaseros();
+  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}&list=${lista}`,
+              `${a.act} · Parte ${i + 1} de ${partes.length}`, formatDate(a.fecha), 0);
+  _partesActuales = { act: a.act, n: partes.length, lista, ids: partes.map(p => p.v) };
+  escucharYoutube();
+}
+
+// Cuando YouTube pasa sola a la parte siguiente, actualiza «Parte N de M» en el título del reproductor.
+// (API de mensajes del reproductor incrustado: se le pide que avise con "listening".)
+function escucharYoutube() {
+  const ifr = document.getElementById('player-iframe') || document.querySelector('#player-overlay iframe');
+  if (!ifr) return;
+  const pedir = () => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'af-partes', channel: 'widget' }), '*'); } catch (e) {} };
+  ifr.addEventListener('load', pedir, { once: true });
+  setTimeout(pedir, 1500);
+}
+window.addEventListener('message', ev => {
+  if (!_partesActuales || !/youtube(-nocookie)?\.com$/.test(new URL(ev.origin || 'http://x').hostname)) return;
+  let d; try { d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data; } catch (e) { return; }
+  const info = d && d.info;
+  const ifr = document.getElementById('player-iframe');
+  if (!info || !ifr || !ifr.src.includes(_partesActuales.lista)) return;
+  let i = typeof info.playlistIndex === 'number' ? info.playlistIndex : -1;
+  if (i < 0 && info.videoData && info.videoData.video_id) i = _partesActuales.ids.indexOf(info.videoData.video_id);
+  if (i < 0 || i >= _partesActuales.n) return;
+  const t = document.getElementById('player-titulo');
+  if (t) t.textContent = `${_partesActuales.act} · Parte ${i + 1} de ${_partesActuales.n}`;
+});
 
 function filtrarAnio(y, btn) {
   document.querySelectorAll('#year-chips .chip').forEach(b => b.classList.toggle('active', b === btn));
