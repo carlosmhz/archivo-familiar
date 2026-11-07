@@ -198,7 +198,7 @@ async function pedirMinisAct() {
 // ── Actuaciones en una lista de YouTube: ventana «Partes» (7 nov 2026, opción 2 de Carlos) ──
 // Al tocar una actuación enlazada a una lista se abre la ventana de escenas (#caseros-modal) con las
 // partes en orden (foto, «Parte N», título de YouTube y duración). Cada parte se abre como
-// watch?v=<parte>&playlist=<siguientes>: YouTube empieza justo en esa parte y sigue sola con las demás.
+// watch?v=<parte>&playlist=<parte,siguientes…>: YouTube empieza en esa parte y sigue sola con las demás.
 // Las partes las da el servidor (actuaciones-minis → p). Si no las tiene, se abre la lista desde la
 // primera parte (portada de la lista) o, en último caso, como antes.
 let _partesActuales = null;
@@ -262,8 +262,10 @@ function verParte(id, i) {
   cerrarModalCaseros();
   // Cola propia en el orden correcto (no la lista de YouTube, que puede ir al revés): la parte elegida
   // y detrás las siguientes; YouTube pasa sola de una a otra.
-  const siguen = partes.slice(i + 1).map(p => p.v).join(',');
-  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}${siguen ? '&playlist=' + siguen : ''}`,
+  // La parte elegida va también en la cola: con playlist=<solo las siguientes>, el reproductor
+  // incrustado se saltaba la primera y empezaba por la segunda.
+  const cola = partes.slice(i).map(p => p.v).join(',');
+  abrirPlayer(`https://www.youtube.com/watch?v=${partes[i].v}&playlist=${cola}`,
               `${a.act} · Parte ${i + 1} de ${partes.length}`, formatDate(a.fecha), 0);
   _partesActuales = { act: a.act, n: partes.length, ids: partes.map(p => p.v) };
   escucharYoutube();
