@@ -8,6 +8,8 @@ if ($method === 'GET' && $action === 'listar') {
 
 // Miniaturas de las actuaciones (7 nov 2026). Devuelve:
 //  l: { idLista: idVideo }  portada de las actuaciones enlazadas a una lista de YouTube (oEmbed).
+//  p: { idLista: [{v, t, s}, …] } partes de cada lista en orden (vídeo, título, segundos), leídas de la
+//     página de la lista; las usa la ventana «Partes» al abrir una actuación de lista.
 //  d: { idVideo: segundos } duración de los vídeos con actuaciones que empiezan a mitad, leída de la
 //     página incrustada (/embed/) si la trae. El navegador elige con ella la foto automática de YouTube
 //     más cercana al minuto (1/4, 1/2, 3/4); si no hay duración, la estima con los minutos de inicio.
@@ -47,9 +49,34 @@ function ytDuracion($html) {
     return 0;
 }
 
+// Partes de una lista de YouTube, en orden, desde la página de la lista (ytInitialData).
+// Devuelve [['v' => id, 't' => título, 's' => segundos], …] o null si la página no las trae.
+function ytPartesLista($html) {
+    if (!preg_match('/ytInitialData\s*=\s*(\{.+?\});\s*<\/script>/s', $html, $m)) return null;
+    $data = json_decode($m[1], true);
+    if (!is_array($data)) return null;
+    $partes = []; $vistos = [];
+    $recorrer = function ($n) use (&$recorrer, &$partes, &$vistos) {
+        if (!is_array($n)) return;
+        if (isset($n['playlistVideoRenderer']['videoId'])) {
+            $r = $n['playlistVideoRenderer'];
+            $v = $r['videoId'];
+            if (!isset($vistos[$v]) && preg_match('/^[\w-]{11}$/', $v)) {
+                $vistos[$v] = true;
+                $t = $r['title']['runs'][0]['text'] ?? ($r['title']['simpleText'] ?? '');
+                $partes[] = ['v' => $v, 't' => mb_substr((string)$t, 0, 120), 's' => intval($r['lengthSeconds'] ?? 0)];
+            }
+            return;
+        }
+        foreach ($n as $h) $recorrer($h);
+    };
+    $recorrer($data);
+    return $partes ?: null;
+}
+
 if ($method === 'GET' && $action === 'actuaciones-minis') {
     $s = exigirSesion();
-    if (!in_array($s['r'], ['admin', 'todo', 'actuaciones'], true)) responder(true, ['l' => (object)[], 'd' => (object)[]]);
+    if (!in_array($s['r'], ['admin', 'todo', 'actuaciones'], true)) responder(true, ['l' => (object)[], 'd' => (object)[], 'p' => (object)[]]);
     $listas = []; $videos = [];
     foreach (leerJSON(FILE_ACTUACIONES) as $a) {
         $u = (string)($a['youtube'] ?? '');
@@ -60,7 +87,7 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
     $diag = !empty($_GET['diag']);
     $fCache = DIR_DATOS . '/yt-minis.json';
     $cache = is_file($fCache) ? (json_decode(file_get_contents($fCache), true) ?: []) : [];
-    $cache = ['l' => $cache['l'] ?? [], 'd' => $cache['d'] ?? []];   // (lo antiguo de storyboards se descarta)
+    $cache = ['l' => $cache['l'] ?? [], 'd' => $cache['d'] ?? [], 'p' => $cache['p'] ?? []];   // (lo antiguo de storyboards se descarta)
     $ahora = time(); $semana = 7 * 86400;
     $urls = [];
     foreach (array_keys($listas) as $l) {
@@ -68,19 +95,30 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
         if (!$c || (empty($c['v']) && ($diag || $ahora - ($c['t'] ?? 0) > $semana)))
             $urls['l:' . $l] = 'https://www.youtube.com/oembed?format=json&url=' . rawurlencode('https://www.youtube.com/playlist?list=' . $l);
     }
+    foreach (array_keys($listas) as $l) {
+        $c = $cache['p'][$l] ?? null;
+        $edad = $ahora - ($c['t'] ?? 0);
+        if (!$c || (empty($c['i']) && ($diag || $edad > 86400)) || $edad > $semana)
+            $urls['p:' . $l] = 'https://www.youtube.com/playlist?list=' . $l . '&hl=es';
+    }
     foreach (array_keys($videos) as $v) {
         $c = $cache['d'][$v] ?? null;
         if (!$c || (empty($c['s']) && ($diag || $ahora - ($c['t'] ?? 0) > $semana)))
             $urls['d:' . $v] = 'https://www.youtube.com/embed/' . $v . '?hl=es';
     }
     if ($urls) {
-        foreach (ytDescargar(array_slice($urls, 0, 40, true), 10) as $k => [$codigo, $cuerpo]) {
+        foreach (ytDescargar(array_slice($urls, 0, 60, true), 10) as $k => [$codigo, $cuerpo]) {
             [$tipo, $id] = explode(':', $k, 2);
             $motivo = $codigo === 0 ? 'sin conexión (' . substr($cuerpo, 0, 60) . ')' : ($codigo !== 200 ? 'HTTP ' . $codigo : null);
             if ($tipo === 'l') {
                 $j = $codigo === 200 ? json_decode($cuerpo, true) : null;
                 $v = (is_array($j) && preg_match('~/vi(?:_webp)?/([\w-]{11})/~', (string)($j['thumbnail_url'] ?? ''), $m)) ? $m[1] : null;
                 $cache['l'][$id] = ['v' => $v, 't' => $ahora, 'e' => $v ? null : ($motivo ?: 'sin portada')];
+            } elseif ($tipo === 'p') {
+                $partes = $codigo === 200 ? ytPartesLista($cuerpo) : null;
+                if ($partes || empty($cache['p'][$id]['i']))
+                    $cache['p'][$id] = ['i' => $partes, 't' => $ahora, 'e' => $partes ? null : ($motivo ?: (stripos($cuerpo, 'consent.') !== false ? 'página de cookies' : 'sin partes (' . strlen($cuerpo) . ' bytes)'))];
+                else $cache['p'][$id]['t'] = $ahora - $semana + 86400;   // se conserva la anterior; reintento mañana
             } else {
                 $seg = $codigo === 200 ? ytDuracion($cuerpo) : 0;
                 $cache['d'][$id] = ['s' => $seg ?: null, 't' => $ahora, 'e' => $seg ? null : ($motivo ?: 'sin duración (' . strlen($cuerpo) . ' bytes)')];
@@ -88,16 +126,23 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
         }
         @file_put_contents($fCache, json_encode($cache, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
     }
-    $out = ['l' => [], 'd' => []];
-    foreach (array_keys($listas) as $l) if (!empty($cache['l'][$l]['v'])) $out['l'][$l] = $cache['l'][$l]['v'];
+    $out = ['l' => [], 'd' => [], 'p' => []];
+    foreach (array_keys($listas) as $l) {
+        if (!empty($cache['p'][$l]['i'])) $out['p'][$l] = $cache['p'][$l]['i'];
+        $portada = $cache['l'][$l]['v'] ?? ($cache['p'][$l]['i'][0]['v'] ?? null);
+        if ($portada) $out['l'][$l] = $portada;
+    }
     foreach (array_keys($videos) as $v) if (!empty($cache['d'][$v]['s'])) $out['d'][$v] = $cache['d'][$v]['s'];
-    $resp = ['l' => (object)$out['l'], 'd' => (object)$out['d']];
+    $resp = ['l' => (object)$out['l'], 'd' => (object)$out['d'], 'p' => (object)$out['p']];
     if ($diag) {
         $f = [];
         foreach (array_keys($videos) as $v) if (!empty($cache['d'][$v]['e'])) $f[$v] = $cache['d'][$v]['e'];
-        foreach (array_keys($listas) as $l) if (!empty($cache['l'][$l]['e'])) $f['lista ' . $l] = $cache['l'][$l]['e'];
+        foreach (array_keys($listas) as $l) {
+            if (!empty($cache['l'][$l]['e'])) $f['lista ' . $l] = $cache['l'][$l]['e'];
+            if (!empty($cache['p'][$l]['e'])) $f['partes ' . $l] = $cache['p'][$l]['e'];
+        }
         $resp['diag'] = ['curl' => function_exists('curl_multi_init'), 'videos' => count($videos), 'con_duracion' => count($out['d']),
-                         'listas' => count($listas), 'listas_con_foto' => count($out['l']), 'fallos' => $f];
+                         'listas' => count($listas), 'listas_con_foto' => count($out['l']), 'listas_con_partes' => count($out['p']), 'fallos' => $f];
     }
     responder(true, $resp);
 }
