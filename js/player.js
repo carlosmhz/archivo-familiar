@@ -551,6 +551,7 @@ function doSearch(q) {
   document.getElementById('search-results-list').innerHTML = results.length
     ? results.map(renderFn).join('')
     : `<p style="color:var(--text-light);font-size:14px">${emptyMsg}</p>`;
+  if (typeof pintarMinisAct === 'function') pintarMinisAct(document.getElementById('search-results-list'));
 }
 
 function clearSearch() {
