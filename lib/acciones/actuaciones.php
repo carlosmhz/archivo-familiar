@@ -43,19 +43,24 @@ function ytDescargar(array $peticiones, $timeout) {
     return $res;
 }
 
-// Pide el reproductor de YouTube haciéndose pasar por uno de sus clientes (web, móvil, iPhone).
+// Pide el reproductor de YouTube haciéndose pasar por uno de sus clientes (tele, incrustado, gafas VR, iPhone, web móvil).
 function ytPeticionPlayer($v, $cliente) {
     $clientes = [
-        'IOS'  => [['clientName' => 'IOS', 'clientVersion' => '19.45.4', 'deviceMake' => 'Apple', 'deviceModel' => 'iPhone16,2', 'osName' => 'iPhone', 'osVersion' => '18.1.0.22B83'],
-                   'com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X;)', '5'],
-        'MWEB' => [['clientName' => 'MWEB', 'clientVersion' => '2.20241106.01.00'],
-                   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', '2'],
-        'ANDROID' => [['clientName' => 'ANDROID', 'clientVersion' => '19.44.38', 'androidSdkVersion' => 30, 'osName' => 'Android', 'osVersion' => '11'],
-                   'com.google.android.youtube/19.44.38 (Linux; U; Android 11) gzip', '3'],
+        'TV'      => [['clientName' => 'TVHTML5', 'clientVersion' => '7.20250312.16.00'], 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version', 7, false],
+        'EMBED'   => [['clientName' => 'WEB_EMBEDDED_PLAYER', 'clientVersion' => '1.20250310.01.00'], null, 56, true],
+        'TV_EMBED'=> [['clientName' => 'TVHTML5_SIMPLY_EMBEDDED_PLAYER', 'clientVersion' => '2.0'], 'Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version', 85, true],
+        'VR'      => [['clientName' => 'ANDROID_VR', 'clientVersion' => '1.62.27', 'deviceMake' => 'Oculus', 'deviceModel' => 'Quest 3', 'androidSdkVersion' => 32, 'osName' => 'Android', 'osVersion' => '12L'],
+                      'com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip', 28, false],
+        'IOS'     => [['clientName' => 'IOS', 'clientVersion' => '20.10.4', 'deviceMake' => 'Apple', 'deviceModel' => 'iPhone16,2', 'osName' => 'iPhone', 'osVersion' => '18.3.2.22D82'],
+                      'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)', 5, false],
+        'MWEB'    => [['clientName' => 'MWEB', 'clientVersion' => '2.20250311.03.00'],
+                      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', 2, false],
     ];
-    [$c, $ua, $num] = $clientes[$cliente];
+    [$c, $ua, $num, $incrustado] = $clientes[$cliente];
     $c += ['hl' => 'es', 'gl' => 'ES'];
-    $cuerpo = json_encode(['context' => ['client' => $c], 'videoId' => $v, 'contentCheckOk' => true, 'racyCheckOk' => true]);
+    $ctx = ['client' => $c];
+    if ($incrustado) $ctx['thirdParty'] = ['embedUrl' => 'https://www.youtube.com/'];
+    $cuerpo = json_encode(['context' => $ctx, 'videoId' => $v, 'contentCheckOk' => true, 'racyCheckOk' => true]);
     return ['https://www.youtube.com/youtubei/v1/player?prettyPrint=false', $cuerpo, $ua,
             ['Content-Type: application/json', 'Origin: https://www.youtube.com', 'X-Youtube-Client-Name: ' . $num, 'X-Youtube-Client-Version: ' . $c['clientVersion']]];
 }
@@ -63,7 +68,7 @@ function ytPeticionPlayer($v, $cliente) {
 // Motivo legible de un fallo, para el diagnóstico.
 function ytMotivo($codigo, $cuerpo) {
     if ($codigo === 0) return 'sin conexión (' . substr($cuerpo, 0, 80) . ')';
-    if ($codigo !== 200) return 'HTTP ' . $codigo;
+    if ($codigo !== 200) return 'HTTP ' . $codigo . (preg_match('/"message":\s*"([^"]{0,60})/', $cuerpo, $m) ? ' ' . $m[1] : '');
     if (preg_match('/"playabilityStatus":\{"status":"([A-Z_]+)"(?:,"reason":"([^"]{0,80}))?/', $cuerpo, $m)) return $m[1] . (isset($m[2]) ? ': ' . $m[2] : '');
     if (stripos($cuerpo, 'consent.youtube.com') !== false) return 'página de cookies';
     return 'sin storyboard (' . strlen($cuerpo) . ' bytes)';
@@ -132,12 +137,14 @@ if ($method === 'GET' && $action === 'actuaciones-minis') {
             $cache['l'][$id] = ['v' => $v, 't' => $ahora, 'e' => $v ? null : ytMotivo($codigo, $cuerpo)];
         }
     }
-    // Etapas: página del vídeo → reproductor como app de iPhone → como web móvil → como app de Android
+    // Etapas: página del vídeo, página incrustada y el reproductor como varios clientes de YouTube
     $motivos = [];
-    foreach (['watch', 'IOS', 'MWEB', 'ANDROID'] as $etapa) {
+    @set_time_limit(120);
+    foreach (['watch', 'embed', 'TV', 'EMBED', 'TV_EMBED', 'VR', 'IOS', 'MWEB'] as $etapa) {
         if (!$pendientes) break;
         $pet = [];
-        foreach ($pendientes as $v) $pet[$v] = $etapa === 'watch' ? 'https://www.youtube.com/watch?v=' . $v . '&hl=es&bpctr=9999999999&has_verified=1' : ytPeticionPlayer($v, $etapa);
+        foreach ($pendientes as $v) $pet[$v] = $etapa === 'watch' ? 'https://www.youtube.com/watch?v=' . $v . '&hl=es&bpctr=9999999999&has_verified=1'
+                                           : ($etapa === 'embed' ? 'https://www.youtube.com/embed/' . $v . '?hl=es' : ytPeticionPlayer($v, $etapa));
         $siguen = [];
         foreach (ytDescargar($pet, 10) as $v => [$codigo, $cuerpo]) {
             $sb = $codigo === 200 ? ytStoryboard($cuerpo) : null;

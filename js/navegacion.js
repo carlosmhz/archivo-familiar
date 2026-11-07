@@ -176,7 +176,7 @@ async function cargarMinisAct() {
     _minisAct = (d.ok && d.data) ? d.data : { l: {}, s: {} };
     if (diag && typeof avisar === 'function') {
       const g = (d.data && d.data.diag) || {};
-      const fallos = Object.entries(g.fallos || {}).slice(0, 4).map(([k, v]) => `• ${k}: ${v}`).join('\n');
+      const fallos = Object.entries(g.fallos || {}).slice(0, 1).map(([k, v]) => `• ${k}: ${v}`).join('\n');
       avisar(d.ok ? `curl: ${g.curl ? 'sí' : 'NO'}\nCintas con foto del minuto: ${g.con_foto} de ${g.videos}\nListas con portada: ${g.listas_con_foto} de ${g.listas}\n${fallos}` : (d.msg || 'Error'),
              { titulo: 'Diagnóstico de miniaturas' });
     }
