@@ -204,12 +204,12 @@ async function pedirMinisAct() {
 let _partesActuales = null;
 
 // Algunas listas de YouTube tienen las partes al revés (p. ej. «Teatro 02/26 3» la primera). Si todos
-// los títulos acaban en un número y esos números son 1…N sin repetir, se ordenan por él; si no, se
-// respeta el orden de la lista.
+// los títulos acaban en un número y no se repite ninguno, se ordenan por él (aunque falte alguno: la
+// lista «Villar de Argañán» va del 2 al 7); si no, se respeta el orden de la lista.
 function partesOrdenadas(lista) {
   const ps = (_minisAct && _minisAct.p && _minisAct.p[lista]) || [];
   const nums = ps.map(p => { const m = String(p.t || '').match(/(\d+)\s*\)?\s*$/); return m ? parseInt(m[1]) : NaN; });
-  const ok = ps.length > 1 && nums.every(n => n >= 1 && n <= ps.length) && new Set(nums).size === ps.length;
+  const ok = ps.length > 1 && nums.every(n => n >= 0) && new Set(nums).size === ps.length;
   return ok ? ps.map((p, i) => [nums[i], p]).sort((a, b) => a[0] - b[0]).map(x => x[1]) : ps;
 }    // { act, n, lista } mientras suena una parte, para el título «Parte N de M»
 
