@@ -336,6 +336,8 @@ function renderSevillanas() {
     grouped[y].push(a);
   });
   const years = Object.keys(grouped).sort((a,b) => b - a);
+  // Dentro de cada año, de la más reciente a la más antigua (como los años). sort es estable: con la misma fecha se respeta el orden de siempre.
+  years.forEach(y => grouped[y].sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || ''))));
   const chips = document.getElementById('year-chips');
   if (chips) chips.innerHTML = years.length > 1
     ? ['Todas', ...years].map((y, i) => `<button class="chip${i === 0 ? ' active' : ''}" onclick="filtrarAnio('${i === 0 ? '' : y}', this)">${y}</button>`).join('')
